@@ -1,0 +1,10 @@
+const router = require("express").Router();
+const c = require("../controllers/addonController");
+const { protect } = require("../middleware/auth");
+router.use(protect);
+router.post("/", c.createAddon);
+router.get("/", c.getAddons);
+router.get("/:id", c.getAddonById);
+router.put("/:id", c.updateAddon);
+router.delete("/:id", c.deleteAddon);
+module.exports = router;

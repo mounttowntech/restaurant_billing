@@ -1,0 +1,10 @@
+const router = require("express").Router();
+const c = require("../controllers/kotController");
+const { protect } = require("../middleware/auth");
+router.use(protect);
+router.post("/", c.createKOT);
+router.get("/", c.getKOTs);
+router.get("/:id", c.getKOTById);
+router.put("/:id", c.updateKOT);
+router.delete("/:id", c.deleteKOT);
+module.exports = router;
