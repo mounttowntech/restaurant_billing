@@ -1,7 +1,6 @@
 const router = require("express").Router();
 const c = require("../controllers/supplierController");
-const { protect } = require("../middleware/auth");
-router.use(protect);
+
 router.post("/", c.createSupplier);
 router.get("/", c.getSuppliers);
 router.get("/:id", c.getSupplierById);

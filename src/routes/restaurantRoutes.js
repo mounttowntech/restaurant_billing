@@ -1,7 +1,6 @@
 const router = require("express").Router();
 const c = require("../controllers/restaurantController");
-const { protect } = require("../middleware/auth");
-router.use(protect);
+
 router.post("/", c.createRestaurant);
 router.get("/", c.getRestaurants);
 router.get("/:id", c.getRestaurantById);
