@@ -10,6 +10,7 @@ app.get("/", (req, res) =>
   res.json({ success: true, message: "Restaurant Billing API running" }),
 );
 app.use("/api/auth", require("./src/routes/authRoutes"));
+app.use("/api/cashregister",require("./src/routes/cashRegisterRoutes"));
 // app.use("/api/users", require("./src/routes/userRoutes"));
 app.use("/api/roles", require("./src/routes/roleRoutes"));
 app.use("/api/restaurants", require("./src/routes/restaurantRoutes"));
@@ -32,6 +33,7 @@ app.use("/api/coupons", require("./src/routes/couponRoutes"));
 app.use("/api/taxes", require("./src/routes/taxRoutes"));
 app.use("/api/dashboard", require("./src/routes/dashboardRoutes"));
 app.use("/api/reports", require("./src/routes/reportRoutes"));
+app.use("/api/deliveryPartners", require("./src/routes/deliveryPartnerRoutes"));
 app.use((req, res) =>
   res.status(404).json({ success: false, message: "Route not found" }),
 );

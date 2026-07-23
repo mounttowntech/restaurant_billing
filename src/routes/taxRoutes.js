@@ -1,7 +1,6 @@
 const router = require("express").Router();
 const c = require("../controllers/taxController");
-const { protect } = require("../middleware/auth");
-router.use(protect);
+
 router.post("/", c.createTax);
 router.get("/", c.getTaxs);
 router.get("/:id", c.getTaxById);

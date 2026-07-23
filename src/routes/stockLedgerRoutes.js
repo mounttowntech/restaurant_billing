@@ -1,7 +1,6 @@
 const router = require("express").Router();
 const c = require("../controllers/stockLedgerController");
-const { protect } = require("../middleware/auth");
-router.use(protect);
+
 router.post("/", c.createStockLedger);
 router.get("/", c.getStockLedgers);
 router.get("/:id", c.getStockLedgerById);

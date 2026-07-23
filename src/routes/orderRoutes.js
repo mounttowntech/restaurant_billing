@@ -1,7 +1,6 @@
 const router = require("express").Router();
 const c = require("../controllers/orderController");
-const { protect } = require("../middleware/auth");
-router.use(protect);
+
 router.post("/", c.createOrder);
 router.get("/", c.getOrders);
 router.get("/:id", c.getOrderById);

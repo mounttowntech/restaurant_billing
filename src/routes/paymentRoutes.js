@@ -1,7 +1,6 @@
 const router=require('express').Router();
 const c=require('../controllers/paymentController');
-const {protect}=require('../middleware/auth');
-router.use(protect);
+
 router.post('/',c.createPayment);
 router.get('/',c.getPayments);
 router.get('/:id',c.getPaymentById);

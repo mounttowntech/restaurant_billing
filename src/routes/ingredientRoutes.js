@@ -1,7 +1,6 @@
 const router = require("express").Router();
 const c = require("../controllers/ingredientController");
-const { protect } = require("../middleware/auth");
-router.use(protect);
+
 router.post("/", c.createIngredient);
 router.get("/", c.getIngredients);
 router.get("/:id", c.getIngredientById);

@@ -1,7 +1,6 @@
 const router = require("express").Router();
 const c = require("../controllers/expenseController");
-const { protect } = require("../middleware/auth");
-router.use(protect);
+
 router.post("/", c.createExpense);
 router.get("/", c.getExpenses);
 router.get("/:id", c.getExpenseById);
