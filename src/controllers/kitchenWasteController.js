@@ -1,425 +1,440 @@
-const Payment = require("../models/Payment");
-const axios = require("axios");
+const KitchenWaste = require("../models/kitchenWasteModel");
 
 // ==========================================================
-// Create Payment
+// Create Kitchen Waste
 // ==========================================================
 
-exports.createPayment = async (req, res) => {
+exports.createKitchenWaste = async (req, res) => {
   try {
-    const payment = await Payment.create({
+    const waste = new KitchenWaste({
       ...req.body,
-      createdBy: req.user?.id,
+
+      createdBy: req.user.id,
+
+      reportedBy: req.body.reportedBy || req.user.id,
     });
+
+    const savedWaste = await waste.save();
 
     res.status(201).json({
       success: true,
-      message: "Payment created successfully",
-      data: payment,
+
+      message: "Kitchen waste created successfully",
+
+      data: savedWaste,
     });
   } catch (error) {
     res.status(500).json({
       success: false,
+
       message: error.message,
     });
   }
 };
 
 // ==========================================================
-// Get All Payments
+// Get All Kitchen Waste
 // ==========================================================
 
-exports.getPayments = async (req, res) => {
+exports.getKitchenWaste = async (req, res) => {
   try {
-    const payments = await Payment.find()
-      .populate("customer", "name phone")
-      .populate("invoice", "invoiceNo")
-      .populate("order", "orderNo")
+    const wastes = await KitchenWaste.find()
+
+      .populate("restaurant", "name")
+
+      .populate("store", "storeName")
+
+      .populate("kitchen", "kitchenName")
+
+      .populate("reportedBy", "firstName lastName")
+
       .sort({
-        createdAt: -1,
+        wasteDate: -1,
       });
 
     res.json({
       success: true,
-      count: payments.length,
-      data: payments,
+
+      count: wastes.length,
+
+      data: wastes,
     });
   } catch (error) {
     res.status(500).json({
       success: false,
+
       message: error.message,
     });
   }
 };
 
 // ==========================================================
-// Get Payment By ID
+// Get Waste By ID
 // ==========================================================
 
-exports.getPaymentById = async (req, res) => {
+exports.getKitchenWasteById = async (req, res) => {
   try {
-    const payment = await Payment.findById(req.params.id)
-      .populate("customer")
-      .populate("invoice")
-      .populate("order");
+    const waste = await KitchenWaste.findById(req.params.id)
 
-    if (!payment) {
+      .populate("wasteItems.ingredient")
+
+      .populate("wasteItems.menuItem")
+
+      .populate("store")
+
+      .populate("kitchen")
+
+      .populate("reportedBy");
+
+    if (!waste) {
       return res.status(404).json({
         success: false,
-        message: "Payment not found",
+
+        message: "Waste record not found",
       });
     }
 
     res.json({
       success: true,
-      data: payment,
+
+      data: waste,
     });
   } catch (error) {
     res.status(500).json({
       success: false,
+
       message: error.message,
     });
   }
 };
 
 // ==========================================================
-// Update Payment
+// Update Kitchen Waste
 // ==========================================================
 
-exports.updatePayment = async (req, res) => {
+exports.updateKitchenWaste = async (req, res) => {
   try {
-    const payment = await Payment.findByIdAndUpdate(
-      req.params.id,
-      {
-        ...req.body,
-        updatedBy: req.user?.id,
-      },
-      {
-        new: true,
-        runValidators: true,
-      },
-    );
+    const waste = await KitchenWaste.findById(req.params.id);
 
-    if (!payment) {
+    if (!waste) {
       return res.status(404).json({
         success: false,
-        message: "Payment not found",
+
+        message: "Waste record not found",
       });
     }
 
+    Object.assign(waste, req.body);
+
+    waste.updatedBy = req.user.id;
+
+    await waste.save();
+
     res.json({
       success: true,
-      message: "Payment updated",
-      data: payment,
+
+      message: "Kitchen waste updated successfully",
+
+      data: waste,
     });
   } catch (error) {
     res.status(500).json({
       success: false,
+
       message: error.message,
     });
   }
 };
 
 // ==========================================================
-// Soft Delete Payment
+// Soft Delete
 // ==========================================================
 
-exports.deletePayment = async (req, res) => {
+exports.deleteKitchenWaste = async (req, res) => {
   try {
-    const payment = await Payment.findById(req.params.id);
+    const waste = await KitchenWaste.findById(req.params.id);
 
-    if (!payment) {
-      return res.status(404).json({
-        success: false,
-        message: "Payment not found",
-      });
-    }
-
-    await payment.softDelete(req.user?.id);
+    await waste.softDelete(req.user.id);
 
     res.json({
       success: true,
-      message: "Payment deleted",
+
+      message: "Waste deleted successfully",
     });
   } catch (error) {
     res.status(500).json({
       success: false,
+
       message: error.message,
     });
   }
 };
 
 // ==========================================================
-// Restore Payment
+// Restore Waste
 // ==========================================================
 
-exports.restorePayment = async (req, res) => {
+exports.restoreKitchenWaste = async (req, res) => {
   try {
-    const payment = await Payment.findById(req.params.id);
+    const waste = await KitchenWaste.findById(req.params.id);
 
-    await payment.restore();
+    await waste.restore();
 
     res.json({
       success: true,
-      message: "Payment restored",
-      data: payment,
+
+      message: "Waste restored successfully",
     });
   } catch (error) {
     res.status(500).json({
       success: false,
+
       message: error.message,
     });
   }
 };
 
 // ==========================================================
-// Mark Paid
+// Approve Waste
 // ==========================================================
 
-exports.markPaymentPaid = async (req, res) => {
+exports.approveWaste = async (req, res) => {
   try {
-    const payment = await Payment.findById(req.params.id);
+    const waste = await KitchenWaste.findById(req.params.id);
 
-    await payment.markPaid(req.body.paymentMethod, req.body.transactionId);
+    await waste.approveWaste(req.user.id);
 
     res.json({
       success: true,
-      message: "Payment completed",
-      data: payment,
+
+      message: "Waste approved successfully",
+
+      data: waste,
     });
   } catch (error) {
     res.status(500).json({
       success: false,
+
       message: error.message,
     });
   }
 };
 
 // ==========================================================
-// Refund Payment
+// Reject Waste
 // ==========================================================
 
-exports.refundPayment = async (req, res) => {
+exports.rejectWaste = async (req, res) => {
   try {
-    const payment = await Payment.findById(req.params.id);
+    const waste = await KitchenWaste.findById(req.params.id);
 
-    await payment.refundPayment(req.body.refundAmount, req.body.refundReason);
+    await waste.rejectWaste(
+      req.user.id,
 
-    res.json({
-      success: true,
-      message: "Payment refunded",
-      data: payment,
-    });
-  } catch (error) {
-    res.status(500).json({
-      success: false,
-      message: error.message,
-    });
-  }
-};
-
-// ==========================================================
-// Cancel Payment
-// ==========================================================
-
-exports.cancelPayment = async (req, res) => {
-  try {
-    const payment = await Payment.findById(req.params.id);
-
-    await payment.cancelPayment(req.body.remarks);
-
-    res.json({
-      success: true,
-      message: "Payment cancelled",
-      data: payment,
-    });
-  } catch (error) {
-    res.status(500).json({
-      success: false,
-      message: error.message,
-    });
-  }
-};
-
-// ==========================================================
-// Today's Collection
-// ==========================================================
-
-exports.todayCollection = async (req, res) => {
-  try {
-    const result = await Payment.getTodayCollection();
-
-    res.json({
-      success: true,
-      data: result,
-    });
-  } catch (error) {
-    res.status(500).json({
-      success: false,
-      message: error.message,
-    });
-  }
-};
-
-// ==========================================================
-// Pending Payments
-// ==========================================================
-
-exports.pendingPayments = async (req, res) => {
-  try {
-    const payments = await Payment.getPendingPayments();
-
-    res.json({
-      success: true,
-      data: payments,
-    });
-  } catch (error) {
-    res.status(500).json({
-      success: false,
-      message: error.message,
-    });
-  }
-};
-
-// ==========================================================
-// Payment Summary
-// ==========================================================
-
-exports.paymentSummary = async (req, res) => {
-  try {
-    const summary = await Payment.getPaymentSummary();
-
-    res.json({
-      success: true,
-      data: summary,
-    });
-  } catch (error) {
-    res.status(500).json({
-      success: false,
-      message: error.message,
-    });
-  }
-};
-
-// ==========================================================
-// Store Collection
-// ==========================================================
-
-exports.storeCollection = async (req, res) => {
-  try {
-    const payments = await Payment.getStoreCollection(req.params.storeId);
-
-    res.json({
-      success: true,
-      data: payments,
-    });
-  } catch (error) {
-    res.status(500).json({
-      success: false,
-      message: error.message,
-    });
-  }
-};
-
-// ==========================================================
-// Cashfree Create Order
-// ==========================================================
-
-exports.createCashfreeOrder = async (req, res) => {
-  try {
-    const response = await axios.post(
-      `${process.env.CASHFREE_ENV}/pg/orders`,
-
-      {
-        order_id: "ORDER_" + Date.now(),
-
-        order_amount: req.body.amount,
-
-        order_currency: "INR",
-
-        customer_details: {
-          customer_id: req.body.customerId,
-          customer_phone: req.body.phone,
-          customer_name: req.body.name,
-          customer_email: req.body.email,
-        },
-      },
-
-      {
-        headers: {
-          "x-client-id": process.env.CASHFREE_APP_ID,
-
-          "x-client-secret": process.env.CASHFREE_SECRET_KEY,
-
-          "x-api-version": "2023-08-01",
-
-          "Content-Type": "application/json",
-        },
-      },
+      req.body.reason,
     );
 
     res.json({
       success: true,
 
-      data: response.data,
+      message: "Waste rejected successfully",
     });
   } catch (error) {
     res.status(500).json({
       success: false,
 
-      message: error.response?.data || error.message,
+      message: error.message,
     });
   }
 };
 
 // ==========================================================
-// Verify Cashfree Payment
+// Complete Waste
 // ==========================================================
 
-exports.verifyCashfreePayment = async (req, res) => {
+exports.completeWaste = async (req, res) => {
   try {
-    const response = await axios.get(
-      `${process.env.CASHFREE_ENV}/pg/orders/${req.params.orderId}`,
+    const waste = await KitchenWaste.findById(req.params.id);
 
-      {
-        headers: {
-          "x-client-id": process.env.CASHFREE_APP_ID,
+    await waste.completeWaste();
 
-          "x-client-secret": process.env.CASHFREE_SECRET_KEY,
+    res.json({
+      success: true,
 
-          "x-api-version": "2023-08-01",
-        },
-      },
+      message: "Waste completed successfully",
+
+      data: waste,
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+
+      message: error.message,
+    });
+  }
+};
+
+// ==========================================================
+// Cancel Waste
+// ==========================================================
+
+exports.cancelWaste = async (req, res) => {
+  try {
+    const waste = await KitchenWaste.findById(req.params.id);
+
+    await waste.cancelWaste();
+
+    res.json({
+      success: true,
+
+      message: "Waste cancelled successfully",
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+
+      message: error.message,
+    });
+  }
+};
+
+// ==========================================================
+// Pending Waste
+// ==========================================================
+
+exports.getPendingWaste = async (req, res) => {
+  try {
+    const data = await KitchenWaste.getPendingWaste(req.user.restaurant);
+
+    res.json({
+      success: true,
+
+      data,
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+
+      message: error.message,
+    });
+  }
+};
+
+// ==========================================================
+// Approved Waste
+// ==========================================================
+
+exports.getApprovedWaste = async (req, res) => {
+  try {
+    const data = await KitchenWaste.getApprovedWaste(req.user.restaurant);
+
+    res.json({
+      success: true,
+
+      data,
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+
+      message: error.message,
+    });
+  }
+};
+
+// ==========================================================
+// Today Waste
+// ==========================================================
+
+exports.getTodayWaste = async (req, res) => {
+  try {
+    const data = await KitchenWaste.getTodayWaste(req.user.restaurant);
+
+    res.json({
+      success: true,
+
+      data,
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+
+      message: error.message,
+    });
+  }
+};
+
+// ==========================================================
+// Waste Summary
+// ==========================================================
+
+exports.getWasteSummary = async (req, res) => {
+  try {
+    const data = await KitchenWaste.getWasteSummary(
+      req.user.restaurant,
+
+      req.query.fromDate,
+
+      req.query.toDate,
     );
 
     res.json({
       success: true,
 
-      data: response.data,
+      data,
     });
   } catch (error) {
     res.status(500).json({
       success: false,
 
-      message: error.response?.data || error.message,
+      message: error.message,
     });
   }
 };
 
 // ==========================================================
-// Cashfree Webhook
+// Category Wise Waste
 // ==========================================================
 
-exports.cashfreeWebhook = async (req, res) => {
+exports.getCategoryWiseWaste = async (req, res) => {
   try {
-    console.log("Cashfree webhook", req.body);
+    const data = await KitchenWaste.getCategoryWiseWaste(req.user.restaurant);
 
-    res.status(200).json({
+    res.json({
       success: true,
+
+      data,
     });
   } catch (error) {
     res.status(500).json({
       success: false,
+
+      message: error.message,
+    });
+  }
+};
+
+// ==========================================================
+// Store Wise Waste
+// ==========================================================
+
+exports.getStoreWaste = async (req, res) => {
+  try {
+    const data = await KitchenWaste.getStoreWaste(
+      req.user.restaurant,
+
+      req.query.storeId,
+    );
+
+    res.json({
+      success: true,
+
+      data,
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+
       message: error.message,
     });
   }
