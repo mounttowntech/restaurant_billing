@@ -1,17 +1,9 @@
 const Restaurant = require("../models/Restaurant");
-
-
-// ===============================
-// Create Restaurant
-// ===============================
-exports.createRestaurant = async (req, res) => {
-  try {
-    const restaurant = await Restaurant.create({
-      ...req.body,
-      createdBy: req.user?.id,
 const mongoose = require("mongoose");
+const axios=require("axios");
 /* ==========================================================
    Create Restaurant
+========================================================== */
 
 exports.createRestaurant = async (req, res) => {
   try {
@@ -72,74 +64,6 @@ exports.createRestaurant = async (req, res) => {
 
     return res.status(201).json({
       success: true,
-      message: "Restaurant created successfully",
-      data: restaurant,
-    });
-  } catch (error) {
-    return res.status(500).json({
-      success: false,
-      message: error.message,
-    });
-  }
-};
-
-
-// ===============================
-// Get All Restaurants
-// ===============================
-exports.getRestaurants = async (req, res) => {
-  try {
-    const {
-      page = 1,
-      limit = 10,
-      search = "",
-      status,
-      city,
-    } = req.query;
-
-    const query = {
-      isDeleted: false,
-    };
-
-    if (search) {
-      query.$or = [
-        { restaurantName: { $regex: search, $options: "i" } },
-        { restaurantCode: { $regex: search, $options: "i" } },
-        { ownerName: { $regex: search, $options: "i" } },
-        { phone: { $regex: search, $options: "i" } },
-      ];
-    }
-
-    if (status) query.status = status;
-
-    if (city) query.city = city;
-
-    const restaurants = await Restaurant.find(query)
-      .sort({ createdAt: -1 })
-      .skip((page - 1) * limit)
-      .limit(Number(limit));
-
-    const total = await Restaurant.countDocuments(query);
-
-    return res.status(200).json({
-      success: true,
-      total,
-      page: Number(page),
-      pages: Math.ceil(total / limit),
-      data: restaurants,
-    });
-  } catch (error) {
-    return res.status(500).json({
-      success: false,
-      message: error.message,
-    });
-  }
-};
-
-
-// ===============================
-// Get Restaurant By ID
-// ===============================
       message: "Restaurant created successfully.",
       data: restaurant,
     });
@@ -156,6 +80,7 @@ exports.getRestaurants = async (req, res) => {
 
 /* ==========================================================
    Get Restaurants
+========================================================== */
 
 exports.getRestaurants = async (req, res) => {
   try {
@@ -235,6 +160,7 @@ exports.getRestaurants = async (req, res) => {
 
 /* ==========================================================
    Get Restaurant By Id
+========================================================== */
 
 exports.getRestaurantById = async (req, res) => {
   try {
@@ -246,7 +172,6 @@ exports.getRestaurantById = async (req, res) => {
     if (!restaurant) {
       return res.status(404).json({
         success: false,
-        message: "Restaurant not found",
         message: "Restaurant not found.",
       });
     }
@@ -256,37 +181,6 @@ exports.getRestaurantById = async (req, res) => {
       data: restaurant,
     });
   } catch (error) {
-    return res.status(500).json({
-      success: false,
-      message: error.message,
-    });
-  }
-};
-
-
-// ===============================
-// Update Restaurant
-// ===============================
-exports.updateRestaurant = async (req, res) => {
-  try {
-    const restaurant = await Restaurant.findOneAndUpdate(
-      {
-        _id: req.params.id,
-        isDeleted: false,
-      },
-      {
-        ...req.body,
-        updatedBy: req.user?.id,
-      },
-      {
-        new: true,
-        runValidators: true,
-      }
-    );
-
-    if (!restaurant) {
-      return res.status(404).json({
-        success: false,
     console.error("Get Restaurant By Id Error:", error);
 
     return res.status(500).json({
@@ -309,35 +203,6 @@ exports.updateRestaurant = async (req, res) => {
       });
     }
 
-    return res.status(200).json({
-      success: true,
-      message: "Restaurant updated successfully",
-      data: restaurant,
-    });
-  } catch (error) {
-    return res.status(500).json({
-      success: false,
-      message: error.message,
-    });
-  }
-};
-
-
-// ===============================
-// Delete Restaurant (Soft Delete)
-// ===============================
-exports.deleteRestaurant = async (req, res) => {
-  try {
-    const restaurant = await Restaurant.findByIdAndUpdate(
-      req.params.id,
-      {
-        isDeleted: true,
-        updatedBy: req.user?.id,
-      },
-      {
-        new: true,
-      }
-    );
     Object.assign(restaurant, req.body);
 
     restaurant.updatedBy = req.user?.userId || req.user?.id;
@@ -368,6 +233,7 @@ exports.deleteRestaurant = async (req, res) => {
 
    Soft Delete Restaurant
 
+========================================================== */
 
 exports.deleteRestaurant = async (req, res) => {
   try {
@@ -376,41 +242,10 @@ exports.deleteRestaurant = async (req, res) => {
     if (!restaurant) {
       return res.status(404).json({
         success: false,
-
         message: "Restaurant not found",
       });
     }
 
-    return res.status(200).json({
-      success: true,
-      message: "Restaurant deleted successfully",
-    });
-  } catch (error) {
-    return res.status(500).json({
-      success: false,
-      message: error.message,
-    });
-  }
-};
-
-
-// ===============================
-// Change Restaurant Status
-// ===============================
-exports.changeRestaurantStatus = async (req, res) => {
-  try {
-    const { status } = req.body;
-
-    const restaurant = await Restaurant.findByIdAndUpdate(
-      req.params.id,
-      {
-        status,
-        updatedBy: req.user?.id,
-      },
-      {
-        new: true,
-      }
-    );
     restaurant.isDeleted = true;
 
     restaurant.updatedBy = req.user?.userId || req.user?.id;
@@ -439,64 +274,55 @@ exports.changeRestaurantStatus = async (req, res) => {
 
    Restore Restaurant
 
+========================================================== */
 
-exports.restoreRestaurant = async (req, res) => {
-  try {
-    const restaurant = await Restaurant.findOne({
-      _id: req.params.id,
+// exports.restoreRestaurant = async (req, res) => {
+//   try {
+//     const restaurant = await Restaurant.findOne({
+//       _id: req.params.id,
 
-      isDeleted: true,
-    });
+//       isDeleted: true,
+//     });
 
-    if (!restaurant) {
-      return res.status(404).json({
-        success: false,
-        message: "Restaurant not found",
-      });
-    }
+//     if (!restaurant) {
+//       return res.status(404).json({
+//         success: false,
 
-    return res.status(200).json({
-      success: true,
-      message: "Restaurant status updated",
-      data: restaurant,
-    });
-  } catch (error) {
-    return res.status(500).json({
+//         message: "Deleted restaurant not found",
+//       });
+//     }
 
-        message: "Deleted restaurant not found",
-      });
-    }
+//     restaurant.isDeleted = false;
 
-    restaurant.isDeleted = false;
+//     restaurant.updatedBy = req.user?.userId || req.user?.id;
 
-    restaurant.updatedBy = req.user?.userId || req.user?.id;
+//     await restaurant.save();
 
-    await restaurant.save();
+//     res.status(200).json({
+//       success: true,
 
-    res.status(200).json({
-      success: true,
+//       message: "Restaurant restored successfully",
 
-      message: "Restaurant restored successfully",
+//       data: restaurant,
+//     });
+//   } catch (error) {
+//     console.error("restoreRestaurant Error:", error);
 
-      data: restaurant,
-    });
-  } catch (error) {
-    console.error("restoreRestaurant Error:", error);
+//     res.status(500).json({
+//       success: false,
 
-    res.status(500).json({
-      success: false,
+//       message: "Failed to restore restaurant",
 
-      message: "Failed to restore restaurant",
-
-      error: error.message,
-    });
-  }
-};
+//       error: error.message,
+//     });
+//   }
+// };
 
 /* ==========================================================
 
    Update Restaurant Status
 
+========================================================== */
 
 exports.updateRestaurantStatus = async (req, res) => {
   try {
@@ -531,87 +357,7 @@ exports.updateRestaurantStatus = async (req, res) => {
     });
   }
 };
-exports.searchRestaurants = async (req, res) => {
-  try {
-    const {
-      search = "",
-      page = 1,
-      limit = 10,
-      status,
-      city,
-      state,
-    } = req.query;
 
-    const filter = {
-      isDeleted: false,
-    };
-
-    if (status) filter.status = status;
-    if (city) filter.city = city;
-    if (state) filter.state = state;
-
-    if (search) {
-      filter.$or = [
-        {
-          restaurantName: {
-            $regex: search,
-            $options: "i",
-          },
-        },
-        {
-          restaurantCode: {
-            $regex: search,
-            $options: "i",
-          },
-        },
-        {
-          ownerName: {
-            $regex: search,
-            $options: "i",
-          },
-        },
-        {
-          phone: {
-            $regex: search,
-            $options: "i",
-          },
-        },
-        {
-          email: {
-            $regex: search,
-            $options: "i",
-          },
-        },
-        {
-          city: {
-            $regex: search,
-            $options: "i",
-          },
-        },
-      ];
-    }
-
-    const restaurants = await Restaurant.find(filter)
-      .sort({ createdAt: -1 })
-      .skip((page - 1) * limit)
-      .limit(Number(limit));
-
-    const total = await Restaurant.countDocuments(filter);
-
-    res.status(200).json({
-      success: true,
-      total,
-      page: Number(page),
-      pages: Math.ceil(total / limit),
-      data: restaurants,
-    });
-  } catch (error) {
-    res.status(500).json({
-      success: false,
-      message: error.message,
-    });
-  }
-};
 exports.getActiveRestaurants = async (req, res) => {
   try {
     const restaurants = await Restaurant.find({
@@ -621,242 +367,241 @@ exports.getActiveRestaurants = async (req, res) => {
       restaurantName: 1,
     });
 
-    res.json({
-      success: true,
-      count: restaurants.length,
-      data: restaurants,
-    });
-  } catch (error) {
-    res.status(500).json({
-      success: false,
-      message: error.message,
-    });
-  }
-};
-exports.getInactiveRestaurants = async (req, res) => {
-  try {
-    const restaurants = await Restaurant.find({
-      status: "Inactive",
-      isDeleted: false,
-    }).sort({
-      restaurantName: 1,
-    });
+//     res.json({
+//       success: true,
+//       count: restaurants.length,
+//       data: restaurants,
+//     });
+//   } catch (error) {
+//     res.status(500).json({
+//       success: false,
+//       message: error.message,
+//     });
+//   }
+// };
+// exports.getInactiveRestaurants = async (req, res) => {
+//   try {
+//     const restaurants = await Restaurant.find({
+//       status: "Inactive",
+//       isDeleted: false,
+//     }).sort({
+//       restaurantName: 1,
+//     });
 
-    res.json({
-      success: true,
-      count: restaurants.length,
-      data: restaurants,
-    });
-  } catch (error) {
-    res.status(500).json({
-      success: false,
-      message: error.message,
-    });
-  }
-};
-exports.getDeletedRestaurants = async (req, res) => {
-  try {
-    const restaurants = await Restaurant.find({
-      isDeleted: true,
-    });
+//     res.json({
+//       success: true,
+//       count: restaurants.length,
+//       data: restaurants,
+//     });
+//   } catch (error) {
+//     res.status(500).json({
+//       success: false,
+//       message: error.message,
+//     });
+//   }
+// };
+// exports.getDeletedRestaurants = async (req, res) => {
+//   try {
+//     const restaurants = await Restaurant.find({
+//       isDeleted: true,
+//     });
 
-    res.json({
-      success: true,
-      count: restaurants.length,
-      data: restaurants,
-    });
-  } catch (error) {
-    res.status(500).json({
-      success: false,
-      message: error.message,
-    });
-  }
-};
-exports.getRestaurantSummary = async (req, res) => {
-  try {
-    const totalRestaurants = await Restaurant.countDocuments({
-      isDeleted: false,
-    });
+//     res.json({
+//       success: true,
+//       count: restaurants.length,
+//       data: restaurants,
+//     });
+//   } catch (error) {
+//     res.status(500).json({
+//       success: false,
+//       message: error.message,
+//     });
+//   }
+// };
+// exports.getRestaurantSummary = async (req, res) => {
+//   try {
+//     const totalRestaurants = await Restaurant.countDocuments({
+//       isDeleted: false,
+//     });
 
-    const activeRestaurants = await Restaurant.countDocuments({
-      status: "Active",
-      isDeleted: false,
-    });
+//     const activeRestaurants = await Restaurant.countDocuments({
+//       status: "Active",
+//       isDeleted: false,
+//     });
 
-    const inactiveRestaurants = await Restaurant.countDocuments({
-      status: "Inactive",
-      isDeleted: false,
-    });
+//     const inactiveRestaurants = await Restaurant.countDocuments({
+//       status: "Inactive",
+//       isDeleted: false,
+//     });
 
-    const deletedRestaurants = await Restaurant.countDocuments({
-      isDeleted: true,
-    });
+//     const deletedRestaurants = await Restaurant.countDocuments({
+//       isDeleted: true,
+//     });
 
-    res.json({
-      success: true,
-      data: {
-        totalRestaurants,
-        activeRestaurants,
-        inactiveRestaurants,
-        deletedRestaurants,
-      },
-    });
-  } catch (error) {
-    res.status(500).json({
-      success: false,
-      message: error.message,
-    });
-  }
-};
-};
-exports.getRestaurantAnalytics = async (req, res) => {
-  try {
-    const cityWise = await Restaurant.aggregate([
-      {
-        $match: {
-          isDeleted: false,
-        },
-      },
-      {
-        $group: {
-          _id: "$city",
-          restaurants: {
-            $sum: 1,
-          },
-        },
-      },
-      {
-        $sort: {
-          restaurants: -1,
-        },
-      },
-    ]);
+//     res.json({
+//       success: true,
+//       data: {
+//         totalRestaurants,
+//         activeRestaurants,
+//         inactiveRestaurants,
+//         deletedRestaurants,
+//       },
+//     });
+//   } catch (error) {
+//     res.status(500).json({
+//       success: false,
+//       message: error.message,
+//     });
+//   }
+// };
+// exports.getRestaurantAnalytics = async (req, res) => {
+//   try {
+//     const cityWise = await Restaurant.aggregate([
+//       {
+//         $match: {
+//           isDeleted: false,
+//         },
+//       },
+//       {
+//         $group: {
+//           _id: "$city",
+//           restaurants: {
+//             $sum: 1,
+//           },
+//         },
+//       },
+//       {
+//         $sort: {
+//           restaurants: -1,
+//         },
+//       },
+//     ]);
 
-    const stateWise = await Restaurant.aggregate([
-      {
-        $match: {
-          isDeleted: false,
-        },
-      },
-      {
-        $group: {
-          _id: "$state",
-          restaurants: {
-            $sum: 1,
-          },
-        },
-      },
-      {
-        $sort: {
-          restaurants: -1,
-        },
-      },
-    ]);
+//     const stateWise = await Restaurant.aggregate([
+//       {
+//         $match: {
+//           isDeleted: false,
+//         },
+//       },
+//       {
+//         $group: {
+//           _id: "$state",
+//           restaurants: {
+//             $sum: 1,
+//           },
+//         },
+//       },
+//       {
+//         $sort: {
+//           restaurants: -1,
+//         },
+//       },
+//     ]);
 
-    const statusWise = await Restaurant.aggregate([
-      {
-        $match: {
-          isDeleted: false,
-        },
-      },
-      {
-        $group: {
-          _id: "$status",
-          total: {
-            $sum: 1,
-          },
-        },
-      },
-    ]);
+//     const statusWise = await Restaurant.aggregate([
+//       {
+//         $match: {
+//           isDeleted: false,
+//         },
+//       },
+//       {
+//         $group: {
+//           _id: "$status",
+//           total: {
+//             $sum: 1,
+//           },
+//         },
+//       },
+//     ]);
 
-    res.json({
-      success: true,
-      data: {
-        cityWise,
-        stateWise,
-        statusWise,
-      },
-    });
-  } catch (error) {
-    res.status(500).json({
-      success: false,
-      message: error.message,
-    });
-  }
-};
-exports.getCityWiseRestaurants = async (req, res) => {
-  try {
-    const result = await Restaurant.aggregate([
-      {
-        $match: {
-          isDeleted: false,
-        },
-      },
-      {
-        $group: {
-          _id: "$city",
-          totalRestaurants: {
-            $sum: 1,
-          },
-          restaurants: {
-            $push: {
-              _id: "$_id",
-              restaurantName: "$restaurantName",
-              phone: "$phone",
-              status: "$status",
-            },
-          },
-        },
-      },
-      {
-        $sort: {
-          _id: 1,
-        },
-      },
-    ]);
+//     res.json({
+//       success: true,
+//       data: {
+//         cityWise,
+//         stateWise,
+//         statusWise,
+//       },
+//     });
+//   } catch (error) {
+//     res.status(500).json({
+//       success: false,
+//       message: error.message,
+//     });
+//   }
+// };
+// exports.getCityWiseRestaurants = async (req, res) => {
+//   try {
+//     const result = await Restaurant.aggregate([
+//       {
+//         $match: {
+//           isDeleted: false,
+//         },
+//       },
+//       {
+//         $group: {
+//           _id: "$city",
+//           totalRestaurants: {
+//             $sum: 1,
+//           },
+//           restaurants: {
+//             $push: {
+//               _id: "$_id",
+//               restaurantName: "$restaurantName",
+//               phone: "$phone",
+//               status: "$status",
+//             },
+//           },
+//         },
+//       },
+//       {
+//         $sort: {
+//           _id: 1,
+//         },
+//       },
+//     ]);
 
-    res.json({
-      success: true,
-      data: result,
-    });
-  } catch (error) {
-    res.status(500).json({
-      success: false,
-      message: error.message,
-    });
-  }
-};
-exports.getStateWiseRestaurants = async (req, res) => {
-  try {
-    const result = await Restaurant.aggregate([
-      {
-        $match: {
-          isDeleted: false,
-        },
-      },
-      {
-        $group: {
-          _id: "$state",
-          totalRestaurants: {
-            $sum: 1,
-          },
-          restaurants: {
-            $push: {
-              _id: "$_id",
-              restaurantName: "$restaurantName",
-              city: "$city",
-              phone: "$phone",
-              status: "$status",
-            },
-          },
-        },
-      },
-      {
-        $sort: {
-          _id: 1,
-        },
-      },
-    ]);
+//     res.json({
+//       success: true,
+//       data: result,
+//     });
+//   } catch (error) {
+//     res.status(500).json({
+//       success: false,
+//       message: error.message,
+//     });
+//   }
+// };
+// exports.getStateWiseRestaurants = async (req, res) => {
+//   try {
+//     const result = await Restaurant.aggregate([
+//       {
+//         $match: {
+//           isDeleted: false,
+//         },
+//       },
+//       {
+//         $group: {
+//           _id: "$state",
+//           totalRestaurants: {
+//             $sum: 1,
+//           },
+//           restaurants: {
+//             $push: {
+//               _id: "$_id",
+//               restaurantName: "$restaurantName",
+//               city: "$city",
+//               phone: "$phone",
+//               status: "$status",
+//             },
+//           },
+//         },
+//       },
+//       {
+//         $sort: {
+//           _id: 1,
+//         },
+//       },
+//     ]);
 
     res.json({
       success: true,
