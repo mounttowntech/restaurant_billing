@@ -242,10 +242,6 @@ exports.deleteRestaurant = async (req, res) => {
     if (!restaurant) {
       return res.status(404).json({
         success: false,
-<<<<<<< HEAD
-
-=======
->>>>>>> restuarant_initial_30_06_26
         message: "Restaurant not found",
       });
     }
@@ -361,98 +357,7 @@ exports.updateRestaurantStatus = async (req, res) => {
     });
   }
 };
-// exports.searchRestaurants = async (req, res) => {
-//   try {
-//     const {
-//       search = "",
-//       page = 1,
-//       limit = 10,
-//       status,
-//       city,
-//       state,
-//     } = req.query;
 
-//     const filter = {
-//       isDeleted: false,
-//     };
-
-//     if (status) filter.status = status;
-//     if (city) filter.city = city;
-//     if (state) filter.state = state;
-
-//     if (search) {
-//       filter.$or = [
-//         {
-//           restaurantName: {
-//             $regex: search,
-//             $options: "i",
-//           },
-//         },
-//         {
-//           restaurantCode: {
-//             $regex: search,
-//             $options: "i",
-//           },
-//         },
-//         {
-//           ownerName: {
-//             $regex: search,
-//             $options: "i",
-//           },
-//         },
-//         {
-//           phone: {
-//             $regex: search,
-//             $options: "i",
-//           },
-//         },
-//         {
-//           email: {
-//             $regex: search,
-//             $options: "i",
-//           },
-//         },
-//         {
-//           city: {
-//             $regex: search,
-//             $options: "i",
-//           },
-//         },
-//       ];
-//     }
-
-//     const restaurants = await Restaurant.find(filter)
-//       .sort({ createdAt: -1 })
-//       .skip((page - 1) * limit)
-//       .limit(Number(limit));
-
-//     const total = await Restaurant.countDocuments(filter);
-
-    res.status(200).json({
-      success: true,
-      total,
-      page: Number(page),
-      pages: Math.ceil(total / limit),
-      data: restaurants,
-    });
-  } catch (error) {
-    res.status(500).json({
-=======
-
-    return res.status(200).json({
-      success: true,
-      message: "Restaurant status updated",
-      data: restaurant,
-    });
-  } catch (error) {
-    return res.status(500).json({
->>>>>>> restuarant_initial_30_06_26
-      success: false,
-      message: error.message,
-    });
-  }
-<<<<<<< HEAD
-};
 exports.getActiveRestaurants = async (req, res) => {
   try {
     const restaurants = await Restaurant.find({
@@ -709,6 +614,3 @@ exports.getActiveRestaurants = async (req, res) => {
     });
   }
 };
-=======
-};
->>>>>>> restuarant_initial_30_06_26
