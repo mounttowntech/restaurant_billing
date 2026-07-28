@@ -18,7 +18,7 @@ const {
 router.post("/register", register);
 router.post("/login", login);
 router.post("/forgot-password", forgotPassword);
-router.put("/reset-password/:token", resetPassword);
+router.put("/reset-password", resetPassword);
 
 // Protected
 router.put("/change-password", verifyToken, changePassword);
