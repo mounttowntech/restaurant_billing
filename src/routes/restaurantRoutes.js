@@ -1,9 +1,36 @@
-const router = require("express").Router();
-const c = require("../controllers/restaurantController");
+const express = require("express");
 
-router.post("/", c.createRestaurant);
-router.get("/", c.getRestaurants);
-router.get("/:id", c.getRestaurantById);
-router.put("/:id", c.updateRestaurant);
-router.delete("/:id", c.deleteRestaurant);
+const router = express.Router();
+
+const {
+  createRestaurant,
+  getRestaurants,
+  getRestaurantById,
+  updateRestaurant,
+  deleteRestaurant,
+  changeRestaurantStatus,
+} = require("../controllers/restaurantController");
+
+// middleware
+const { verifyToken } = require("../middleware/auth");
+
+
+// Create
+router.post("/create", verifyToken, createRestaurant);
+
+// Get All
+router.get("/all", verifyToken, getRestaurants);
+
+// Get By Id
+router.get("/:id", verifyToken, getRestaurantById);
+
+// Update
+router.put("/update/:id", verifyToken, updateRestaurant);
+
+// Soft Delete
+router.delete("/delete/:id", verifyToken, deleteRestaurant);
+
+// Change Status
+router.patch("/:id/status", verifyToken, changeRestaurantStatus);
+
 module.exports = router;

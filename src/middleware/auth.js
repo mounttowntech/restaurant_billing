@@ -7,6 +7,8 @@ const User = require("../models/User");
 
 exports.verifyToken = async (req, res, next) => {
   try {
+    console.log("Authorization Header:", req.headers.authorization);
+
     let token;
 
     if (
@@ -16,60 +18,28 @@ exports.verifyToken = async (req, res, next) => {
       token = req.headers.authorization.split(" ")[1];
     }
 
-    if (!token) {
-      return res.status(401).json({
-        success: false,
-        message: "Access denied. Token missing.",
-      });
-    }
+    console.log("Token:", token);
 
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
-    const user = await User.findById(decoded.id)
-      .select("-password -resetPasswordToken -resetPasswordExpire")
-      .populate("role")
-      .populate("restaurant")
-      .populate("store");
+    console.log("Decoded:", decoded);
 
-    if (!user) {
-      return res.status(401).json({
-        success: false,
-        message: "User not found.",
-      });
-    }
+    const user = await User.findById(decoded.id).select("-password");
 
-    if (user.isDeleted) {
-      return res.status(403).json({
-        success: false,
-        message: "User account has been deleted.",
-      });
-    }
-
-    if (user.isBlocked) {
-      return res.status(403).json({
-        success: false,
-        message: "Your account has been blocked.",
-      });
-    }
-
-    if (user.status !== "Active") {
-      return res.status(403).json({
-        success: false,
-        message: "Your account is inactive.",
-      });
-    }
+    console.log("User:", user);
 
     req.user = user;
 
     next();
   } catch (err) {
+    console.log("JWT Error:", err);
+
     return res.status(401).json({
       success: false,
       message: "Invalid or expired token.",
     });
   }
 };
-
 // ======================================================
 // Role Authorization
 // ======================================================
