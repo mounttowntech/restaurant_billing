@@ -1,9 +1,21 @@
 const Restaurant = require("../models/Restaurant");
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+
+
+// ===============================
+// Create Restaurant
+// ===============================
+exports.createRestaurant = async (req, res) => {
+  try {
+    const restaurant = await Restaurant.create({
+      ...req.body,
+      createdBy: req.user?.id,
+>>>>>>> 2429a9f93bae9b054b4c561df3df8ad7b1db2676
 const mongoose = require("mongoose");
 /* ==========================================================
    Create Restaurant
-========================================================== */
 
 exports.createRestaurant = async (req, res) => {
   try {
@@ -60,6 +72,7 @@ exports.createRestaurant = async (req, res) => {
       restaurantCode: restaurantCode.toUpperCase(),
       email: email ? email.toLowerCase() : "",
       createdBy: req.user?.userId,
+<<<<<<< HEAD
 =======
 
 
@@ -72,11 +85,84 @@ exports.createRestaurant = async (req, res) => {
       ...req.body,
       createdBy: req.user?.id,
 >>>>>>> restuarant_initial_30_06_26
+=======
+>>>>>>> 2429a9f93bae9b054b4c561df3df8ad7b1db2676
     });
 
     return res.status(201).json({
       success: true,
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+      message: "Restaurant created successfully",
+      data: restaurant,
+    });
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
+
+// ===============================
+// Get All Restaurants
+// ===============================
+exports.getRestaurants = async (req, res) => {
+  try {
+    const {
+      page = 1,
+      limit = 10,
+      search = "",
+      status,
+      city,
+    } = req.query;
+
+    const query = {
+      isDeleted: false,
+    };
+
+    if (search) {
+      query.$or = [
+        { restaurantName: { $regex: search, $options: "i" } },
+        { restaurantCode: { $regex: search, $options: "i" } },
+        { ownerName: { $regex: search, $options: "i" } },
+        { phone: { $regex: search, $options: "i" } },
+      ];
+    }
+
+    if (status) query.status = status;
+
+    if (city) query.city = city;
+
+    const restaurants = await Restaurant.find(query)
+      .sort({ createdAt: -1 })
+      .skip((page - 1) * limit)
+      .limit(Number(limit));
+
+    const total = await Restaurant.countDocuments(query);
+
+    return res.status(200).json({
+      success: true,
+      total,
+      page: Number(page),
+      pages: Math.ceil(total / limit),
+      data: restaurants,
+    });
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
+
+// ===============================
+// Get Restaurant By ID
+// ===============================
+>>>>>>> 2429a9f93bae9b054b4c561df3df8ad7b1db2676
       message: "Restaurant created successfully.",
       data: restaurant,
     });
@@ -87,6 +173,7 @@ exports.createRestaurant = async (req, res) => {
       success: false,
       message: "Failed to create restaurant.",
       error: error.message,
+<<<<<<< HEAD
 =======
       message: "Restaurant created successfully",
       data: restaurant,
@@ -96,14 +183,18 @@ exports.createRestaurant = async (req, res) => {
       success: false,
       message: error.message,
 >>>>>>> restuarant_initial_30_06_26
+=======
+>>>>>>> 2429a9f93bae9b054b4c561df3df8ad7b1db2676
     });
   }
 };
 
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> 2429a9f93bae9b054b4c561df3df8ad7b1db2676
 /* ==========================================================
    Get Restaurants
-========================================================== */
 
 exports.getRestaurants = async (req, res) => {
   try {
@@ -177,6 +268,7 @@ exports.getRestaurants = async (req, res) => {
       success: false,
       message: "Failed to fetch restaurants.",
       error: error.message,
+<<<<<<< HEAD
 =======
 
 // ===============================
@@ -228,21 +320,28 @@ exports.getRestaurants = async (req, res) => {
       success: false,
       message: error.message,
 >>>>>>> restuarant_initial_30_06_26
+=======
+>>>>>>> 2429a9f93bae9b054b4c561df3df8ad7b1db2676
     });
   }
 };
 
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> 2429a9f93bae9b054b4c561df3df8ad7b1db2676
 /* ==========================================================
    Get Restaurant By Id
-========================================================== */
 
+<<<<<<< HEAD
 =======
 
 // ===============================
 // Get Restaurant By ID
 // ===============================
 >>>>>>> restuarant_initial_30_06_26
+=======
+>>>>>>> 2429a9f93bae9b054b4c561df3df8ad7b1db2676
 exports.getRestaurantById = async (req, res) => {
   try {
     const restaurant = await Restaurant.findOne({
@@ -254,10 +353,15 @@ exports.getRestaurantById = async (req, res) => {
       return res.status(404).json({
         success: false,
 <<<<<<< HEAD
+<<<<<<< HEAD
         message: "Restaurant not found.",
 =======
         message: "Restaurant not found",
 >>>>>>> restuarant_initial_30_06_26
+=======
+        message: "Restaurant not found",
+        message: "Restaurant not found.",
+>>>>>>> 2429a9f93bae9b054b4c561df3df8ad7b1db2676
       });
     }
 
@@ -267,22 +371,62 @@ exports.getRestaurantById = async (req, res) => {
     });
   } catch (error) {
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+    return res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
+
+// ===============================
+// Update Restaurant
+// ===============================
+exports.updateRestaurant = async (req, res) => {
+  try {
+    const restaurant = await Restaurant.findOneAndUpdate(
+      {
+        _id: req.params.id,
+        isDeleted: false,
+      },
+      {
+        ...req.body,
+        updatedBy: req.user?.id,
+      },
+      {
+        new: true,
+        runValidators: true,
+      }
+    );
+
+    if (!restaurant) {
+      return res.status(404).json({
+        success: false,
+>>>>>>> 2429a9f93bae9b054b4c561df3df8ad7b1db2676
     console.error("Get Restaurant By Id Error:", error);
 
     return res.status(500).json({
       success: false,
       message: "Failed to fetch restaurant.",
       error: error.message,
+<<<<<<< HEAD
 =======
     return res.status(500).json({
       success: false,
       message: error.message,
 >>>>>>> restuarant_initial_30_06_26
+=======
+>>>>>>> 2429a9f93bae9b054b4c561df3df8ad7b1db2676
     });
   }
 };
 
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> 2429a9f93bae9b054b4c561df3df8ad7b1db2676
 exports.updateRestaurant = async (req, res) => {
   try {
     const restaurant = await Restaurant.findById(req.params.id);
@@ -295,6 +439,35 @@ exports.updateRestaurant = async (req, res) => {
       });
     }
 
+    return res.status(200).json({
+      success: true,
+      message: "Restaurant updated successfully",
+      data: restaurant,
+    });
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
+
+// ===============================
+// Delete Restaurant (Soft Delete)
+// ===============================
+exports.deleteRestaurant = async (req, res) => {
+  try {
+    const restaurant = await Restaurant.findByIdAndUpdate(
+      req.params.id,
+      {
+        isDeleted: true,
+        updatedBy: req.user?.id,
+      },
+      {
+        new: true,
+      }
+    );
     Object.assign(restaurant, req.body);
 
     restaurant.updatedBy = req.user?.userId || req.user?.id;
@@ -325,11 +498,11 @@ exports.updateRestaurant = async (req, res) => {
 
    Soft Delete Restaurant
 
-========================================================== */
 
 exports.deleteRestaurant = async (req, res) => {
   try {
     const restaurant = await Restaurant.findById(req.params.id);
+<<<<<<< HEAD
 =======
 
 // ===============================
@@ -352,19 +525,58 @@ exports.updateRestaurant = async (req, res) => {
       }
     );
 >>>>>>> restuarant_initial_30_06_26
+=======
+>>>>>>> 2429a9f93bae9b054b4c561df3df8ad7b1db2676
 
     if (!restaurant) {
       return res.status(404).json({
         success: false,
 <<<<<<< HEAD
+<<<<<<< HEAD
 
 =======
 >>>>>>> restuarant_initial_30_06_26
+=======
+
+>>>>>>> 2429a9f93bae9b054b4c561df3df8ad7b1db2676
         message: "Restaurant not found",
       });
     }
 
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+    return res.status(200).json({
+      success: true,
+      message: "Restaurant deleted successfully",
+    });
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
+
+// ===============================
+// Change Restaurant Status
+// ===============================
+exports.changeRestaurantStatus = async (req, res) => {
+  try {
+    const { status } = req.body;
+
+    const restaurant = await Restaurant.findByIdAndUpdate(
+      req.params.id,
+      {
+        status,
+        updatedBy: req.user?.id,
+      },
+      {
+        new: true,
+      }
+    );
+>>>>>>> 2429a9f93bae9b054b4c561df3df8ad7b1db2676
     restaurant.isDeleted = true;
 
     restaurant.updatedBy = req.user?.userId || req.user?.id;
@@ -385,6 +597,7 @@ exports.updateRestaurant = async (req, res) => {
       message: "Failed to delete restaurant",
 
       error: error.message,
+<<<<<<< HEAD
 =======
     return res.status(200).json({
       success: true,
@@ -395,10 +608,13 @@ exports.updateRestaurant = async (req, res) => {
     return res.status(500).json({
       success: false,
       message: error.message,
+=======
+>>>>>>> 2429a9f93bae9b054b4c561df3df8ad7b1db2676
     });
   }
 };
 
+<<<<<<< HEAD
 
 // ===============================
 // Delete Restaurant (Soft Delete)
@@ -437,11 +653,12 @@ exports.deleteRestaurant = async (req, res) => {
 };
 
 <<<<<<< HEAD
+=======
+>>>>>>> 2429a9f93bae9b054b4c561df3df8ad7b1db2676
 /* ==========================================================
 
    Restore Restaurant
 
-========================================================== */
 
 exports.restoreRestaurant = async (req, res) => {
   try {
@@ -454,6 +671,17 @@ exports.restoreRestaurant = async (req, res) => {
     if (!restaurant) {
       return res.status(404).json({
         success: false,
+        message: "Restaurant not found",
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: "Restaurant status updated",
+      data: restaurant,
+    });
+  } catch (error) {
+    return res.status(500).json({
 
         message: "Deleted restaurant not found",
       });
@@ -489,7 +717,6 @@ exports.restoreRestaurant = async (req, res) => {
 
    Update Restaurant Status
 
-========================================================== */
 
 exports.updateRestaurantStatus = async (req, res) => {
   try {
@@ -502,6 +729,7 @@ exports.updateRestaurantStatus = async (req, res) => {
     }
     const restaurant = await Restaurant.findById(req.params.id);
     if (!restaurant || restaurant.isDeleted) {
+<<<<<<< HEAD
 =======
 
 // ===============================
@@ -524,12 +752,17 @@ exports.changeRestaurantStatus = async (req, res) => {
 
     if (!restaurant) {
 >>>>>>> restuarant_initial_30_06_26
+=======
+>>>>>>> 2429a9f93bae9b054b4c561df3df8ad7b1db2676
       return res.status(404).json({
         success: false,
         message: "Restaurant not found",
       });
     }
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> 2429a9f93bae9b054b4c561df3df8ad7b1db2676
     restaurant.status = status;
     restaurant.updatedBy = req.user?.userId || req.user?.id;
     await restaurant.save();
@@ -623,6 +856,7 @@ exports.searchRestaurants = async (req, res) => {
     });
   } catch (error) {
     res.status(500).json({
+<<<<<<< HEAD
 =======
 
     return res.status(200).json({
@@ -633,11 +867,16 @@ exports.searchRestaurants = async (req, res) => {
   } catch (error) {
     return res.status(500).json({
 >>>>>>> restuarant_initial_30_06_26
+=======
+>>>>>>> 2429a9f93bae9b054b4c561df3df8ad7b1db2676
       success: false,
       message: error.message,
     });
   }
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> 2429a9f93bae9b054b4c561df3df8ad7b1db2676
 };
 exports.getActiveRestaurants = async (req, res) => {
   try {
@@ -734,6 +973,7 @@ exports.getRestaurantSummary = async (req, res) => {
       message: error.message,
     });
   }
+};
 };
 exports.getRestaurantAnalytics = async (req, res) => {
   try {
@@ -895,6 +1135,9 @@ exports.getStateWiseRestaurants = async (req, res) => {
     });
   }
 };
+<<<<<<< HEAD
 =======
 };
 >>>>>>> restuarant_initial_30_06_26
+=======
+>>>>>>> 2429a9f93bae9b054b4c561df3df8ad7b1db2676
