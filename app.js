@@ -23,7 +23,7 @@ app.use("/api/orders", require("./src/routes/orderRoutes"));
 app.use("/api/kot", require("./src/routes/kotRoutes"));
 app.use("/api/invoices", require("./src/routes/invoiceRoutes"));
 app.use("/api/payments", require("./src/routes/paymentRoutes"));
-app.use("/api/ingredients", require("./src/routes/ingredientRoutes"));
+app.use("/api/ingredientstock", require("./src/routes/ingredientStockRoutes"));
 app.use("/api/suppliers", require("./src/routes/supplierRoutes"));
 app.use("/api/purchases", require("./src/routes/purchaseRoutes"));
 app.use("/api/stock-ledgers", require("./src/routes/stockLedgerRoutes"));
@@ -34,6 +34,15 @@ app.use("/api/taxes", require("./src/routes/taxRoutes"));
 app.use("/api/dashboard", require("./src/routes/dashboardRoutes"));
 app.use("/api/reports", require("./src/routes/reportRoutes"));
 app.use("/api/deliveryPartners", require("./src/routes/deliveryPartnerRoutes"));
+app.use("/api/discounts",require("./src/routes/discountRoutes"));
+app.use("/api/ingradients",require("./src/routes/ingradientRoutes"));
+app.use("/api/kitchenwastes",require("./src/routes/kitchenWasteRoutes"));
+app.use("/api/menucategories",require("./src/routes/menuCategoryRoutes"));
+app.use("/api/notifications",require("./src/routes/notificationRoutes"));
+app.use("/api/purchase-returns",require("./src/routes/purchaseReturnRoutes"));
+app.use("/api/receipes",require("./src/routes/receipeRoutes"));
+app.use("/api/restaurant-settings",require("./src/routes/restaurantSettingRoutes"));
+app.use("/api/shifts",require("./src/routes/shiftRoutes"));
 app.use((req, res) =>
   res.status(404).json({ success: false, message: "Route not found" }),
 );

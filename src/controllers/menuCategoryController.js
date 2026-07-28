@@ -1,32 +1,39 @@
-const KOT = require("../models/KOT");
+const MenuCategory = require("../models/menuCategoryModel");
 
 
 // ==========================================================
-// Create KOT
+// Create Menu Category
 // ==========================================================
 
-exports.createKOT = async (req, res) => {
+exports.createMenuCategory = async (req, res) => {
 
     try {
 
-        const kot = await KOT.create({
+        const category = await MenuCategory.create({
+
             ...req.body,
+
             createdBy: req.user?.id,
+
         });
 
 
         res.status(201).json({
+
             success:true,
-            message:"KOT created successfully",
-            data:kot
+            message:"Menu category created successfully",
+            data:category
+
         });
 
 
     } catch(error){
 
         res.status(500).json({
+
             success:false,
             message:error.message
+
         });
 
     }
@@ -35,36 +42,49 @@ exports.createKOT = async (req, res) => {
 
 
 
+
 // ==========================================================
-// Get All KOT
+// Get All Categories
 // ==========================================================
 
-exports.getAllKOT = async(req,res)=>{
+exports.getAllMenuCategories = async(req,res)=>{
 
     try{
 
-        const kots = await KOT.find()
-        .populate("order")
-        .populate("table")
-        .populate("chef")
-        .populate("waiter")
+
+        const categories = await MenuCategory.find()
+
+        .populate(
+            "parentCategory",
+            "categoryName"
+        )
+
         .sort({
+            displayOrder:1,
             createdAt:-1
         });
 
 
+
         res.json({
+
             success:true,
-            count:kots.length,
-            data:kots
+
+            count:categories.length,
+
+            data:categories
+
         });
+
 
 
     }catch(error){
 
         res.status(500).json({
+
             success:false,
             message:error.message
+
         });
 
     }
@@ -74,41 +94,54 @@ exports.getAllKOT = async(req,res)=>{
 
 
 
+
 // ==========================================================
-// Get KOT By ID
+// Get Category By ID
 // ==========================================================
 
-exports.getKOTById = async(req,res)=>{
+exports.getMenuCategoryById = async(req,res)=>{
 
     try{
 
-        const kot = await KOT.findById(req.params.id)
-        .populate("order")
-        .populate("table")
-        .populate("chef")
-        .populate("waiter");
+
+        const category =
+        await MenuCategory.findById(req.params.id)
+
+        .populate(
+            "parentCategory",
+            "categoryName"
+        );
 
 
-        if(!kot)
-        {
+        if(!category){
+
             return res.status(404).json({
+
                 success:false,
-                message:"KOT not found"
+                message:"Category not found"
+
             });
+
         }
 
 
+
         res.json({
+
             success:true,
-            data:kot
+            data:category
+
         });
+
 
 
     }catch(error){
 
         res.status(500).json({
+
             success:false,
             message:error.message
+
         });
 
     }
@@ -118,22 +151,27 @@ exports.getKOTById = async(req,res)=>{
 
 
 
+
 // ==========================================================
-// Update KOT
+// Update Category
 // ==========================================================
 
-exports.updateKOT = async(req,res)=>{
+exports.updateMenuCategory = async(req,res)=>{
 
     try{
 
 
-        const kot = await KOT.findByIdAndUpdate(
+        const category =
+        await MenuCategory.findByIdAndUpdate(
 
             req.params.id,
 
             {
+
                 ...req.body,
+
                 updatedBy:req.user?.id
+
             },
 
             {
@@ -144,11 +182,14 @@ exports.updateKOT = async(req,res)=>{
         );
 
 
+
         res.json({
 
             success:true,
-            message:"KOT updated successfully",
-            data:kot
+
+            message:"Category updated successfully",
+
+            data:category
 
         });
 
@@ -157,8 +198,10 @@ exports.updateKOT = async(req,res)=>{
     }catch(error){
 
         res.status(500).json({
+
             success:false,
             message:error.message
+
         });
 
     }
@@ -168,45 +211,113 @@ exports.updateKOT = async(req,res)=>{
 
 
 
+
 // ==========================================================
-// Delete KOT
+// Soft Delete Category
 // ==========================================================
 
-exports.deleteKOT = async(req,res)=>{
+exports.deleteMenuCategory = async(req,res)=>{
 
     try{
 
-        const kot = await KOT.findById(req.params.id);
+
+        const category =
+        await MenuCategory.findById(
+            req.params.id
+        );
 
 
-        if(!kot){
+        if(!category){
 
             return res.status(404).json({
+
                 success:false,
-                message:"KOT not found"
+                message:"Category not found"
+
             });
 
         }
 
 
-        await kot.softDelete(
-            req.user?.id
+
+        category.isDeleted = true;
+
+        category.updatedBy = req.user?.id;
+
+
+        await category.save();
+
+
+
+        res.json({
+
+            success:true,
+
+            message:"Category deleted successfully"
+
+        });
+
+
+
+    }catch(error){
+
+        res.status(500).json({
+
+            success:false,
+            message:error.message
+
+        });
+
+    }
+
+};
+
+
+
+
+
+// ==========================================================
+// Restore Category
+// ==========================================================
+
+exports.restoreMenuCategory = async(req,res)=>{
+
+    try{
+
+
+        const category =
+        await MenuCategory.findById(
+            req.params.id
         );
 
 
+        category.isDeleted=false;
+
+
+        await category.save();
+
+
+
         res.json({
 
             success:true,
-            message:"KOT deleted successfully"
+
+            message:"Category restored successfully",
+
+            data:category
 
         });
+
 
 
     }catch(error){
 
         res.status(500).json({
+
             success:false,
+
             message:error.message
+
         });
 
     }
@@ -216,257 +327,51 @@ exports.deleteKOT = async(req,res)=>{
 
 
 
+
 // ==========================================================
-// Restore KOT
+// Toggle Availability
 // ==========================================================
 
-exports.restoreKOT = async(req,res)=>{
+exports.toggleAvailability = async(req,res)=>{
 
     try{
 
 
-        const kot = await KOT.findById(req.params.id);
-
-
-        await kot.restore();
-
-
-        res.json({
-
-            success:true,
-            message:"KOT restored successfully",
-            data:kot
-
-        });
-
-
-
-    }catch(error){
-
-        res.status(500).json({
-            success:false,
-            message:error.message
-        });
-
-    }
-
-};
-
-
-
-
-// ==========================================================
-// Mark Preparing
-// ==========================================================
-
-exports.markPreparing = async(req,res)=>{
-
-    try{
-
-        const kot = await KOT.findById(req.params.id);
-
-
-        await kot.markPreparing();
-
-
-        res.json({
-
-            success:true,
-            message:"KOT moved to Preparing",
-            data:kot
-
-        });
-
-
-    }catch(error){
-
-        res.status(500).json({
-            success:false,
-            message:error.message
-        });
-
-    }
-
-};
-
-
-
-
-// ==========================================================
-// Mark Ready
-// ==========================================================
-
-exports.markReady = async(req,res)=>{
-
-    try{
-
-        const kot = await KOT.findById(req.params.id);
-
-
-        await kot.markReady();
-
-
-        res.json({
-
-            success:true,
-            message:"KOT Ready",
-            data:kot
-
-        });
-
-
-
-    }catch(error){
-
-        res.status(500).json({
-            success:false,
-            message:error.message
-        });
-
-    }
-
-};
-
-
-
-
-// ==========================================================
-// Mark Served
-// ==========================================================
-
-exports.markServed = async(req,res)=>{
-
-    try{
-
-        const kot = await KOT.findById(req.params.id);
-
-
-        await kot.markServed();
-
-
-        res.json({
-
-            success:true,
-            message:"KOT Served",
-            data:kot
-
-        });
-
-
-
-    }catch(error){
-
-        res.status(500).json({
-            success:false,
-            message:error.message
-        });
-
-    }
-
-};
-
-
-
-
-// ==========================================================
-// Mark Printed
-// ==========================================================
-
-exports.markPrinted = async(req,res)=>{
-
-    try{
-
-        const kot = await KOT.findById(req.params.id);
-
-
-        await kot.markPrinted();
-
-
-        res.json({
-
-            success:true,
-            message:"KOT Printed",
-            data:kot
-
-        });
-
-
-    }catch(error){
-
-        res.status(500).json({
-            success:false,
-            message:error.message
-        });
-
-    }
-
-};
-
-
-
-
-// ==========================================================
-// Kitchen Queue
-// ==========================================================
-
-exports.getKitchenQueue = async(req,res)=>{
-
-    try{
-
-        const data =
-        await KOT.getKitchenQueue();
-
-
-        res.json({
-
-            success:true,
-            data
-
-        });
-
-
-    }catch(error){
-
-        res.status(500).json({
-            success:false,
-            message:error.message
-        });
-
-    }
-
-};
-
-
-
-
-// ==========================================================
-// Chef Orders
-// ==========================================================
-
-exports.getChefOrders = async(req,res)=>{
-
-    try{
-
-
-        const data =
-        await KOT.getChefOrders(
-            req.params.chefId
+        const category =
+        await MenuCategory.findById(
+            req.params.id
         );
 
 
+        category.isAvailable =
+        !category.isAvailable;
+
+
+
+        await category.save();
+
+
+
         res.json({
 
             success:true,
-            data
+
+            message:"Availability updated",
+
+            isAvailable:
+            category.isAvailable
 
         });
+
 
 
     }catch(error){
 
         res.status(500).json({
+
             success:false,
             message:error.message
+
         });
 
     }
@@ -476,32 +381,50 @@ exports.getChefOrders = async(req,res)=>{
 
 
 
+
 // ==========================================================
-// Pending KOT
+// Toggle Active Status
 // ==========================================================
 
-exports.getPendingKOTs = async(req,res)=>{
+exports.toggleActiveStatus = async(req,res)=>{
 
     try{
 
 
-        const data =
-        await KOT.getPendingKOTs();
+        const category =
+        await MenuCategory.findById(
+            req.params.id
+        );
+
+
+        category.isActive =
+        !category.isActive;
+
+
+        await category.save();
+
 
 
         res.json({
 
             success:true,
-            data
+
+            message:"Active status updated",
+
+            isActive:
+            category.isActive
 
         });
+
 
 
     }catch(error){
 
         res.status(500).json({
+
             success:false,
             message:error.message
+
         });
 
     }
@@ -511,22 +434,29 @@ exports.getPendingKOTs = async(req,res)=>{
 
 
 
+
 // ==========================================================
-// Today KOT
+// Popular Categories
 // ==========================================================
 
-exports.getTodayKOTs = async(req,res)=>{
+exports.getPopularCategories = async(req,res)=>{
 
     try{
 
-        const data =
-        await KOT.getTodayKOTs();
+
+        const categories =
+        await MenuCategory.find({
+
+            isPopular:true,
+            isDeleted:false
+
+        });
 
 
         res.json({
 
             success:true,
-            data
+            data:categories
 
         });
 
@@ -534,8 +464,10 @@ exports.getTodayKOTs = async(req,res)=>{
     }catch(error){
 
         res.status(500).json({
+
             success:false,
             message:error.message
+
         });
 
     }
@@ -545,11 +477,153 @@ exports.getTodayKOTs = async(req,res)=>{
 
 
 
+
 // ==========================================================
-// Search KOT
+// Store Wise Categories
 // ==========================================================
 
-exports.searchKOT = async(req,res)=>{
+exports.getStoreCategories = async(req,res)=>{
+
+    try{
+
+
+        const categories =
+        await MenuCategory.find({
+
+            store:req.params.storeId,
+
+            isDeleted:false
+
+        });
+
+
+
+        res.json({
+
+            success:true,
+            data:categories
+
+        });
+
+
+
+    }catch(error){
+
+        res.status(500).json({
+
+            success:false,
+            message:error.message
+
+        });
+
+    }
+
+};
+
+
+
+
+
+// ==========================================================
+// Kitchen Section Wise
+// ==========================================================
+
+exports.getKitchenSectionCategories =
+async(req,res)=>{
+
+    try{
+
+
+        const categories =
+        await MenuCategory.find({
+
+            kitchenSection:
+            req.params.section,
+
+            isDeleted:false
+
+        });
+
+
+
+        res.json({
+
+            success:true,
+            data:categories
+
+        });
+
+
+
+    }catch(error){
+
+        res.status(500).json({
+
+            success:false,
+            message:error.message
+
+        });
+
+    }
+
+};
+
+
+
+
+
+// ==========================================================
+// Parent Categories
+// ==========================================================
+
+exports.getParentCategories =
+async(req,res)=>{
+
+    try{
+
+
+        const categories =
+        await MenuCategory.find({
+
+            parentCategory:null,
+
+            isDeleted:false
+
+        });
+
+
+
+        res.json({
+
+            success:true,
+            data:categories
+
+        });
+
+
+    }catch(error){
+
+        res.status(500).json({
+
+            success:false,
+            message:error.message
+
+        });
+
+    }
+
+};
+
+
+
+
+
+// ==========================================================
+// Search Category
+// ==========================================================
+
+exports.searchMenuCategory =
+async(req,res)=>{
 
 
     try{
@@ -558,33 +632,39 @@ exports.searchKOT = async(req,res)=>{
         const {keyword}=req.query;
 
 
-        const data = await KOT.find({
+
+        const categories =
+        await MenuCategory.find({
 
             $or:[
 
                 {
-                    kotNo:{
+                    categoryName:{
                         $regex:keyword,
                         $options:"i"
                     }
                 },
 
                 {
-                    remarks:{
+                    categoryCode:{
                         $regex:keyword,
                         $options:"i"
                     }
                 }
 
-            ]
+            ],
+
+            isDeleted:false
 
         });
+
 
 
         res.json({
 
             success:true,
-            data
+
+            data:categories
 
         });
 
@@ -593,11 +673,12 @@ exports.searchKOT = async(req,res)=>{
     }catch(error){
 
         res.status(500).json({
+
             success:false,
             message:error.message
+
         });
 
     }
-
 
 };
