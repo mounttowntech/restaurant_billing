@@ -1,5 +1,6 @@
 const Restaurant = require("../models/Restaurant");
 const mongoose = require("mongoose");
+const axios=require("axios");
 /* ==========================================================
    Create Restaurant
 ========================================================== */
@@ -241,6 +242,10 @@ exports.deleteRestaurant = async (req, res) => {
     if (!restaurant) {
       return res.status(404).json({
         success: false,
+<<<<<<< HEAD
+
+=======
+>>>>>>> restuarant_initial_30_06_26
         message: "Restaurant not found",
       });
     }
@@ -275,47 +280,47 @@ exports.deleteRestaurant = async (req, res) => {
 
 ========================================================== */
 
-exports.restoreRestaurant = async (req, res) => {
-  try {
-    const restaurant = await Restaurant.findOne({
-      _id: req.params.id,
+// exports.restoreRestaurant = async (req, res) => {
+//   try {
+//     const restaurant = await Restaurant.findOne({
+//       _id: req.params.id,
 
-      isDeleted: true,
-    });
+//       isDeleted: true,
+//     });
 
-    if (!restaurant) {
-      return res.status(404).json({
-        success: false,
+//     if (!restaurant) {
+//       return res.status(404).json({
+//         success: false,
 
-        message: "Deleted restaurant not found",
-      });
-    }
+//         message: "Deleted restaurant not found",
+//       });
+//     }
 
-    restaurant.isDeleted = false;
+//     restaurant.isDeleted = false;
 
-    restaurant.updatedBy = req.user?.userId || req.user?.id;
+//     restaurant.updatedBy = req.user?.userId || req.user?.id;
 
-    await restaurant.save();
+//     await restaurant.save();
 
-    res.status(200).json({
-      success: true,
+//     res.status(200).json({
+//       success: true,
 
-      message: "Restaurant restored successfully",
+//       message: "Restaurant restored successfully",
 
-      data: restaurant,
-    });
-  } catch (error) {
-    console.error("restoreRestaurant Error:", error);
+//       data: restaurant,
+//     });
+//   } catch (error) {
+//     console.error("restoreRestaurant Error:", error);
 
-    res.status(500).json({
-      success: false,
+//     res.status(500).json({
+//       success: false,
 
-      message: "Failed to restore restaurant",
+//       message: "Failed to restore restaurant",
 
-      error: error.message,
-    });
-  }
-};
+//       error: error.message,
+//     });
+//   }
+// };
 
 /* ==========================================================
 
@@ -356,72 +361,72 @@ exports.updateRestaurantStatus = async (req, res) => {
     });
   }
 };
-exports.searchRestaurants = async (req, res) => {
-  try {
-    const {
-      search = "",
-      page = 1,
-      limit = 10,
-      status,
-      city,
-      state,
-    } = req.query;
+// exports.searchRestaurants = async (req, res) => {
+//   try {
+//     const {
+//       search = "",
+//       page = 1,
+//       limit = 10,
+//       status,
+//       city,
+//       state,
+//     } = req.query;
 
-    const filter = {
-      isDeleted: false,
-    };
+//     const filter = {
+//       isDeleted: false,
+//     };
 
-    if (status) filter.status = status;
-    if (city) filter.city = city;
-    if (state) filter.state = state;
+//     if (status) filter.status = status;
+//     if (city) filter.city = city;
+//     if (state) filter.state = state;
 
-    if (search) {
-      filter.$or = [
-        {
-          restaurantName: {
-            $regex: search,
-            $options: "i",
-          },
-        },
-        {
-          restaurantCode: {
-            $regex: search,
-            $options: "i",
-          },
-        },
-        {
-          ownerName: {
-            $regex: search,
-            $options: "i",
-          },
-        },
-        {
-          phone: {
-            $regex: search,
-            $options: "i",
-          },
-        },
-        {
-          email: {
-            $regex: search,
-            $options: "i",
-          },
-        },
-        {
-          city: {
-            $regex: search,
-            $options: "i",
-          },
-        },
-      ];
-    }
+//     if (search) {
+//       filter.$or = [
+//         {
+//           restaurantName: {
+//             $regex: search,
+//             $options: "i",
+//           },
+//         },
+//         {
+//           restaurantCode: {
+//             $regex: search,
+//             $options: "i",
+//           },
+//         },
+//         {
+//           ownerName: {
+//             $regex: search,
+//             $options: "i",
+//           },
+//         },
+//         {
+//           phone: {
+//             $regex: search,
+//             $options: "i",
+//           },
+//         },
+//         {
+//           email: {
+//             $regex: search,
+//             $options: "i",
+//           },
+//         },
+//         {
+//           city: {
+//             $regex: search,
+//             $options: "i",
+//           },
+//         },
+//       ];
+//     }
 
-    const restaurants = await Restaurant.find(filter)
-      .sort({ createdAt: -1 })
-      .skip((page - 1) * limit)
-      .limit(Number(limit));
+//     const restaurants = await Restaurant.find(filter)
+//       .sort({ createdAt: -1 })
+//       .skip((page - 1) * limit)
+//       .limit(Number(limit));
 
-    const total = await Restaurant.countDocuments(filter);
+//     const total = await Restaurant.countDocuments(filter);
 
     res.status(200).json({
       success: true,
@@ -432,10 +437,21 @@ exports.searchRestaurants = async (req, res) => {
     });
   } catch (error) {
     res.status(500).json({
+=======
+
+    return res.status(200).json({
+      success: true,
+      message: "Restaurant status updated",
+      data: restaurant,
+    });
+  } catch (error) {
+    return res.status(500).json({
+>>>>>>> restuarant_initial_30_06_26
       success: false,
       message: error.message,
     });
   }
+<<<<<<< HEAD
 };
 exports.getActiveRestaurants = async (req, res) => {
   try {
@@ -446,198 +462,241 @@ exports.getActiveRestaurants = async (req, res) => {
       restaurantName: 1,
     });
 
-    res.json({
-      success: true,
-      count: restaurants.length,
-      data: restaurants,
-    });
-  } catch (error) {
-    res.status(500).json({
-      success: false,
-      message: error.message,
-    });
-  }
-};
-exports.getInactiveRestaurants = async (req, res) => {
-  try {
-    const restaurants = await Restaurant.find({
-      status: "Inactive",
-      isDeleted: false,
-    }).sort({
-      restaurantName: 1,
-    });
+//     res.json({
+//       success: true,
+//       count: restaurants.length,
+//       data: restaurants,
+//     });
+//   } catch (error) {
+//     res.status(500).json({
+//       success: false,
+//       message: error.message,
+//     });
+//   }
+// };
+// exports.getInactiveRestaurants = async (req, res) => {
+//   try {
+//     const restaurants = await Restaurant.find({
+//       status: "Inactive",
+//       isDeleted: false,
+//     }).sort({
+//       restaurantName: 1,
+//     });
 
-    res.json({
-      success: true,
-      count: restaurants.length,
-      data: restaurants,
-    });
-  } catch (error) {
-    res.status(500).json({
-      success: false,
-      message: error.message,
-    });
-  }
-};
-exports.getDeletedRestaurants = async (req, res) => {
-  try {
-    const restaurants = await Restaurant.find({
-      isDeleted: true,
-    });
+//     res.json({
+//       success: true,
+//       count: restaurants.length,
+//       data: restaurants,
+//     });
+//   } catch (error) {
+//     res.status(500).json({
+//       success: false,
+//       message: error.message,
+//     });
+//   }
+// };
+// exports.getDeletedRestaurants = async (req, res) => {
+//   try {
+//     const restaurants = await Restaurant.find({
+//       isDeleted: true,
+//     });
 
-    res.json({
-      success: true,
-      count: restaurants.length,
-      data: restaurants,
-    });
-  } catch (error) {
-    res.status(500).json({
-      success: false,
-      message: error.message,
-    });
-  }
-};
-exports.getRestaurantSummary = async (req, res) => {
-  try {
-    const totalRestaurants = await Restaurant.countDocuments({
-      isDeleted: false,
-    });
+//     res.json({
+//       success: true,
+//       count: restaurants.length,
+//       data: restaurants,
+//     });
+//   } catch (error) {
+//     res.status(500).json({
+//       success: false,
+//       message: error.message,
+//     });
+//   }
+// };
+// exports.getRestaurantSummary = async (req, res) => {
+//   try {
+//     const totalRestaurants = await Restaurant.countDocuments({
+//       isDeleted: false,
+//     });
 
-    const activeRestaurants = await Restaurant.countDocuments({
-      status: "Active",
-      isDeleted: false,
-    });
+//     const activeRestaurants = await Restaurant.countDocuments({
+//       status: "Active",
+//       isDeleted: false,
+//     });
 
-    const inactiveRestaurants = await Restaurant.countDocuments({
-      status: "Inactive",
-      isDeleted: false,
-    });
+//     const inactiveRestaurants = await Restaurant.countDocuments({
+//       status: "Inactive",
+//       isDeleted: false,
+//     });
 
-    const deletedRestaurants = await Restaurant.countDocuments({
-      isDeleted: true,
-    });
+//     const deletedRestaurants = await Restaurant.countDocuments({
+//       isDeleted: true,
+//     });
 
-    res.json({
-      success: true,
-      data: {
-        totalRestaurants,
-        activeRestaurants,
-        inactiveRestaurants,
-        deletedRestaurants,
-      },
-    });
-  } catch (error) {
-    res.status(500).json({
-      success: false,
-      message: error.message,
-    });
-  }
-};
-exports.getRestaurantAnalytics = async (req, res) => {
-  try {
-    const cityWise = await Restaurant.aggregate([
-      {
-        $match: {
-          isDeleted: false,
-        },
-      },
-      {
-        $group: {
-          _id: "$city",
-          restaurants: {
-            $sum: 1,
-          },
-        },
-      },
-      {
-        $sort: {
-          restaurants: -1,
-        },
-      },
-    ]);
+//     res.json({
+//       success: true,
+//       data: {
+//         totalRestaurants,
+//         activeRestaurants,
+//         inactiveRestaurants,
+//         deletedRestaurants,
+//       },
+//     });
+//   } catch (error) {
+//     res.status(500).json({
+//       success: false,
+//       message: error.message,
+//     });
+//   }
+// };
+// exports.getRestaurantAnalytics = async (req, res) => {
+//   try {
+//     const cityWise = await Restaurant.aggregate([
+//       {
+//         $match: {
+//           isDeleted: false,
+//         },
+//       },
+//       {
+//         $group: {
+//           _id: "$city",
+//           restaurants: {
+//             $sum: 1,
+//           },
+//         },
+//       },
+//       {
+//         $sort: {
+//           restaurants: -1,
+//         },
+//       },
+//     ]);
 
-    const stateWise = await Restaurant.aggregate([
-      {
-        $match: {
-          isDeleted: false,
-        },
-      },
-      {
-        $group: {
-          _id: "$state",
-          restaurants: {
-            $sum: 1,
-          },
-        },
-      },
-      {
-        $sort: {
-          restaurants: -1,
-        },
-      },
-    ]);
+//     const stateWise = await Restaurant.aggregate([
+//       {
+//         $match: {
+//           isDeleted: false,
+//         },
+//       },
+//       {
+//         $group: {
+//           _id: "$state",
+//           restaurants: {
+//             $sum: 1,
+//           },
+//         },
+//       },
+//       {
+//         $sort: {
+//           restaurants: -1,
+//         },
+//       },
+//     ]);
 
-    const statusWise = await Restaurant.aggregate([
-      {
-        $match: {
-          isDeleted: false,
-        },
-      },
-      {
-        $group: {
-          _id: "$status",
-          total: {
-            $sum: 1,
-          },
-        },
-      },
-    ]);
+//     const statusWise = await Restaurant.aggregate([
+//       {
+//         $match: {
+//           isDeleted: false,
+//         },
+//       },
+//       {
+//         $group: {
+//           _id: "$status",
+//           total: {
+//             $sum: 1,
+//           },
+//         },
+//       },
+//     ]);
 
-    res.json({
-      success: true,
-      data: {
-        cityWise,
-        stateWise,
-        statusWise,
-      },
-    });
-  } catch (error) {
-    res.status(500).json({
-      success: false,
-      message: error.message,
-    });
-  }
-};
-exports.getCityWiseRestaurants = async (req, res) => {
-  try {
-    const result = await Restaurant.aggregate([
-      {
-        $match: {
-          isDeleted: false,
-        },
-      },
-      {
-        $group: {
-          _id: "$city",
-          totalRestaurants: {
-            $sum: 1,
-          },
-          restaurants: {
-            $push: {
-              _id: "$_id",
-              restaurantName: "$restaurantName",
-              phone: "$phone",
-              status: "$status",
-            },
-          },
-        },
-      },
-      {
-        $sort: {
-          _id: 1,
-        },
-      },
-    ]);
+//     res.json({
+//       success: true,
+//       data: {
+//         cityWise,
+//         stateWise,
+//         statusWise,
+//       },
+//     });
+//   } catch (error) {
+//     res.status(500).json({
+//       success: false,
+//       message: error.message,
+//     });
+//   }
+// };
+// exports.getCityWiseRestaurants = async (req, res) => {
+//   try {
+//     const result = await Restaurant.aggregate([
+//       {
+//         $match: {
+//           isDeleted: false,
+//         },
+//       },
+//       {
+//         $group: {
+//           _id: "$city",
+//           totalRestaurants: {
+//             $sum: 1,
+//           },
+//           restaurants: {
+//             $push: {
+//               _id: "$_id",
+//               restaurantName: "$restaurantName",
+//               phone: "$phone",
+//               status: "$status",
+//             },
+//           },
+//         },
+//       },
+//       {
+//         $sort: {
+//           _id: 1,
+//         },
+//       },
+//     ]);
+
+//     res.json({
+//       success: true,
+//       data: result,
+//     });
+//   } catch (error) {
+//     res.status(500).json({
+//       success: false,
+//       message: error.message,
+//     });
+//   }
+// };
+// exports.getStateWiseRestaurants = async (req, res) => {
+//   try {
+//     const result = await Restaurant.aggregate([
+//       {
+//         $match: {
+//           isDeleted: false,
+//         },
+//       },
+//       {
+//         $group: {
+//           _id: "$state",
+//           totalRestaurants: {
+//             $sum: 1,
+//           },
+//           restaurants: {
+//             $push: {
+//               _id: "$_id",
+//               restaurantName: "$restaurantName",
+//               city: "$city",
+//               phone: "$phone",
+//               status: "$status",
+//             },
+//           },
+//         },
+//       },
+//       {
+//         $sort: {
+//           _id: 1,
+//         },
+//       },
+//     ]);
 
     res.json({
       success: true,
@@ -650,46 +709,6 @@ exports.getCityWiseRestaurants = async (req, res) => {
     });
   }
 };
-exports.getStateWiseRestaurants = async (req, res) => {
-  try {
-    const result = await Restaurant.aggregate([
-      {
-        $match: {
-          isDeleted: false,
-        },
-      },
-      {
-        $group: {
-          _id: "$state",
-          totalRestaurants: {
-            $sum: 1,
-          },
-          restaurants: {
-            $push: {
-              _id: "$_id",
-              restaurantName: "$restaurantName",
-              city: "$city",
-              phone: "$phone",
-              status: "$status",
-            },
-          },
-        },
-      },
-      {
-        $sort: {
-          _id: 1,
-        },
-      },
-    ]);
-
-    res.json({
-      success: true,
-      data: result,
-    });
-  } catch (error) {
-    res.status(500).json({
-      success: false,
-      message: error.message,
-    });
-  }
+=======
 };
+>>>>>>> restuarant_initial_30_06_26
