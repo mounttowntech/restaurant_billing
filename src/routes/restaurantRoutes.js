@@ -8,7 +8,7 @@ const {
   getRestaurantById,
   updateRestaurant,
   deleteRestaurant,
-  changeRestaurantStatus,
+  updateRestaurantStatus
 } = require("../controllers/restaurantController");
 
 // middleware
@@ -31,6 +31,6 @@ router.put("/update/:id", verifyToken, updateRestaurant);
 router.delete("/delete/:id", verifyToken, deleteRestaurant);
 
 // Change Status
-router.patch("/:id/status", verifyToken, changeRestaurantStatus);
+router.patch("/:id/status", verifyToken, updateRestaurantStatus);
 
 module.exports = router;
