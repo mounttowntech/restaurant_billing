@@ -3,29 +3,12 @@ const bcrypt = require("bcryptjs");
 
 const userSchema = new mongoose.Schema(
   {
-    restaurant: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "Restaurant",
-      required: true,
-    },
-
-    store: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "Store",
-    },
-
-    role: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "RolePermission",
-      required: true,
-    },
-
-    employeeCode: {
-      type: String,
-      unique: true,
-      uppercase: true,
-      trim: true,
-    },
+    // employeeCode: {
+    //   type: String,
+    //   required: true,
+    //   unique: true,
+    //   trim: true,
+    // },
 
     firstName: {
       type: String,
@@ -36,22 +19,14 @@ const userSchema = new mongoose.Schema(
     lastName: {
       type: String,
       trim: true,
-      default: "",
     },
 
-    fullName: {
+    email: {
       type: String,
+      required: true,
+      unique: true,
+      lowercase: true,
       trim: true,
-    },
-
-    gender: {
-      type: String,
-      enum: ["Male", "Female", "Other"],
-      default: "Male",
-    },
-
-    dob: {
-      type: Date,
     },
 
     phone: {
@@ -61,67 +36,33 @@ const userSchema = new mongoose.Schema(
       trim: true,
     },
 
-    alternatePhone: {
-      type: String,
-      trim: true,
-      default: "",
-    },
-
-    email: {
-      type: String,
-      unique: true,
-      lowercase: true,
-      trim: true,
-      default: "",
-    },
-
-    username: {
-      type: String,
-      unique: true,
-      required: true,
-      trim: true,
-      lowercase: true,
-    },
-
     password: {
       type: String,
       required: true,
       minlength: 6,
+      select: false,
     },
 
-    profileImage: {
+    profileImage: String,
+
+    role: {
       type: String,
-      default: "",
+      required:true
+    },
+    store: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Store",
     },
 
-    address: {
-      type: String,
-      default: "",
-    },
-
-    city: {
-      type: String,
-      default: "",
-    },
-
-    state: {
-      type: String,
-      default: "",
-    },
-
-    pincode: {
-      type: String,
-      default: "",
-    },
+    designation: String,
+    address: String,
+    city: String,
+    state: String,
+    pincode: String,
 
     joiningDate: {
       type: Date,
       default: Date.now,
-    },
-
-    designation: {
-      type: String,
-      default: "",
     },
 
     salary: {
@@ -129,39 +70,18 @@ const userSchema = new mongoose.Schema(
       default: 0,
     },
 
-    shift: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "Shift",
-    },
+    lastLogin: Date,
 
-    isOnline: {
-      type: Boolean,
-      default: false,
-    },
+    refreshToken: String,
 
-    lastLogin: {
-      type: Date,
-    },
+    resetPasswordOTP: String,
 
-    loginAttempts: {
-      type: Number,
-      default: 0,
-    },
-
-    isBlocked: {
-      type: Boolean,
-      default: false,
-    },
+    resetPasswordOTPExpire: Date,
 
     status: {
       type: String,
-      enum: ["Active", "Inactive"],
-      default: "Active",
-    },
-
-    isDeleted: {
-      type: Boolean,
-      default: false,
+      enum: ["active", "inactive", "blocked"],
+      default: "active",
     },
 
     createdBy: {
@@ -177,60 +97,21 @@ const userSchema = new mongoose.Schema(
   {
     timestamps: true,
     versionKey: false,
-  }
+  },
 );
 
-/* =====================================
-   Full Name
-===================================== */
+userSchema.pre("save", async function () {
+  if (!this.isModified("password")) {
+    return;
+  }
 
-userSchema.pre("save", function (next) {
-  this.fullName = `${this.firstName} ${this.lastName || ""}`.trim();
-  next();
+  const salt = await bcrypt.genSalt(10);
+
+  this.password = await bcrypt.hash(this.password, salt);
 });
-
-/* =====================================
-   Password Hash
-===================================== */
-
-userSchema.pre("save", async function (next) {
-  if (!this.isModified("password")) return next();
-
-  this.password = await bcrypt.hash(this.password, 10);
-
-  next();
-});
-
-/* =====================================
-   Compare Password
-===================================== */
 
 userSchema.methods.comparePassword = async function (password) {
   return await bcrypt.compare(password, this.password);
 };
-
-/* =====================================
-   Indexes
-===================================== */
-
-userSchema.index({ restaurant: 1 });
-
-userSchema.index({ store: 1 });
-
-userSchema.index({ role: 1 });
-
-userSchema.index({ employeeCode: 1 });
-
-userSchema.index({ username: 1 });
-
-userSchema.index({ email: 1 });
-
-userSchema.index({ phone: 1 });
-
-userSchema.index({ status: 1 });
-
-/* =====================================
-   Export
-===================================== */
 
 module.exports = mongoose.model("User", userSchema);
