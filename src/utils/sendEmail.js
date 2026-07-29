@@ -1,24 +1,22 @@
-const nodemailer = require("nodemailer");
+const transporter = require("../config/mailer");
 
-const transporter = nodemailer.createTransport({
-  host: process.env.MAIL_HOST,
-  port: Number(process.env.MAIL_PORT),
-  secure: false,
-  auth: {
-    user: process.env.MAIL_USER,
-    pass: process.env.MAIL_PASS,
-  },
-});
+const sendMail = async ({ to, subject, html, text = "" }) => {
+  try {
+    const info = await transporter.sendMail({
+      from: `WonderBill <${process.env.MAIL_USER}>`,
+      to,
+      subject,
+      text,
+      html,
+    });
 
-const sendEmail = async (to, subject, html) => {
-  const info = await transporter.sendMail({
-    from: `"Restaurant Billing" <${process.env.MAIL_USER}>`,
-    to,
-    subject,
-    html,
-  });
+    console.log("✅ Email Sent:", info.messageId);
 
-  console.log("Mail Sent:", info.messageId);
+    return info;
+  } catch (error) {
+    console.error("❌ Email Error:", error);
+    throw error;
+  }
 };
 
-module.exports = sendEmail;
+module.exports = sendMail;
