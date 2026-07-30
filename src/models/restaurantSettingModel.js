@@ -233,9 +233,9 @@ restaurantSettingSchema.index({ store: 1 });
 // Query Middleware
 // ===============================
 
-restaurantSettingSchema.pre(/^find/, function (next) {
+restaurantSettingSchema.pre(/^find/, function () {
   this.where({ isDeleted: false });
-  next();
+ 
 });
 
 // ===============================

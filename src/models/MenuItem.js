@@ -224,7 +224,7 @@ const menuItemSchema = new mongoose.Schema(
    Auto Calculation
 ========================================================== */
 
-menuItemSchema.pre("save", function (next) {
+menuItemSchema.pre("save", function () {
 
   if (!this.takeawayPrice)
     this.takeawayPrice = this.dineInPrice;
@@ -232,7 +232,7 @@ menuItemSchema.pre("save", function (next) {
   if (!this.deliveryPrice)
     this.deliveryPrice = this.dineInPrice;
 
-  next();
+
 });
 
 /* ==========================================================
@@ -290,7 +290,7 @@ menuItemSchema.index({ createdAt: -1 });
    Middleware
 ========================================================== */
 
-menuItemSchema.pre(/^find/, function (next) {
+menuItemSchema.pre(/^find/, function () {
 
   if (this.getFilter().isDeleted === undefined) {
 
@@ -300,11 +300,11 @@ menuItemSchema.pre(/^find/, function (next) {
 
   }
 
-  next();
+
 
 });
 
-menuItemSchema.pre("validate", function (next) {
+menuItemSchema.pre("validate", function () {
 
   if (this.menuCode) {
 
@@ -314,7 +314,7 @@ menuItemSchema.pre("validate", function (next) {
 
   }
 
-  next();
+
 
 });
 

@@ -63,7 +63,7 @@ router.get("/:id", getRestaurantSettingById);
 // Update
 //======================================================
 
-router.put("/:id", updateRestaurantSetting);
+router.put("/update/:id", updateRestaurantSetting);
 
 router.put("/:id/billing", updateBillingSettings);
 
@@ -89,6 +89,6 @@ router.patch("/:id/deactivate", deactivateRestaurantSetting);
 
 router.patch("/:id/restore", restoreRestaurantSetting);
 
-router.delete("/:id", deleteRestaurantSetting);
+router.delete("/delete/:id", deleteRestaurantSetting);
 
 module.exports = router;

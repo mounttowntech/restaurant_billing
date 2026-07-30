@@ -1,5 +1,5 @@
 const User = require("../models/User");
-const sendEmail = require("../utils/sendEmail");
+const sendMail = require("../utils/sendEmail");
 const RolePermission = require("../models/rolePermissionModel");
 const Store = require("../models/storeModel");
 const jwt = require("jsonwebtoken");
@@ -236,6 +236,8 @@ exports.login = async (req, res) => {
   }
 };
 
+
+
 exports.forgotPassword = async (req, res) => {
   try {
     const { email } = req.body;
@@ -258,32 +260,58 @@ exports.forgotPassword = async (req, res) => {
       });
     }
 
-    // Generate 6-digit OTP
-    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+    // Generate Reset Token
+    const resetToken = crypto.randomBytes(32).toString("hex");
 
-    user.resetPasswordOTP = otp;
-    user.resetPasswordOTPExpire = Date.now() + 10 * 60 * 1000; // 10 Minutes
+    user.resetPasswordToken = resetToken;
+    user.resetPasswordExpire = Date.now() + 15 * 60 * 1000; // 15 Minutes
 
     await user.save();
 
-    // Send OTP Email
+    // Frontend Reset Password URL
+    const resetURL = `http://localhost:5173/reset-password/${resetToken}`;
+
     try {
       await sendMail({
         to: user.email,
-        subject: "Password Reset OTP",
-        html: forgotPasswordEmail(user, otp),
+        subject: "Reset Your Password",
+        html: `
+          <h2>Password Reset Request</h2>
+
+          <p>Hello ${user.name},</p>
+
+          <p>Click the button below to reset your password.</p>
+
+          <a href="${resetURL}"
+             style="
+               display:inline-block;
+               padding:12px 25px;
+               background:#2563eb;
+               color:#fff;
+               text-decoration:none;
+               border-radius:6px;
+             ">
+             Reset Password
+          </a>
+
+          <p>This link will expire in <b>15 minutes</b>.</p>
+
+          <p>If you didn't request this, simply ignore this email.</p>
+        `,
       });
 
-      console.log("✅ Forgot Password email sent.");
+      return res.status(200).json({
+        success: true,
+        message: "Reset password link sent successfully.",
+      });
     } catch (mailError) {
-      console.error("❌ Failed to send Forgot Password email.");
       console.error(mailError);
-    }
 
-    return res.status(200).json({
-      success: true,
-      message: "OTP sent successfully to your registered email.",
-    });
+      return res.status(500).json({
+        success: false,
+        message: "Failed to send email.",
+      });
+    }
   } catch (err) {
     console.error(err);
 
@@ -295,61 +323,34 @@ exports.forgotPassword = async (req, res) => {
 };
 exports.resetPassword = async (req, res) => {
   try {
-    const { email, otp, password } = req.body;
-
-    if (!email || !otp || !password) {
-      return res.status(400).json({
-        success: false,
-        message: "Email, OTP and new password are required.",
-      });
-    }
+    const { token } = req.params;
+    const { password } = req.body;
 
     const user = await User.findOne({
-      email: email.trim().toLowerCase(),
-      resetPasswordOTP: otp,
-      resetPasswordOTPExpire: {
-        $gt: Date.now(),
-      },
-    }).select("+password");
+      resetPasswordToken: token,
+      resetPasswordExpire: { $gt: Date.now() },
+    });
 
     if (!user) {
       return res.status(400).json({
         success: false,
-        message: "Invalid or expired OTP.",
+        message: "Reset link is invalid or has expired.",
       });
     }
 
-    // Update Password
-    user.password = password;
+    user.password = await bcrypt.hash(password, 10);
 
-    // Clear OTP
-    user.resetPasswordOTP = undefined;
-    user.resetPasswordOTPExpire = undefined;
+    user.resetPasswordToken = undefined;
+    user.resetPasswordExpire = undefined;
 
     await user.save();
 
-    // Send Success Email
-    try {
-      await sendMail({
-        to: user.email,
-        subject: "Password Reset Successful",
-        html: resetPasswordEmail(user),
-      });
-
-      console.log("✅ Password Reset email sent.");
-    } catch (mailError) {
-      console.error("❌ Failed to send Password Reset email.");
-      console.error(mailError);
-    }
-
-    return res.status(200).json({
+    res.status(200).json({
       success: true,
-      message: "Password changed successfully.",
+      message: "Password reset successfully.",
     });
   } catch (err) {
-    console.error(err);
-
-    return res.status(500).json({
+    res.status(500).json({
       success: false,
       message: err.message,
     });

@@ -43,6 +43,7 @@ app.use("/api/purchase-returns",require("./src/routes/purchaseReturnRoutes"));
 app.use("/api/receipes",require("./src/routes/receipeRoutes"));
 app.use("/api/restaurant-settings",require("./src/routes/restaurantSettingRoutes"));
 app.use("/api/shifts",require("./src/routes/shiftRoutes"));
+app.use("/api/store",require("./src/routes/storeRoutes"));
 app.use((req, res) =>
   res.status(404).json({ success: false, message: "Route not found" }),
 );

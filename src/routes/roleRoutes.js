@@ -43,27 +43,27 @@ router.get("/all", getRoles);
 
 router.get("/:id", getRoleById);
 
-router.put("/:id", updateRole);
+router.put("/update/:id", updateRole);
 
-router.delete("/:id", deleteRole);
+router.delete("/delete/:id", deleteRole);
 
 // ======================================================
 // Status
 // ======================================================
 
-router.patch("/:id/status", updateRoleStatus);
+router.patch("/status/:id", updateRoleStatus);
 
 // ======================================================
 // Permission APIs
 // ======================================================
 
-router.post("/:id/permissions", addPermission);
+router.post("/permissions/:id", addPermission);
 
-router.put("/:id/permissions/:module", updatePermission);
+router.put("/permissions/:module/:id", updatePermission);
 
-router.delete("/:id/permissions/:module", removePermission);
+router.delete("/permissions/:module/:id", removePermission);
 
-router.get("/:id/permissions", getRolePermissions);
+router.get("/permissions/:id", getRolePermissions);
 
 // ======================================================
 // Reports

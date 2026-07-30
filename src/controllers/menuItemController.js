@@ -81,7 +81,7 @@ exports.getMenuItems = async(req,res)=>{
         .find(filter)
         .populate("menuCategory","categoryName")
         .populate("recipe")
-        .populate("kitchen","kitchenName")
+   
         .sort({
             displayOrder:1,
             createdAt:-1

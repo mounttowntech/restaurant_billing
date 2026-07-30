@@ -36,6 +36,6 @@ router.put("/update/:id", verifyToken, updateCategory);
 router.delete("/delete/:id", verifyToken, deleteCategory);
 
 // Status Change
-router.patch("/:id/status", verifyToken, changeCategoryStatus);
+router.patch("/status/:id", verifyToken, changeCategoryStatus);
 
 module.exports = router;
