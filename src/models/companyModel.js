@@ -1,23 +1,12 @@
 const mongoose = require("mongoose");
 
-const restaurantSchema = new mongoose.Schema(
+const companySchema = new mongoose.Schema(
   {
     // ==========================================
-    // COMPANY REFERENCE
+    // Company Basic Information
     // ==========================================
 
-    companyId: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "Company",
-      required: true,
-      index: true,
-    },
-
-    // ==========================================
-    // BASIC INFORMATION
-    // ==========================================
-
-    restaurantCode: {
+    companyCode: {
       type: String,
       required: true,
       unique: true,
@@ -25,7 +14,7 @@ const restaurantSchema = new mongoose.Schema(
       trim: true,
     },
 
-    restaurantName: {
+    companyName: {
       type: String,
       required: true,
       trim: true,
@@ -44,7 +33,7 @@ const restaurantSchema = new mongoose.Schema(
     },
 
     // ==========================================
-    // CONTACT
+    // Contact Information
     // ==========================================
 
     email: {
@@ -56,8 +45,8 @@ const restaurantSchema = new mongoose.Schema(
 
     phone: {
       type: String,
-      required: true,
       trim: true,
+      required: true,
     },
 
     alternatePhone: {
@@ -67,17 +56,10 @@ const restaurantSchema = new mongoose.Schema(
     },
 
     // ==========================================
-    // TAX
+    // Tax Information
     // ==========================================
 
     gstNumber: {
-      type: String,
-      trim: true,
-      uppercase: true,
-      default: "",
-    },
-
-    fssaiNumber: {
       type: String,
       trim: true,
       uppercase: true,
@@ -92,7 +74,7 @@ const restaurantSchema = new mongoose.Schema(
     },
 
     // ==========================================
-    // ADDRESS
+    // Address
     // ==========================================
 
     address: {
@@ -132,21 +114,7 @@ const restaurantSchema = new mongoose.Schema(
     },
 
     // ==========================================
-    // LOCATION
-    // ==========================================
-
-    latitude: {
-      type: Number,
-      default: null,
-    },
-
-    longitude: {
-      type: Number,
-      default: null,
-    },
-
-    // ==========================================
-    // CURRENCY
+    // Company Settings
     // ==========================================
 
     currency: {
@@ -168,91 +136,7 @@ const restaurantSchema = new mongoose.Schema(
     },
 
     // ==========================================
-    // PREFIXES
-    // ==========================================
-
-    invoicePrefix: {
-      type: String,
-      trim: true,
-      uppercase: true,
-      default: "INV",
-    },
-
-    kotPrefix: {
-      type: String,
-      trim: true,
-      uppercase: true,
-      default: "KOT",
-    },
-
-    orderPrefix: {
-      type: String,
-      trim: true,
-      uppercase: true,
-      default: "ORD",
-    },
-
-    purchasePrefix: {
-      type: String,
-      trim: true,
-      uppercase: true,
-      default: "PUR",
-    },
-
-    expensePrefix: {
-      type: String,
-      trim: true,
-      uppercase: true,
-      default: "EXP",
-    },
-
-    // ==========================================
-    // BUSINESS SETTINGS
-    // ==========================================
-
-    serviceChargePercentage: {
-      type: Number,
-      default: 0,
-      min: 0,
-    },
-
-    gstEnabled: {
-      type: Boolean,
-      default: true,
-    },
-
-    serviceChargeEnabled: {
-      type: Boolean,
-      default: false,
-    },
-
-    loyaltyEnabled: {
-      type: Boolean,
-      default: true,
-    },
-
-    onlineOrderEnabled: {
-      type: Boolean,
-      default: false,
-    },
-
-    takeawayEnabled: {
-      type: Boolean,
-      default: true,
-    },
-
-    dineInEnabled: {
-      type: Boolean,
-      default: true,
-    },
-
-    deliveryEnabled: {
-      type: Boolean,
-      default: true,
-    },
-
-    // ==========================================
-    // IMAGES
+    // Logo
     // ==========================================
 
     logo: {
@@ -260,13 +144,8 @@ const restaurantSchema = new mongoose.Schema(
       default: "",
     },
 
-    bannerImage: {
-      type: String,
-      default: "",
-    },
-
     // ==========================================
-    // STATUS
+    // Status
     // ==========================================
 
     status: {
@@ -282,7 +161,7 @@ const restaurantSchema = new mongoose.Schema(
     },
 
     // ==========================================
-    // AUDIT
+    // Audit
     // ==========================================
 
     createdBy: {
@@ -304,51 +183,38 @@ const restaurantSchema = new mongoose.Schema(
 );
 
 // ==========================================
-// INDEXES
+// Indexes
 // ==========================================
 
-restaurantSchema.index({
-  companyId: 1,
+companySchema.index({
+  companyCode: 1,
 });
 
-restaurantSchema.index({
-  companyId: 1,
-  restaurantName: 1,
+companySchema.index({
+  companyName: 1,
 });
 
-restaurantSchema.index({
-  restaurantCode: 1,
-});
-
-restaurantSchema.index({
-  restaurantName: 1,
-});
-
-restaurantSchema.index({
+companySchema.index({
   phone: 1,
 });
 
-restaurantSchema.index({
+companySchema.index({
   email: 1,
 });
 
-restaurantSchema.index({
+companySchema.index({
   city: 1,
 });
 
-restaurantSchema.index({
+companySchema.index({
   status: 1,
 });
 
-restaurantSchema.index({
+companySchema.index({
   isDeleted: 1,
 });
 
-// ==========================================
-// EXPORT
-// ==========================================
-
 module.exports = mongoose.model(
-  "Restaurant",
-  restaurantSchema
+  "Company",
+  companySchema
 );

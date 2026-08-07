@@ -1,28 +1,22 @@
 const User = require("../models/User");
-const sendMail = require("../utils/sendEmail");
-const RolePermission = require("../models/rolePermissionModel");
+
 const Store = require("../models/storeModel");
+
+const sendMail = require("../utils/sendEmail");
+
 const jwt = require("jsonwebtoken");
 const crypto = require("crypto");
+const bcrypt = require("bcryptjs");
+
 const registerEmail = require("../templates/registerEmail");
 const loginEmail = require("../templates/loginEmail");
-const forgotPasswordEmail = require("../templates/forgotPasswordEmail");
-const resetPasswordEmail = require("../templates/resetPasswordEmail");
 const changePasswordEmail = require("../templates/changePasswordEmail");
-const sendEmailSafely = async ({ to, subject, html }) => {
-  try {
-    await sendMail({
-      to,
-      subject,
-      html,
-    });
 
-    console.log(`✅ Email sent to ${to}`);
-  } catch (error) {
-    console.error(`❌ Failed to send email to ${to}`);
-    console.error(error.message);
-  }
-};
+
+// =====================================================
+// REGISTER USER
+// =====================================================
+
 exports.register = async (req, res) => {
   try {
     let {
@@ -40,44 +34,85 @@ exports.register = async (req, res) => {
       salary,
     } = req.body;
 
-    // Trim Inputs
+    // =================================================
+    // Normalize
+    // =================================================
+
     firstName = firstName?.trim();
     lastName = lastName?.trim();
     email = email?.trim().toLowerCase();
     phone = phone?.trim();
+    role = role?.trim();
 
-    // Validation
+    // =================================================
+    // Required Fields
+    // =================================================
+
     if (!firstName || !email || !phone || !password || !role) {
       return res.status(400).json({
         success: false,
-        message: "First name, email, phone, password and role are required.",
+        message:
+          "First name, email, phone, password and role are required.",
       });
     }
 
-    // Check Role
-    const roleExists = await RolePermission.findById(role);
+    // =================================================
+    // Allowed Roles
+    // =================================================
+    // Since RolePermission does not exist yet,
+    // validate the role directly.
 
-    if (!roleExists) {
-      return res.status(404).json({
+    const allowedRoles = [
+      "Admin",
+      "Manager",
+      "Cashier",
+      "Waiter",
+      "Kitchen",
+      "Accountant",
+      "Staff",
+    ];
+
+    const validRole = allowedRoles.find(
+      (item) => item.toLowerCase() === role.toLowerCase()
+    );
+
+    if (!validRole) {
+      return res.status(400).json({
         success: false,
         message: "Invalid role.",
+        allowedRoles,
       });
     }
 
+    // =================================================
     // Check Store
+    // =================================================
+
+    let storeExists = null;
+
     if (store) {
-      const storeExists = await Store.findById(store);
+      storeExists = await Store.findOne({
+        _id: store,
+        isDeleted: false,
+        status: "Active",
+      });
 
       if (!storeExists) {
         return res.status(404).json({
           success: false,
           message: "Invalid store.",
+          store,
         });
       }
     }
 
+    // =================================================
     // Duplicate Email
-    const emailExists = await User.findOne({ email });
+    // =================================================
+
+    const emailExists = await User.findOne({
+      email,
+    });
 
     if (emailExists) {
       return res.status(400).json({
@@ -86,8 +121,13 @@ exports.register = async (req, res) => {
       });
     }
 
+    // =================================================
     // Duplicate Phone
-    const phoneExists = await User.findOne({ phone });
+    // =================================================
+
+    const phoneExists = await User.findOne({
+      phone,
+    });
 
     if (phoneExists) {
       return res.status(400).json({
@@ -96,23 +136,34 @@ exports.register = async (req, res) => {
       });
     }
 
+    // =================================================
     // Create User
+    // =================================================
+
     const user = await User.create({
       firstName,
       lastName,
       email,
       phone,
       password,
-      role,
-      store,
+
+      // Save role as STRING
+      role: validRole,
+
+      // Save Store ObjectId
+      store: storeExists ? storeExists._id : null,
+
       address,
       city,
       state,
       pincode,
-      salary,
+      salary: salary || 0,
     });
 
-    // Send Welcome Email
+    // =================================================
+    // Welcome Email
+    // =================================================
+
     try {
       await sendMail({
         to: user.email,
@@ -120,76 +171,138 @@ exports.register = async (req, res) => {
         html: registerEmail(user),
       });
 
-      console.log("✅ Welcome email sent.");
+      console.log("Welcome email sent.");
     } catch (mailError) {
-      console.error("❌ Welcome email failed.");
-      console.error(mailError);
+      console.error(
+        "Welcome email failed:",
+        mailError.message
+      );
     }
 
+    // =================================================
     // Remove Password
+    // =================================================
+
     const userData = user.toObject();
+
     delete userData.password;
+
+    // =================================================
+    // Response
+    // =================================================
 
     return res.status(201).json({
       success: true,
       message: "User registered successfully.",
       data: userData,
     });
-  } catch (err) {
-    console.error(err);
 
-    if (err.code === 11000) {
-      const field = Object.keys(err.keyPattern)[0];
+  } catch (error) {
+    console.error("REGISTER ERROR:", error);
+
+    if (error.code === 11000) {
+      const field = Object.keys(
+        error.keyPattern || {}
+      )[0];
 
       return res.status(400).json({
         success: false,
-        message: `${field} already exists.`,
+        message: `${field || "Field"} already exists.`,
       });
     }
 
     return res.status(500).json({
       success: false,
-      message: err.message,
+      message: error.message,
     });
   }
 };
+
+// ======================================================
+// LOGIN
+// ======================================================
+
 exports.login = async (req, res) => {
   try {
     const { email, password } = req.body;
 
-    const user = await User.findOne({ email })
+    // ==========================================
+    // Validation
+    // ==========================================
+
+    if (!email || !password) {
+      return res.status(400).json({
+        success: false,
+        message: "Email and password are required.",
+      });
+    }
+
+    // ==========================================
+    // Find User
+    // ==========================================
+
+    const user = await User.findOne({
+      email: email.trim().toLowerCase(),
+    })
       .select("+password")
-      .populate("role")
       .populate("store");
+
+    // ==========================================
+    // User Not Found
+    // ==========================================
 
     if (!user) {
       return res.status(404).json({
         success: false,
-        message: "Invalid email",
+        message: "Invalid email or password.",
       });
     }
+
+    // ==========================================
+    // Check Status
+    // ==========================================
 
     if (user.status === "blocked") {
       return res.status(403).json({
         success: false,
-        message: "Account blocked",
+        message: "Account blocked.",
       });
     }
+
+    if (user.status === "inactive") {
+      return res.status(403).json({
+        success: false,
+        message: "Account inactive.",
+      });
+    }
+
+    // ==========================================
+    // Password
+    // ==========================================
 
     const match = await user.comparePassword(password);
 
     if (!match) {
       return res.status(401).json({
         success: false,
-        message: "Invalid password",
+        message: "Invalid email or password.",
       });
     }
 
-    // JWT Token
+    // ==========================================
+    // JWT
+    // ==========================================
+
     const token = jwt.sign(
       {
         id: user._id,
-        role: user.role._id,
+
+        // IMPORTANT
+        // Role is STRING
+        role: user.role,
+
+        // Store ID
+        store: user.store?._id || user.store || null,
       },
       process.env.JWT_SECRET,
       {
@@ -197,28 +310,40 @@ exports.login = async (req, res) => {
       }
     );
 
-    // Update Last Login
+    // ==========================================
+    // Last Login
+    // ==========================================
+
     user.lastLogin = new Date();
 
     await user.save();
 
-    // Send Login Email
+    // ==========================================
+    // Login Email
+    // ==========================================
+
     try {
       await sendMail({
         to: user.email,
         subject: "Successful Login",
         html: loginEmail(user),
       });
-
-      console.log("✅ Login email sent.");
     } catch (mailError) {
-      console.error("❌ Login email failed.");
-      console.error(mailError);
+      console.error("Login email failed");
+      console.error(mailError.message);
     }
 
-    // Remove Password Before Response
+    // ==========================================
+    // Remove Password
+    // ==========================================
+
     const userData = user.toObject();
+
     delete userData.password;
+
+    // ==========================================
+    // Response
+    // ==========================================
 
     return res.status(200).json({
       success: true,
@@ -226,17 +351,84 @@ exports.login = async (req, res) => {
       token,
       user: userData,
     });
-  } catch (err) {
-    console.error(err);
+  } catch (error) {
+    console.error("LOGIN ERROR:", error);
 
     return res.status(500).json({
       success: false,
-      message: err.message,
+      message: error.message,
     });
   }
 };
 
+// ======================================================
+// CHANGE PASSWORD
+// ======================================================
 
+exports.changePassword = async (req, res) => {
+  try {
+    const {
+      oldPassword,
+      newPassword,
+    } = req.body;
+
+    if (!oldPassword || !newPassword) {
+      return res.status(400).json({
+        success: false,
+        message:
+          "Old password and new password are required.",
+      });
+    }
+
+    const user = await User.findById(
+      req.user._id || req.user.id
+    ).select("+password");
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found.",
+      });
+    }
+
+    const match = await user.comparePassword(
+      oldPassword
+    );
+
+    if (!match) {
+      return res.status(400).json({
+        success: false,
+        message: "Old password is incorrect.",
+      });
+    }
+
+    user.password = newPassword;
+
+    await user.save();
+
+    await sendEmailSafely({
+      to: user.email,
+      subject: "Password Changed Successfully",
+      html: changePasswordEmail(user),
+    });
+
+    return res.status(200).json({
+      success: true,
+      message: "Password updated successfully.",
+    });
+  } catch (error) {
+    console.error("CHANGE PASSWORD ERROR:", error);
+
+    return res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
+// ======================================================
+// FORGOT PASSWORD
+// ======================================================
 
 exports.forgotPassword = async (req, res) => {
   try {
@@ -260,16 +452,27 @@ exports.forgotPassword = async (req, res) => {
       });
     }
 
-    // Generate Reset Token
-    const resetToken = crypto.randomBytes(32).toString("hex");
+    // ==========================================
+    // Generate Token
+    // ==========================================
+
+    const resetToken = crypto
+      .randomBytes(32)
+      .toString("hex");
 
     user.resetPasswordToken = resetToken;
-    user.resetPasswordExpire = Date.now() + 15 * 60 * 1000; // 15 Minutes
+
+    user.resetPasswordExpire =
+      Date.now() + 15 * 60 * 1000;
 
     await user.save();
 
-    // Frontend Reset Password URL
-    const resetURL = `http://localhost:5173/reset-password/${resetToken}`;
+    // ==========================================
+    // Reset URL
+    // ==========================================
+
+    const resetURL =
+      `http://localhost:5173/reset-password/${resetToken}`;
 
     try {
       await sendMail({
@@ -278,31 +481,42 @@ exports.forgotPassword = async (req, res) => {
         html: `
           <h2>Password Reset Request</h2>
 
-          <p>Hello ${user.name},</p>
+          <p>Hello ${user.firstName},</p>
 
-          <p>Click the button below to reset your password.</p>
+          <p>
+            Click the button below to reset your password.
+          </p>
 
-          <a href="${resetURL}"
-             style="
-               display:inline-block;
-               padding:12px 25px;
-               background:#2563eb;
-               color:#fff;
-               text-decoration:none;
-               border-radius:6px;
-             ">
-             Reset Password
+          <a
+            href="${resetURL}"
+            style="
+              display:inline-block;
+              padding:12px 25px;
+              background:#2563eb;
+              color:#fff;
+              text-decoration:none;
+              border-radius:6px;
+            "
+          >
+            Reset Password
           </a>
 
-          <p>This link will expire in <b>15 minutes</b>.</p>
+          <p>
+            This link will expire in
+            <b>15 minutes</b>.
+          </p>
 
-          <p>If you didn't request this, simply ignore this email.</p>
+          <p>
+            If you did not request this,
+            simply ignore this email.
+          </p>
         `,
       });
 
       return res.status(200).json({
         success: true,
-        message: "Reset password link sent successfully.",
+        message:
+          "Reset password link sent successfully.",
       });
     } catch (mailError) {
       console.error(mailError);
@@ -312,100 +526,66 @@ exports.forgotPassword = async (req, res) => {
         message: "Failed to send email.",
       });
     }
-  } catch (err) {
-    console.error(err);
+  } catch (error) {
+    console.error("FORGOT PASSWORD ERROR:", error);
 
     return res.status(500).json({
       success: false,
-      message: err.message,
+      message: error.message,
     });
   }
 };
+
+// ======================================================
+// RESET PASSWORD
+// ======================================================
+
 exports.resetPassword = async (req, res) => {
   try {
     const { token } = req.params;
+
     const { password } = req.body;
+
+    if (!password) {
+      return res.status(400).json({
+        success: false,
+        message: "Password is required.",
+      });
+    }
 
     const user = await User.findOne({
       resetPasswordToken: token,
-      resetPasswordExpire: { $gt: Date.now() },
+      resetPasswordExpire: {
+        $gt: Date.now(),
+      },
     });
 
     if (!user) {
       return res.status(400).json({
         success: false,
-        message: "Reset link is invalid or has expired.",
+        message:
+          "Reset link is invalid or has expired.",
       });
     }
 
-    user.password = await bcrypt.hash(password, 10);
+    user.password = password;
 
     user.resetPasswordToken = undefined;
+
     user.resetPasswordExpire = undefined;
 
     await user.save();
 
-    res.status(200).json({
+    return res.status(200).json({
       success: true,
       message: "Password reset successfully.",
     });
-  } catch (err) {
-    res.status(500).json({
-      success: false,
-      message: err.message,
-    });
-  }
-};
-exports.changePassword = async (req, res) => {
-  try {
-    const { oldPassword, newPassword } = req.body;
-
-    if (!oldPassword || !newPassword) {
-      return res.status(400).json({
-        success: false,
-        message: "Old password and new password are required.",
-      });
-    }
-
-    const user = await User.findById(req.user.id).select("+password");
-
-    if (!user) {
-      return res.status(404).json({
-        success: false,
-        message: "User not found.",
-      });
-    }
-
-    const match = await user.comparePassword(oldPassword);
-
-    if (!match) {
-      return res.status(400).json({
-        success: false,
-        message: "Old password is incorrect.",
-      });
-    }
-
-    user.password = newPassword;
-
-    await user.save();
-
-    // Send Email
-    await sendEmailSafely({
-      to: user.email,
-      subject: "Password Changed Successfully",
-      html: changePasswordEmail(user),
-    });
-
-    return res.status(200).json({
-      success: true,
-      message: "Password updated successfully.",
-    });
-  } catch (err) {
-    console.error(err);
+  } catch (error) {
+    console.error("RESET PASSWORD ERROR:", error);
 
     return res.status(500).json({
       success: false,
-      message: err.message,
+      message: error.message,
     });
   }
 };

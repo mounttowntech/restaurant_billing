@@ -2,81 +2,83 @@ const express = require("express");
 
 const router = express.Router();
 
-const restaurantController =
-  require("../controllers/restaurantController");
+const {
+  createProduct,
+  getAllProducts,
+  getProductById,
+  updateProduct,
+  deleteProduct,
+  toggleProductAvailability,
+} = require("../controllers/productController");
 
 const {
   verifyToken,
 } = require("../middleware/auth");
 
 // =====================================================
-// Create Restaurant
+// CREATE PRODUCT
+// POST /api/products/create
 // =====================================================
 
 router.post(
   "/create",
-  // verifyToken,
-  restaurantController.createRestaurant
+  verifyToken,
+  createProduct
 );
 
 // =====================================================
-// Get All Restaurants
+// GET ALL PRODUCTS
+// GET /api/products
 // =====================================================
 
 router.get(
   "/all",
   verifyToken,
-  restaurantController.getAllRestaurants
+  getAllProducts
 );
 
 // =====================================================
-// Get Restaurant By ID
+// GET PRODUCT BY ID
+// GET /api/products/:id
 // =====================================================
 
 router.get(
   "/:id",
   verifyToken,
-  restaurantController.getRestaurantById
+  getProductById
 );
 
 // =====================================================
-// Update Restaurant
+// UPDATE PRODUCT
+// PUT /api/products/:id
 // =====================================================
 
 router.put(
   "/update/:id",
   verifyToken,
-  restaurantController.updateRestaurant
+  updateProduct
 );
 
 // =====================================================
-// Delete Restaurant
+// DELETE PRODUCT
+// DELETE /api/products/:id
 // =====================================================
 
 router.delete(
   "/delete/:id",
   verifyToken,
-  restaurantController.deleteRestaurant
+  deleteProduct
 );
 
 // =====================================================
-// Restore Restaurant
+// TOGGLE AVAILABILITY
+// PATCH /api/products/:id/toggle-availability
 // =====================================================
 
 router.patch(
-  "/:id/restore",
+  "/toggle-availability/:id",
   verifyToken,
-  restaurantController.restoreRestaurant
-);
-
-// =====================================================
-// Toggle Status
-// =====================================================
-
-router.patch(
-  "/:id/toggle-status",
-  verifyToken,
-  restaurantController.toggleRestaurantStatus
+  toggleProductAvailability
 );
 
 module.exports = router;

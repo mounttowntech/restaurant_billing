@@ -65,6 +65,7 @@ const addonSchema = new mongoose.Schema(
         "Beverage",
         "Dessert",
         "Extra",
+        "Protein"
       ],
       default: "Extra",
     },

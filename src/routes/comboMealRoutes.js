@@ -2,81 +2,88 @@ const express = require("express");
 
 const router = express.Router();
 
-const restaurantController =
-  require("../controllers/restaurantController");
+const comboMealController = require("../controllers/comboMealController");
 
-const {
-  verifyToken,
-} = require("../middleware/auth");
+const { verifyToken } = require("../middleware/auth");
 
 // =====================================================
-// Create Restaurant
+// Create Combo
 // =====================================================
 
 router.post(
   "/create",
-  // verifyToken,
-  restaurantController.createRestaurant
+  verifyToken,
+  comboMealController.createCombo
 );
 
 // =====================================================
-// Get All Restaurants
+// Get All Combos
 // =====================================================
 
 router.get(
   "/all",
   verifyToken,
-  restaurantController.getAllRestaurants
+  comboMealController.getCombos
 );
 
 // =====================================================
-// Get Restaurant By ID
+// Get Single Combo
 // =====================================================
 
 router.get(
   "/:id",
   verifyToken,
-  restaurantController.getRestaurantById
+  comboMealController.getCombo
 );
 
 // =====================================================
-// Update Restaurant
+// Update Combo
 // =====================================================
 
 router.put(
   "/update/:id",
   verifyToken,
-  restaurantController.updateRestaurant
+  comboMealController.updateCombo
 );
 
 // =====================================================
-// Delete Restaurant
+// Delete Combo
 // =====================================================
 
 router.delete(
   "/delete/:id",
   verifyToken,
-  restaurantController.deleteRestaurant
+  comboMealController.deleteCombo
 );
 
 // =====================================================
-// Restore Restaurant
+// Restore Combo
 // =====================================================
 
 router.patch(
-  "/:id/restore",
+  "/restore/:id",
   verifyToken,
-  restaurantController.restoreRestaurant
+  comboMealController.restoreCombo
 );
 
 // =====================================================
-// Toggle Status
+// Toggle Availability
 // =====================================================
 
 router.patch(
-  "/:id/toggle-status",
+  "/toggle-availability/:id",
   verifyToken,
-  restaurantController.toggleRestaurantStatus
+  comboMealController.toggleAvailability
+);
+
+// =====================================================
+// Toggle Active
+// =====================================================
+
+router.patch(
+  "/:id/toggle-active",
+  verifyToken,
+  comboMealController.toggleActive
 );
 
 module.exports = router;

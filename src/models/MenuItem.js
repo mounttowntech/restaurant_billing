@@ -84,10 +84,10 @@ const menuItemSchema = new mongoose.Schema(
       ref: "Recipe",
     },
 
-    kitchen: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "Kitchen",
-    },
+    // kitchen: {
+    //   type: mongoose.Schema.Types.ObjectId,
+    //   ref: "Kitchen",
+    // },
 
     barcode: String,
 

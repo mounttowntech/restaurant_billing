@@ -44,6 +44,11 @@ app.use("/api/receipes",require("./src/routes/receipeRoutes"));
 app.use("/api/restaurant-settings",require("./src/routes/restaurantSettingRoutes"));
 app.use("/api/shifts",require("./src/routes/shiftRoutes"));
 app.use("/api/store",require("./src/routes/storeRoutes"));
+app.use("/api/combomeals",require("./src/routes/comboMealRoutes"));
+app.use( "/api/companies",require("./src/routes/companyRoutes"));
+app.use("/api/products",require("./src/routes/productRoutes"));
+app.use("/api/reservations",require("./src/routes/reservationRoutes"));
+app.use( "/api/inventory",require("./src/routes/inventoryRoutes"));
 app.use((req, res) =>
   res.status(404).json({ success: false, message: "Route not found" }),
 );

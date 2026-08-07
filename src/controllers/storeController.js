@@ -1,9 +1,14 @@
+const mongoose = require("mongoose");
 const Store = require("../models/storeModel");
 const Restaurant = require("../models/Restaurant");
 
-/* ==========================================================
-   Create Store
-========================================================== */
+// =====================================================
+// CREATE STORE
+// POST /api/stores/create
+//
+// Authentication is NOT required.
+// This allows initial setup.
+// =====================================================
 
 exports.createStore = async (req, res) => {
   try {
@@ -41,168 +46,343 @@ exports.createStore = async (req, res) => {
       kitchenPrinter,
       billingPrinter,
       logo,
+      status,
     } = req.body;
 
-    // Validate Restaurant
-    const restaurantExists = await Restaurant.findById(restaurant);
+    // =====================================================
+    // VALIDATION
+    // =====================================================
+
+    if (!restaurant) {
+      return res.status(400).json({
+        success: false,
+        message: "Restaurant ID is required",
+      });
+    }
+
+    if (!mongoose.Types.ObjectId.isValid(restaurant)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid Restaurant ID",
+      });
+    }
+
+    if (!storeCode) {
+      return res.status(400).json({
+        success: false,
+        message: "Store code is required",
+      });
+    }
+
+    if (!storeName) {
+      return res.status(400).json({
+        success: false,
+        message: "Store name is required",
+      });
+    }
+
+    if (!phone) {
+      return res.status(400).json({
+        success: false,
+        message: "Phone is required",
+      });
+    }
+
+    // =====================================================
+    // CHECK RESTAURANT
+    // =====================================================
+
+    const restaurantExists = await Restaurant.findOne({
+      _id: restaurant,
+      isDeleted: false,
+    });
 
     if (!restaurantExists) {
       return res.status(404).json({
         success: false,
-        message: "Restaurant not found.",
+        message: "Restaurant not found",
+        restaurantId: restaurant,
       });
     }
 
-    // Duplicate Store Code
-    const existingCode = await Store.findOne({
+    // =====================================================
+    // CHECK DUPLICATE STORE CODE
+    // =====================================================
+
+    const existingStore = await Store.findOne({
       storeCode: storeCode.toUpperCase(),
     });
 
-    if (existingCode) {
+    if (existingStore) {
       return res.status(400).json({
         success: false,
-        message: "Store code already exists.",
+        message: "Store code already exists",
+        storeCode: storeCode.toUpperCase(),
       });
     }
+
+    // =====================================================
+    // CREATE STORE
+    // =====================================================
 
     const store = await Store.create({
       restaurant,
+
       storeCode: storeCode.toUpperCase(),
+
       storeName,
-      branchName,
-      managerName,
-      email,
+
+      branchName: branchName || "",
+
+      managerName: managerName || "",
+
+      email: email || "",
+
       phone,
-      alternatePhone,
-      gstNumber,
-      fssaiNumber,
-      address,
-      area,
-      city,
-      state,
-      country,
-      pincode,
-      latitude,
-      longitude,
-      openingTime,
-      closingTime,
-      totalTables,
-      totalSeats,
-      serviceChargePercentage,
-      gstEnabled,
-      serviceChargeEnabled,
-      dineInEnabled,
-      takeawayEnabled,
-      deliveryEnabled,
-      onlineOrderEnabled,
-      printerName,
-      kitchenPrinter,
-      billingPrinter,
-      logo,
-      createdBy: req.user?.id,
+
+      alternatePhone: alternatePhone || "",
+
+      gstNumber: gstNumber || "",
+
+      fssaiNumber: fssaiNumber || "",
+
+      address: address || "",
+
+      area: area || "",
+
+      city: city || "",
+
+      state: state || "",
+
+      country: country || "India",
+
+      pincode: pincode || "",
+
+      latitude:
+        latitude !== undefined
+          ? latitude
+          : null,
+
+      longitude:
+        longitude !== undefined
+          ? longitude
+          : null,
+
+      openingTime:
+        openingTime || "09:00",
+
+      closingTime:
+        closingTime || "23:00",
+
+      totalTables:
+        totalTables !== undefined
+          ? totalTables
+          : 0,
+
+      totalSeats:
+        totalSeats !== undefined
+          ? totalSeats
+          : 0,
+
+      serviceChargePercentage:
+        serviceChargePercentage !== undefined
+          ? serviceChargePercentage
+          : 0,
+
+      gstEnabled:
+        gstEnabled !== undefined
+          ? gstEnabled
+          : true,
+
+      serviceChargeEnabled:
+        serviceChargeEnabled !== undefined
+          ? serviceChargeEnabled
+          : false,
+
+      dineInEnabled:
+        dineInEnabled !== undefined
+          ? dineInEnabled
+          : true,
+
+      takeawayEnabled:
+        takeawayEnabled !== undefined
+          ? takeawayEnabled
+          : true,
+
+      deliveryEnabled:
+        deliveryEnabled !== undefined
+          ? deliveryEnabled
+          : true,
+
+      onlineOrderEnabled:
+        onlineOrderEnabled !== undefined
+          ? onlineOrderEnabled
+          : false,
+
+      printerName: printerName || "",
+
+      kitchenPrinter:
+        kitchenPrinter || "",
+
+      billingPrinter:
+        billingPrinter || "",
+
+      logo: logo || "",
+
+      status: status || "Active",
+
+      // Initial setup does not require req.user
+      createdBy: null,
+      updatedBy: null,
     });
 
-    const populatedStore = await Store.findById(store._id)
-      .populate("restaurant", "restaurantName restaurantCode");
+    // =====================================================
+    // RESPONSE
+    // =====================================================
+
+    const populatedStore =
+      await Store.findById(store._id)
+        .populate(
+          "restaurant",
+          "restaurantCode restaurantName companyId"
+        );
 
     return res.status(201).json({
       success: true,
-      message: "Store created successfully.",
+      message: "Store created successfully",
       data: populatedStore,
     });
+
   } catch (error) {
-    console.error("createStore:", error);
+    console.error(
+      "CREATE STORE ERROR:",
+      error
+    );
+
+    if (error.code === 11000) {
+      return res.status(400).json({
+        success: false,
+        message: "Store code already exists",
+      });
+    }
 
     return res.status(500).json({
       success: false,
-      message: "Failed to create store.",
-      error: error.message,
+      message: error.message,
     });
   }
 };
 
-/* ==========================================================
-   Get All Stores
-========================================================== */
+// =====================================================
+// GET ALL STORES
+// GET /api/stores
+// =====================================================
 
-exports.getStores = async (req, res) => {
+exports.getAllStores = async (req, res) => {
   try {
-    const {
-      page = 1,
-      limit = 10,
-      restaurant,
-      status,
-      city,
-    } = req.query;
-
     const filter = {
       isDeleted: false,
     };
 
-    if (restaurant) {
-      filter.restaurant = restaurant;
+    // Optional restaurant filter
+    if (req.query.restaurant) {
+      if (
+        !mongoose.Types.ObjectId.isValid(
+          req.query.restaurant
+        )
+      ) {
+        return res.status(400).json({
+          success: false,
+          message: "Invalid restaurant ID",
+        });
+      }
+
+      filter.restaurant =
+        req.query.restaurant;
     }
 
-    if (status) {
-      filter.status = status;
+    // Optional search
+    if (req.query.search) {
+      filter.$or = [
+        {
+          storeName: {
+            $regex: req.query.search,
+            $options: "i",
+          },
+        },
+        {
+          storeCode: {
+            $regex: req.query.search,
+            $options: "i",
+          },
+        },
+      ];
     }
 
-    if (city) {
-      filter.city = city;
+    // Optional status
+    if (req.query.status) {
+      filter.status =
+        req.query.status;
     }
 
-    const totalRecords = await Store.countDocuments(filter);
-
-    const stores = await Store.find(filter)
-      .populate(
-        "restaurant",
-        "restaurantName restaurantCode"
-      )
-      .sort({
-        createdAt: -1,
-      })
-      .skip((Number(page) - 1) * Number(limit))
-      .limit(Number(limit));
+    const stores =
+      await Store.find(filter)
+        .populate(
+          "restaurant",
+          "restaurantCode restaurantName companyId"
+        )
+        .sort({
+          createdAt: -1,
+        });
 
     return res.status(200).json({
       success: true,
-      totalRecords,
-      currentPage: Number(page),
-      totalPages: Math.ceil(
-        totalRecords / Number(limit)
-      ),
       count: stores.length,
       data: stores,
     });
+
   } catch (error) {
-    console.error("getStores:", error);
+    console.error(
+      "GET STORES ERROR:",
+      error
+    );
 
     return res.status(500).json({
       success: false,
-      message: "Failed to fetch stores.",
-      error: error.message,
+      message: error.message,
     });
   }
 };
 
-/* ==========================================================
-   Get Store By ID
-========================================================== */
+// =====================================================
+// GET STORE BY ID
+// GET /api/stores/:id
+// =====================================================
 
 exports.getStoreById = async (req, res) => {
   try {
-    const store = await Store.findOne({
-      _id: req.params.id,
-      isDeleted: false,
-    }).populate(
-      "restaurant",
-      "restaurantName restaurantCode ownerName phone"
-    );
+    const { id } = req.params;
+
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid store ID",
+      });
+    }
+
+    const store =
+      await Store.findOne({
+        _id: id,
+        isDeleted: false,
+      }).populate(
+        "restaurant",
+        "restaurantCode restaurantName companyId"
+      );
 
     if (!store) {
       return res.status(404).json({
         success: false,
-        message: "Store not found.",
+        message: "Store not found",
       });
     }
 
@@ -210,1359 +390,292 @@ exports.getStoreById = async (req, res) => {
       success: true,
       data: store,
     });
+
   } catch (error) {
-    console.error("getStoreById:", error);
+    console.error(
+      "GET STORE ERROR:",
+      error
+    );
 
     return res.status(500).json({
       success: false,
-      message: "Failed to fetch store.",
-      error: error.message,
+      message: error.message,
     });
   }
 };
 
-
-
+// =====================================================
+// UPDATE STORE
+// PUT /api/stores/:id
+// =====================================================
 
 exports.updateStore = async (req, res) => {
-
   try {
+    const { id } = req.params;
 
-    const store = await Store.findOne({
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid store ID",
+      });
+    }
 
-      _id: req.params.id,
-
-      isDeleted: false,
-
-    });
-
-
+    const store =
+      await Store.findOne({
+        _id: id,
+        isDeleted: false,
+      });
 
     if (!store) {
-
       return res.status(404).json({
-
         success: false,
-
-        message: "Store not found.",
-
+        message: "Store not found",
       });
-
     }
 
-
-
-    // Validate Restaurant
-
+    // Restaurant cannot be changed
     if (req.body.restaurant) {
-
-      const restaurant = await Restaurant.findById(
-
-        req.body.restaurant
-
-      );
-
-
-
-      if (!restaurant) {
-
-        return res.status(404).json({
-
-          success: false,
-
-          message: "Restaurant not found.",
-
-        });
-
-      }
-
-
-
-      store.restaurant = req.body.restaurant;
-
-    }
-
-
-
-    // Check duplicate store code
-
-    if (
-
-      req.body.storeCode &&
-
-      req.body.storeCode.toUpperCase() !==
-
-        store.storeCode
-
-    ) {
-
-      const existing = await Store.findOne({
-
-        storeCode: req.body.storeCode.toUpperCase(),
-
-        _id: { $ne: store._id },
-
+      return res.status(400).json({
+        success: false,
+        message:
+          "Restaurant cannot be changed from this endpoint",
       });
-
-
-
-      if (existing) {
-
-        return res.status(400).json({
-
-          success: false,
-
-          message: "Store code already exists.",
-
-        });
-
-      }
-
-
-
-      store.storeCode =
-
-        req.body.storeCode.toUpperCase();
-
     }
 
-
-
-    if (req.body.storeName !== undefined)
-
-      store.storeName = req.body.storeName;
-
-
-
-    if (req.body.branchName !== undefined)
-
-      store.branchName = req.body.branchName;
-
-
-
-    if (req.body.managerName !== undefined)
-
-      store.managerName = req.body.managerName;
-
-
-
-    if (req.body.email !== undefined)
-
-      store.email = req.body.email;
-
-
-
-    if (req.body.phone !== undefined)
-
-      store.phone = req.body.phone;
-
-
-
-    if (req.body.alternatePhone !== undefined)
-
-      store.alternatePhone =
-
-        req.body.alternatePhone;
-
-
-
-    if (req.body.gstNumber !== undefined)
-
-      store.gstNumber = req.body.gstNumber;
-
-
-
-    if (req.body.fssaiNumber !== undefined)
-
-      store.fssaiNumber = req.body.fssaiNumber;
-
-
-
-    if (req.body.address !== undefined)
-
-      store.address = req.body.address;
-
-
-
-    if (req.body.area !== undefined)
-
-      store.area = req.body.area;
-
-
-
-    if (req.body.city !== undefined)
-
-      store.city = req.body.city;
-
-
-
-    if (req.body.state !== undefined)
-
-      store.state = req.body.state;
-
-
-
-    if (req.body.country !== undefined)
-
-      store.country = req.body.country;
-
-
-
-    if (req.body.pincode !== undefined)
-
-      store.pincode = req.body.pincode;
-
-
-
-    if (req.body.latitude !== undefined)
-
-      store.latitude = req.body.latitude;
-
-
-
-    if (req.body.longitude !== undefined)
-
-      store.longitude = req.body.longitude;
-
-
-
-    if (req.body.openingTime !== undefined)
-
-      store.openingTime = req.body.openingTime;
-
-
-
-    if (req.body.closingTime !== undefined)
-
-      store.closingTime = req.body.closingTime;
-
-
-
-    if (req.body.totalTables !== undefined)
-
-      store.totalTables = req.body.totalTables;
-
-
-
-    if (req.body.totalSeats !== undefined)
-
-      store.totalSeats = req.body.totalSeats;
-
-
-
-    if (
-
-      req.body.serviceChargePercentage !==
-
-      undefined
-
-    )
-
-      store.serviceChargePercentage =
-
-        req.body.serviceChargePercentage;
-
-
-
-    if (req.body.gstEnabled !== undefined)
-
-      store.gstEnabled = req.body.gstEnabled;
-
-
-
-    if (
-
-      req.body.serviceChargeEnabled !==
-
-      undefined
-
-    )
-
-      store.serviceChargeEnabled =
-
-        req.body.serviceChargeEnabled;
-
-
-
-    if (req.body.dineInEnabled !== undefined)
-
-      store.dineInEnabled =
-
-        req.body.dineInEnabled;
-
-
-
-    if (
-
-      req.body.takeawayEnabled !== undefined
-
-    )
-
-      store.takeawayEnabled =
-
-        req.body.takeawayEnabled;
-
-
-
-    if (
-
-      req.body.deliveryEnabled !== undefined
-
-    )
-
-      store.deliveryEnabled =
-
-        req.body.deliveryEnabled;
-
-
-
-    if (
-
-      req.body.onlineOrderEnabled !==
-
-      undefined
-
-    )
-
-      store.onlineOrderEnabled =
-
-        req.body.onlineOrderEnabled;
-
-
-
-    if (req.body.printerName !== undefined)
-
-      store.printerName =
-
-        req.body.printerName;
-
-
-
-    if (
-
-      req.body.kitchenPrinter !== undefined
-
-    )
-
-      store.kitchenPrinter =
-
-        req.body.kitchenPrinter;
-
-
-
-    if (
-
-      req.body.billingPrinter !== undefined
-
-    )
-
-      store.billingPrinter =
-
-        req.body.billingPrinter;
-
-
-
-    if (req.body.logo !== undefined)
-
-      store.logo = req.body.logo;
-
-
-
-    store.updatedBy = req.user?.id;
-
-
+    const allowedFields = [
+      "storeName",
+      "branchName",
+      "managerName",
+      "email",
+      "phone",
+      "alternatePhone",
+      "gstNumber",
+      "fssaiNumber",
+      "address",
+      "area",
+      "city",
+      "state",
+      "country",
+      "pincode",
+      "latitude",
+      "longitude",
+      "openingTime",
+      "closingTime",
+      "totalTables",
+      "totalSeats",
+      "serviceChargePercentage",
+      "gstEnabled",
+      "serviceChargeEnabled",
+      "dineInEnabled",
+      "takeawayEnabled",
+      "deliveryEnabled",
+      "onlineOrderEnabled",
+      "printerName",
+      "kitchenPrinter",
+      "billingPrinter",
+      "logo",
+      "status",
+    ];
+
+    allowedFields.forEach((field) => {
+      if (req.body[field] !== undefined) {
+        store[field] =
+          req.body[field];
+      }
+    });
+
+    // Only set updatedBy if authentication exists
+    if (req.user && req.user._id) {
+      store.updatedBy =
+        req.user._id;
+    }
 
     await store.save();
 
-
-
-    const updatedStore = await Store.findById(
-
-      store._id
-
-    ).populate(
-
-      "restaurant",
-
-      "restaurantName restaurantCode"
-
-    );
-
-
-
     return res.status(200).json({
-
       success: true,
-
-      message: "Store updated successfully.",
-
-      data: updatedStore,
-
+      message: "Store updated successfully",
+      data: store,
     });
 
   } catch (error) {
-
-    console.error(error);
-
-
+    console.error(
+      "UPDATE STORE ERROR:",
+      error
+    );
 
     return res.status(500).json({
-
       success: false,
-
       message: error.message,
-
     });
-
   }
-
 };
 
-
-
-/* ==========================================================
-
-   Delete Store (Soft Delete)
-
-========================================================== */
-
-
+// =====================================================
+// DELETE STORE
+// DELETE /api/stores/:id
+// =====================================================
 
 exports.deleteStore = async (req, res) => {
-
   try {
+    const { id } = req.params;
 
-    const store = await Store.findOne({
-
-      _id: req.params.id,
-
-      isDeleted: false,
-
-    });
-
-
-
-    if (!store) {
-
-      return res.status(404).json({
-
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({
         success: false,
-
-        message: "Store not found.",
-
+        message: "Invalid store ID",
       });
-
     }
 
+    const store =
+      await Store.findOne({
+        _id: id,
+        isDeleted: false,
+      });
 
+    if (!store) {
+      return res.status(404).json({
+        success: false,
+        message: "Store not found",
+      });
+    }
 
     store.isDeleted = true;
 
-    store.updatedBy = req.user?.id;
-
-
+    if (req.user && req.user._id) {
+      store.updatedBy =
+        req.user._id;
+    }
 
     await store.save();
 
-
-
     return res.status(200).json({
-
       success: true,
-
-      message: "Store deleted successfully.",
-
+      message: "Store deleted successfully",
     });
 
   } catch (error) {
-
-    console.error(error);
-
-
+    console.error(
+      "DELETE STORE ERROR:",
+      error
+    );
 
     return res.status(500).json({
-
       success: false,
-
       message: error.message,
-
     });
-
   }
-
 };
 
-
-
-/* ==========================================================
-
-   Restore Store
-
-========================================================== */
-
-
+// =====================================================
+// RESTORE STORE
+// PATCH /api/stores/:id/restore
+// =====================================================
 
 exports.restoreStore = async (req, res) => {
-
   try {
+    const { id } = req.params;
 
-    const store = await Store.findOne({
-
-      _id: req.params.id,
-
-      isDeleted: true,
-
-    });
-
-
-
-    if (!store) {
-
-      return res.status(404).json({
-
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({
         success: false,
-
-        message: "Deleted store not found.",
-
+        message: "Invalid store ID",
       });
-
     }
 
+    const store =
+      await Store.findById(id);
 
+    if (!store) {
+      return res.status(404).json({
+        success: false,
+        message: "Store not found",
+      });
+    }
 
     store.isDeleted = false;
 
-    store.updatedBy = req.user?.id;
-
-
+    if (req.user && req.user._id) {
+      store.updatedBy =
+        req.user._id;
+    }
 
     await store.save();
 
-
-
     return res.status(200).json({
-
       success: true,
-
-      message: "Store restored successfully.",
-
+      message: "Store restored successfully",
       data: store,
-
     });
 
   } catch (error) {
-
-    console.error(error);
-
-
+    console.error(
+      "RESTORE STORE ERROR:",
+      error
+    );
 
     return res.status(500).json({
-
       success: false,
-
       message: error.message,
-
     });
-
   }
-
 };
 
+// =====================================================
+// TOGGLE STORE STATUS
+// PATCH /api/stores/:id/toggle-status
+// =====================================================
 
+exports.toggleStoreStatus =
+  async (req, res) => {
+    try {
+      const { id } = req.params;
 
-/* ==========================================================
-
-   Update Store Status
-
-========================================================== */
-
-
-
-exports.updateStoreStatus = async (
-
-  req,
-
-  res
-
-) => {
-
-  try {
-
-    const { status } = req.body;
-
-
-
-    if (
-
-      !["Active", "Inactive"].includes(status)
-
-    ) {
-
-      return res.status(400).json({
-
-        success: false,
-
-        message: "Invalid status.",
-
-      });
-
-    }
-
-
-
-    const store = await Store.findOneAndUpdate(
-
-      {
-
-        _id: req.params.id,
-
-        isDeleted: false,
-
-      },
-
-      {
-
-        status,
-
-        updatedBy: req.user?.id,
-
-      },
-
-      {
-
-        new: true,
-
+      if (!mongoose.Types.ObjectId.isValid(id)) {
+        return res.status(400).json({
+          success: false,
+          message: "Invalid store ID",
+        });
       }
 
-    ).populate(
+      const store =
+        await Store.findById(id);
 
-      "restaurant",
-
-      "restaurantName restaurantCode"
-
-    );
-
-
-
-    if (!store) {
-
-      return res.status(404).json({
-
-        success: false,
-
-        message: "Store not found.",
-
-      });
-
-    }
-
-
-
-    return res.status(200).json({
-
-      success: true,
-
-      message:
-
-        "Store status updated successfully.",
-
-      data: store,
-
-    });
-
-  } catch (error) {
-
-    console.error(error);
-
-
-
-    return res.status(500).json({
-
-      success: false,
-
-      message: error.message,
-
-    });
-
-  }
-
-};
-
-
-
-/* ==========================================================
-
-   Activate Store
-
-========================================================== */
-
-
-
-exports.activateStore = async (req, res) => {
-
-  try {
-
-    const store = await Store.findOneAndUpdate(
-
-      {
-
-        _id: req.params.id,
-
-        isDeleted: false,
-
-      },
-
-      {
-
-        status: "Active",
-
-        updatedBy: req.user?.id,
-
-      },
-
-      {
-
-        new: true,
-
+      if (!store) {
+        return res.status(404).json({
+          success: false,
+          message: "Store not found",
+        });
       }
 
-    );
+      store.status =
+        store.status === "Active"
+          ? "Inactive"
+          : "Active";
 
-
-
-    if (!store) {
-
-      return res.status(404).json({
-
-        success: false,
-
-        message: "Store not found.",
-
-      });
-
-    }
-
-
-
-    return res.status(200).json({
-
-      success: true,
-
-      message: "Store activated successfully.",
-
-      data: store,
-
-    });
-
-  } catch (error) {
-
-    return res.status(500).json({
-
-      success: false,
-
-      message: error.message,
-
-    });
-
-  }
-
-};
-
-
-
-/* ==========================================================
-
-   Deactivate Store
-
-========================================================== */
-
-
-
-exports.deactivateStore = async (
-
-  req,
-
-  res
-
-) => {
-
-  try {
-
-    const store = await Store.findOneAndUpdate(
-
-      {
-
-        _id: req.params.id,
-
-        isDeleted: false,
-
-      },
-
-      {
-
-        status: "Inactive",
-
-        updatedBy: req.user?.id,
-
-      },
-
-      {
-
-        new: true,
-
+      if (req.user && req.user._id) {
+        store.updatedBy =
+          req.user._id;
       }
 
-    );
+      await store.save();
 
-
-
-    if (!store) {
-
-      return res.status(404).json({
-
-        success: false,
-
-        message: "Store not found.",
-
+      return res.status(200).json({
+        success: true,
+        message:
+          "Store status updated successfully",
+        data: store,
       });
 
+    } catch (error) {
+      console.error(
+        "TOGGLE STORE STATUS ERROR:",
+        error
+      );
+
+      return res.status(500).json({
+        success: false,
+        message: error.message,
+      });
     }
-
-
-
-    return res.status(200).json({
-
-      success: true,
-
-      message:
-
-        "Store deactivated successfully.",
-
-      data: store,
-
-    });
-
-  } catch (error) {
-
-    return res.status(500).json({
-
-      success: false,
-
-      message: error.message,
-
-    });
-
-  }
-
-};
-
-exports.searchStores = async (req, res) => {
-  try {
-    const { keyword = "" } = req.query;
-
-    const stores = await Store.find({
-      isDeleted: false,
-      $or: [
-        {
-          storeCode: {
-            $regex: keyword,
-            $options: "i",
-          },
-        },
-        {
-          storeName: {
-            $regex: keyword,
-            $options: "i",
-          },
-        },
-        {
-          branchName: {
-            $regex: keyword,
-            $options: "i",
-          },
-        },
-        {
-          city: {
-            $regex: keyword,
-            $options: "i",
-          },
-        },
-        {
-          managerName: {
-            $regex: keyword,
-            $options: "i",
-          },
-        },
-      ],
-    }).populate(
-      "restaurant",
-      "restaurantName restaurantCode"
-    );
-
-    res.status(200).json({
-      success: true,
-      count: stores.length,
-      data: stores,
-    });
-  } catch (error) {
-    res.status(500).json({
-      success: false,
-      message: error.message,
-    });
-  }
-};
-
-/* ==========================================================
-   Active Stores
-========================================================== */
-
-exports.getActiveStores = async (req, res) => {
-  try {
-    const stores = await Store.find({
-      status: "Active",
-      isDeleted: false,
-    }).populate(
-      "restaurant",
-      "restaurantName restaurantCode"
-    );
-
-    res.status(200).json({
-      success: true,
-      count: stores.length,
-      data: stores,
-    });
-  } catch (error) {
-    res.status(500).json({
-      success: false,
-      message: error.message,
-    });
-  }
-};
-
-/* ==========================================================
-   Inactive Stores
-========================================================== */
-
-exports.getInactiveStores = async (req, res) => {
-  try {
-    const stores = await Store.find({
-      status: "Inactive",
-      isDeleted: false,
-    }).populate(
-      "restaurant",
-      "restaurantName restaurantCode"
-    );
-
-    res.status(200).json({
-      success: true,
-      count: stores.length,
-      data: stores,
-    });
-  } catch (error) {
-    res.status(500).json({
-      success: false,
-      message: error.message,
-    });
-  }
-};
-
-/* ==========================================================
-   Deleted Stores
-========================================================== */
-
-exports.getDeletedStores = async (req, res) => {
-  try {
-    const stores = await Store.find({
-      isDeleted: true,
-    }).populate(
-      "restaurant",
-      "restaurantName restaurantCode"
-    );
-
-    res.status(200).json({
-      success: true,
-      count: stores.length,
-      data: stores,
-    });
-  } catch (error) {
-    res.status(500).json({
-      success: false,
-      message: error.message,
-    });
-  }
-};
-
-/* ==========================================================
-   Restaurant Stores
-========================================================== */
-
-exports.getRestaurantStores = async (req, res) => {
-  try {
-    const { restaurantId } = req.params;
-
-    const stores = await Store.find({
-      restaurant: restaurantId,
-      isDeleted: false,
-    }).populate(
-      "restaurant",
-      "restaurantName restaurantCode"
-    );
-
-    res.status(200).json({
-      success: true,
-      count: stores.length,
-      data: stores,
-    });
-  } catch (error) {
-    res.status(500).json({
-      success: false,
-      message: error.message,
-    });
-  }
-};
-
-/* ==========================================================
-   City Wise Stores
-========================================================== */
-
-exports.getCityWiseStores = async (req, res) => {
-  try {
-    const result = await Store.aggregate([
-      {
-        $match: {
-          isDeleted: false,
-        },
-      },
-      {
-        $group: {
-          _id: "$city",
-          totalStores: {
-            $sum: 1,
-          },
-        },
-      },
-      {
-        $sort: {
-          totalStores: -1,
-        },
-      },
-    ]);
-
-    res.status(200).json({
-      success: true,
-      data: result,
-    });
-  } catch (error) {
-    res.status(500).json({
-      success: false,
-      message: error.message,
-    });
-  }
-};
-
-/* ==========================================================
-   State Wise Stores
-========================================================== */
-
-exports.getStateWiseStores = async (req, res) => {
-  try {
-    const result = await Store.aggregate([
-      {
-        $match: {
-          isDeleted: false,
-        },
-      },
-      {
-        $group: {
-          _id: "$state",
-          totalStores: {
-            $sum: 1,
-          },
-        },
-      },
-      {
-        $sort: {
-          totalStores: -1,
-        },
-      },
-    ]);
-
-    res.status(200).json({
-      success: true,
-      data: result,
-    });
-  } catch (error) {
-    res.status(500).json({
-      success: false,
-      message: error.message,
-    });
-  }
-};
-
-/* ==========================================================
-   Online Order Stores
-========================================================== */
-
-exports.getOnlineOrderStores = async (req, res) => {
-  try {
-    const stores = await Store.find({
-      onlineOrderEnabled: true,
-      isDeleted: false,
-    }).populate(
-      "restaurant",
-      "restaurantName restaurantCode"
-    );
-
-    res.status(200).json({
-      success: true,
-      count: stores.length,
-      data: stores,
-    });
-  } catch (error) {
-    res.status(500).json({
-      success: false,
-      message: error.message,
-    });
-  }
-};
-
-/* ==========================================================
-   Dine In Stores
-========================================================== */
-
-exports.getDineInStores = async (req, res) => {
-  try {
-    const stores = await Store.find({
-      dineInEnabled: true,
-      isDeleted: false,
-    }).populate(
-      "restaurant",
-      "restaurantName restaurantCode"
-    );
-
-    res.status(200).json({
-      success: true,
-      count: stores.length,
-      data: stores,
-    });
-  } catch (error) {
-    res.status(500).json({
-      success: false,
-      message: error.message,
-    });
-  }
-};
-
-/* ==========================================================
-   Delivery Stores
-========================================================== */
-
-exports.getDeliveryStores = async (req, res) => {
-  try {
-    const stores = await Store.find({
-      deliveryEnabled: true,
-      isDeleted: false,
-    }).populate(
-      "restaurant",
-      "restaurantName restaurantCode"
-    );
-
-    res.status(200).json({
-      success: true,
-      count: stores.length,
-      data: stores,
-    });
-  } catch (error) {
-    res.status(500).json({
-      success: false,
-      message: error.message,
-    });
-  }
-};
-
-/* ==========================================================
-   Takeaway Stores
-========================================================== */
-
-exports.getTakeawayStores = async (req, res) => {
-  try {
-    const stores = await Store.find({
-      takeawayEnabled: true,
-      isDeleted: false,
-    }).populate(
-      "restaurant",
-      "restaurantName restaurantCode"
-    );
-
-    res.status(200).json({
-      success: true,
-      count: stores.length,
-      data: stores,
-    });
-  } catch (error) {
-    res.status(500).json({
-      success: false,
-      message: error.message,
-    });
-  }
-};
-
-/* ==========================================================
-   Store Summary
-========================================================== */
-
-exports.getStoreSummary = async (req, res) => {
-  try {
-    const [
-      totalStores,
-      activeStores,
-      inactiveStores,
-      deletedStores,
-      onlineStores,
-      dineInStores,
-      deliveryStores,
-      takeawayStores,
-    ] = await Promise.all([
-      Store.countDocuments({
-        isDeleted: false,
-      }),
-      Store.countDocuments({
-        status: "Active",
-        isDeleted: false,
-      }),
-      Store.countDocuments({
-        status: "Inactive",
-        isDeleted: false,
-      }),
-      Store.countDocuments({
-        isDeleted: true,
-      }),
-      Store.countDocuments({
-        onlineOrderEnabled: true,
-        isDeleted: false,
-      }),
-      Store.countDocuments({
-        dineInEnabled: true,
-        isDeleted: false,
-      }),
-      Store.countDocuments({
-        deliveryEnabled: true,
-        isDeleted: false,
-      }),
-      Store.countDocuments({
-        takeawayEnabled: true,
-        isDeleted: false,
-      }),
-    ]);
-
-    res.status(200).json({
-      success: true,
-      data: {
-        totalStores,
-        activeStores,
-        inactiveStores,
-        deletedStores,
-        onlineStores,
-        dineInStores,
-        deliveryStores,
-        takeawayStores,
-      },
-    });
-  } catch (error) {
-    res.status(500).json({
-      success: false,
-      message: error.message,
-    });
-  }
-};
-
-/* ==========================================================
-   Store Analytics
-========================================================== */
-
-exports.getStoreAnalytics = async (req, res) => {
-  try {
-    const analytics = await Store.aggregate([
-      {
-        $facet: {
-          statusWise: [
-            {
-              $group: {
-                _id: "$status",
-                total: {
-                  $sum: 1,
-                },
-              },
-            },
-          ],
-
-          cityWise: [
-            {
-              $group: {
-                _id: "$city",
-                total: {
-                  $sum: 1,
-                },
-              },
-            },
-            {
-              $sort: {
-                total: -1,
-              },
-            },
-          ],
-
-          stateWise: [
-            {
-              $group: {
-                _id: "$state",
-                total: {
-                  $sum: 1,
-                },
-              },
-            },
-            {
-              $sort: {
-                total: -1,
-              },
-            },
-          ],
-
-          monthlyCreated: [
-            {
-              $group: {
-                _id: {
-                  year: {
-                    $year: "$createdAt",
-                  },
-                  month: {
-                    $month: "$createdAt",
-                  },
-                },
-                totalStores: {
-                  $sum: 1,
-                },
-              },
-            },
-            {
-              $sort: {
-                "_id.year": 1,
-                "_id.month": 1,
-              },
-            },
-          ],
-        },
-      },
-    ]);
-
-    res.status(200).json({
-      success: true,
-      data: analytics[0],
-    });
-  } catch (error) {
-    res.status(500).json({
-      success: false,
-      message: error.message,
-    });
-  }
-};
+  };

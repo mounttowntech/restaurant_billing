@@ -35,10 +35,10 @@ router.get("/category/:categoryId", getCategoryWiseMenu);
 router.get("/:id", getMenuItemById);
 
 // Update
-router.put("/:id", updateMenuItem);
+router.put("/update/:id", updateMenuItem);
 
 // Delete
-router.delete("/:id", deleteMenuItem);
+router.delete("/delete/:id", deleteMenuItem);
 
 // Restore
 router.put("/restore/:id", restoreMenuItem);

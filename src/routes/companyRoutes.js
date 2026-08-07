@@ -2,71 +2,71 @@ const express = require("express");
 
 const router = express.Router();
 
-const restaurantController =
-  require("../controllers/restaurantController");
+const companyController =
+  require("../controllers/companyController");
 
 const {
   verifyToken,
 } = require("../middleware/auth");
 
 // =====================================================
-// Create Restaurant
+// Create Company
 // =====================================================
 
 router.post(
   "/create",
-  // verifyToken,
-  restaurantController.createRestaurant
+  verifyToken,
+  companyController.createCompany
 );
 
 // =====================================================
-// Get All Restaurants
+// Get All Companies
 // =====================================================
 
 router.get(
   "/all",
   verifyToken,
-  restaurantController.getAllRestaurants
+  companyController.getAllCompanies
 );
 
 // =====================================================
-// Get Restaurant By ID
+// Get Company By ID
 // =====================================================
 
 router.get(
   "/:id",
   verifyToken,
-  restaurantController.getRestaurantById
+  companyController.getCompanyById
 );
 
 // =====================================================
-// Update Restaurant
+// Update Company
 // =====================================================
 
 router.put(
   "/update/:id",
   verifyToken,
-  restaurantController.updateRestaurant
+  companyController.updateCompany
 );
 
 // =====================================================
-// Delete Restaurant
+// Delete Company
 // =====================================================
 
 router.delete(
   "/delete/:id",
   verifyToken,
-  restaurantController.deleteRestaurant
+  companyController.deleteCompany
 );
 
 // =====================================================
-// Restore Restaurant
+// Restore Company
 // =====================================================
 
 router.patch(
-  "/:id/restore",
+  "/restore/:id",
   verifyToken,
-  restaurantController.restoreRestaurant
+  companyController.restoreCompany
 );
 
 // =====================================================
@@ -74,9 +74,9 @@ router.patch(
 // =====================================================
 
 router.patch(
-  "/:id/toggle-status",
+  "/toggle-status/:id",
   verifyToken,
-  restaurantController.toggleRestaurantStatus
+  companyController.toggleCompanyStatus
 );
 
 module.exports = router;

@@ -3,180 +3,60 @@ const express = require("express");
 const router = express.Router();
 
 const {
-  // CRUD
   createStore,
-  getStores,
+  getAllStores,
   getStoreById,
-
-  // Update & Status
   updateStore,
   deleteStore,
   restoreStore,
-  updateStoreStatus,
-  activateStore,
-  deactivateStore,
-
-  // Reports
-  searchStores,
-  getActiveStores,
-  getInactiveStores,
-  getDeletedStores,
-  getRestaurantStores,
-  getCityWiseStores,
-  getStateWiseStores,
-  getOnlineOrderStores,
-  getDineInStores,
-  getDeliveryStores,
-  getTakeawayStores,
-  getStoreSummary,
-  getStoreAnalytics,
-
+  toggleStoreStatus,
 } = require("../controllers/storeController");
 
-// const { protect } = require("../middleware/auth");
+// =====================================================
+// STORE ROUTES
+// =====================================================
 
-/* ==========================================================
-   CRUD
-========================================================== */
-
+// Create store
+// No authentication required for initial setup
 router.post(
   "/create",
-  // protect,
   createStore
 );
 
+// Get all stores
 router.get(
   "/all",
-  // protect,
-  getStores
+  getAllStores
 );
 
+// Get store by ID
 router.get(
   "/:id",
-  // protect,
   getStoreById
 );
 
+// Update store
 router.put(
-  "/:id",
-  // protect,
+  "/update/:id",
   updateStore
 );
 
-/* ==========================================================
-   Status
-========================================================== */
-
+// Delete store
 router.delete(
-  "/:id",
-  // protect,
+  "/delete/:id",
   deleteStore
 );
 
-router.put(
+// Restore store
+router.patch(
   "/restore/:id",
-  // protect,
   restoreStore
 );
 
-router.put(
-  "/status/:id",
-  // protect,
-  updateStoreStatus
-);
-
-router.put(
-  "/activate/:id",
-  // protect,
-  activateStore
-);
-
-router.put(
-  "/deactivate/:id",
-  // protect,
-  deactivateStore
-);
-
-/* ==========================================================
-   Reports
-========================================================== */
-
-router.get(
-  "/reports/search",
-  // protect,
-  searchStores
-);
-
-router.get(
-  "/reports/active",
-  // protect,
-  getActiveStores
-);
-
-router.get(
-  "/reports/inactive",
-  // protect,
-  getInactiveStores
-);
-
-router.get(
-  "/reports/deleted",
-  // protect,
-  getDeletedStores
-);
-
-router.get(
-  "/reports/city",
-  // protect,
-  getCityWiseStores
-);
-
-router.get(
-  "/reports/state",
-  // protect,
-  getStateWiseStores
-);
-
-router.get(
-  "/reports/online-order",
-  // protect,
-  getOnlineOrderStores
-);
-
-router.get(
-  "/reports/dine-in",
-  // protect,
-  getDineInStores
-);
-
-router.get(
-  "/reports/delivery",
-  // protect,
-  getDeliveryStores
-);
-
-router.get(
-  "/reports/takeaway",
-  // protect,
-  getTakeawayStores
-);
-
-router.get(
-  "/reports/summary",
-  // protect,
-  getStoreSummary
-);
-
-router.get(
-  "/reports/analytics",
-  // protect,
-  getStoreAnalytics
-);
-
-router.get(
-  "/restaurant/:restaurantId",
-  // protect,
-  getRestaurantStores
+// Toggle status
+router.patch(
+  "/toggle-status/:id",
+  toggleStoreStatus
 );
 
 module.exports = router;

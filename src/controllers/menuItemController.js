@@ -39,77 +39,56 @@ exports.createMenuItem = async (req, res) => {
 // Get All Menu Items
 // ==========================================================
 
-exports.getMenuItems = async(req,res)=>{
+exports.getMenuItems = async (req, res) => {
+  try {
+    console.log("1");
 
-    try{
+    const { restaurant, store, category, status, foodType } = req.query;
 
+    let filter = {};
 
-        const {
-            restaurant,
-            store,
-            category,
-            status,
-            foodType
-        } = req.query;
+    if (restaurant) filter.restaurant = restaurant;
+    if (store) filter.store = store;
+    if (category) filter.menuCategory = category;
+    if (status) filter.status = status;
+    if (foodType) filter.foodType = foodType;
 
+    console.log("2");
 
-        let filter={};
+    const query = MenuItem.find(filter);
 
+    console.log("3");
 
-        if(restaurant)
-            filter.restaurant=restaurant;
+    query.populate("menuCategory", "categoryName");
 
+    console.log("4");
 
-        if(store)
-            filter.store=store;
+    // query.populate("recipe");
 
+    console.log("5");
 
-        if(category)
-            filter.menuCategory=category;
+    const items = await query.sort({
+      displayOrder: 1,
+      createdAt: -1,
+    });
 
+    console.log("6");
 
-        if(status)
-            filter.status=status;
+    return res.json({
+      success: true,
+      count: items.length,
+      data: items,
+    });
+  } catch (error) {
+    console.error(error);
+    console.error(error.stack);
 
-
-        if(foodType)
-            filter.foodType=foodType;
-
-
-
-        const items = await MenuItem
-        .find(filter)
-        .populate("menuCategory","categoryName")
-        .populate("recipe")
-   
-        .sort({
-            displayOrder:1,
-            createdAt:-1
-        });
-
-
-
-        res.json({
-
-            success:true,
-            count:items.length,
-            data:items
-
-        });
-
-
-
-    }catch(error){
-
-        res.status(500).json({
-            success:false,
-            message:error.message
-        });
-
-    }
-
+    return res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
 };
-
 
 
 // ==========================================================
@@ -124,8 +103,8 @@ exports.getMenuItemById = async(req,res)=>{
         const item = await MenuItem
         .findById(req.params.id)
         .populate("menuCategory")
-        .populate("recipe")
-        .populate("kitchen");
+        // .populate("recipe")
+        // .populate("kitchen");
 
 
         if(!item){

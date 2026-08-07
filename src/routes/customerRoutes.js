@@ -30,14 +30,14 @@ router.get("/:id", verifyToken, getCustomerById);
 
 router.put("/update/:id", verifyToken, updateCustomer);
 
-router.delete("/deletew/:id", verifyToken, deleteCustomer);
+router.delete("/delete/:id", verifyToken, deleteCustomer);
 
 // Status
-router.patch("/:id/status", verifyToken, changeCustomerStatus);
+router.patch("/status/:id", verifyToken, changeCustomerStatus);
 
 // Loyalty Points
 router.patch(
-  "/:id/loyalty",
+  "/loyalty/:id",
   verifyToken,
   addLoyaltyPoints
 );

@@ -1,38 +1,110 @@
 const jwt = require("jsonwebtoken");
 const User = require("../models/User");
-
-// ======================================================
-// Verify JWT Token
-// ======================================================
+const Store = require("../models/storeModel");
+const Restaurant = require("../models/Restaurant");
 
 exports.verifyToken = async (req, res, next) => {
   try {
-    console.log("Authorization Header:", req.headers.authorization);
+    console.log("========================================");
+    console.log("VERIFY TOKEN START");
+    console.log("========================================");
 
-    let token;
+    const authHeader = req.headers.authorization;
 
-    if (
-      req.headers.authorization &&
-      req.headers.authorization.startsWith("Bearer ")
-    ) {
-      token = req.headers.authorization.split(" ")[1];
+    if (!authHeader) {
+      return res.status(401).json({
+        success: false,
+        message: "Authorization header missing.",
+      });
     }
 
-    console.log("Token:", token);
+    if (!authHeader.startsWith("Bearer ")) {
+      return res.status(401).json({
+        success: false,
+        message: "Invalid authorization format.",
+      });
+    }
 
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const token = authHeader.split(" ")[1];
 
-    console.log("Decoded:", decoded);
+    if (!token) {
+      return res.status(401).json({
+        success: false,
+        message: "Token missing.",
+      });
+    }
 
-    const user = await User.findById(decoded.id).select("-password");
+    // ==========================================
+    // Decode Token
+    // ==========================================
 
-    console.log("User:", user);
+    const decoded = jwt.verify(
+      token,
+      process.env.JWT_SECRET
+    );
+
+    console.log("DECODED TOKEN:", decoded);
+
+    // ==========================================
+    // Find User
+    // ==========================================
+
+    const user = await User.findById(decoded.id)
+      .populate("store");
+
+    if (!user) {
+      return res.status(401).json({
+        success: false,
+        message: "User no longer exists.",
+      });
+    }
+
+    if (user.status !== "active") {
+      return res.status(403).json({
+        success: false,
+        message: "User account is not active.",
+      });
+    }
+
+    // ==========================================
+    // Attach User
+    // ==========================================
 
     req.user = user;
 
+    // ==========================================
+    // Attach Company ID if available
+    // ==========================================
+
+    if (user.store) {
+      const Store = require("../models/storeModel");
+      const Restaurant = require("../models/Restaurant");
+
+      const store = await Store.findById(user.store._id);
+
+      if (store) {
+        const restaurant = await Restaurant.findById(
+          store.restaurant
+        );
+
+        if (restaurant) {
+          req.restaurantId = restaurant._id;
+          req.companyId = restaurant.companyId;
+        }
+      }
+    }
+
+    console.log("USER ID:", user._id);
+    console.log("USER ROLE:", user.role);
+    console.log("USER STORE:", user.store?._id);
+    console.log("RESTAURANT ID:", req.restaurantId);
+    console.log("COMPANY ID:", req.companyId);
+
+    console.log("========================================");
+
     next();
-  } catch (err) {
-    console.log("JWT Error:", err);
+  } catch (error) {
+    console.error("VERIFY TOKEN ERROR:", error);
 
     return res.status(401).json({
       success: false,
@@ -44,18 +116,31 @@ exports.verifyToken = async (req, res, next) => {
 // Role Authorization
 // ======================================================
 
-exports.allowRoles =
-  (...roles) =>
-  (req, res, next) => {
-    const roleName = req.user?.role?.roleName;
+exports.allowRoles = (...allowedRoles) => {
+  return (req, res, next) => {
+    if (!req.user) {
+      return res.status(401).json({
+        success: false,
+        message: "Authentication required.",
+      });
+    }
 
-    if (!roleName || !roles.includes(roleName)) {
+    const userRole = String(req.user.role)
+      .trim()
+      .toLowerCase();
+
+    const allowed = allowedRoles.map((role) =>
+      String(role).trim().toLowerCase()
+    );
+
+    if (!allowed.includes(userRole)) {
       return res.status(403).json({
         success: false,
-        message: "Access denied.",
+        message: "You are not authorized.",
+        role: req.user.role,
       });
     }
 
     next();
   };
- 
+};

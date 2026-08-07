@@ -122,6 +122,9 @@ exports.getTables = async (req, res) => {
       isActive,
     } = req.query;
 
+    const pageNumber = Number(page);
+    const limitNumber = Number(limit);
+
     const filter = {
       isDeleted: false,
     };
@@ -136,30 +139,41 @@ exports.getTables = async (req, res) => {
       filter.isActive = isActive === "true";
     }
 
-    const totalRecords = await Table.countDocuments(filter);
+    const totalRecords =
+      await Table.countDocuments(filter);
 
     const tables = await Table.find(filter)
-      .populate("restaurant", "restaurantName restaurantCode")
-      .populate("store", "storeName storeCode")
-      .populate("currentWaiter", "name employeeId")
-      .populate("reservation", "reservationNo customerName")
-      .populate("currentOrder", "orderNo")
+      .populate(
+        "restaurant",
+        "restaurantName restaurantCode"
+      )
+      .populate(
+        "store",
+        "storeName storeCode"
+      )
       .sort({
         tableNumber: 1,
       })
-      .skip((Number(page) - 1) * Number(limit))
-      .limit(Number(limit));
+      .skip(
+        (pageNumber - 1) * limitNumber
+      )
+      .limit(limitNumber);
 
     return res.status(200).json({
       success: true,
       totalRecords,
-      currentPage: Number(page),
-      totalPages: Math.ceil(totalRecords / Number(limit)),
+      currentPage: pageNumber,
+      totalPages: Math.ceil(
+        totalRecords / limitNumber
+      ),
       count: tables.length,
       data: tables,
     });
   } catch (error) {
-    console.error("getTables:", error);
+    console.error(
+      "GET TABLES ERROR:",
+      error
+    );
 
     return res.status(500).json({
       success: false,
