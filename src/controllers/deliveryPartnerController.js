@@ -799,3 +799,48 @@ exports.getPerformanceReport = async (req, res) => {
   }
 
 };
+
+// =====================================
+// Restore Delivery Partner
+// =====================================
+
+exports.restoreDeliveryPartner = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    // Find deleted delivery partner
+    // includeDeleted is required because the schema
+    // automatically filters isDeleted: false
+    const partner = await DeliveryPartner.findOne({
+      _id: id,
+      isDeleted: true
+    }).setOptions({
+      includeDeleted: true
+    });
+
+    if (!partner) {
+      return res.status(404).json({
+        success: false,
+        message: "Deleted Delivery Partner not found."
+      });
+    }
+
+    // Restore delivery partner
+    await partner.restore();
+
+    res.status(200).json({
+      success: true,
+      message: "Delivery Partner restored successfully.",
+      data: partner
+    });
+
+  } catch (error) {
+    console.error("Restore Delivery Partner Error:", error);
+
+    res.status(500).json({
+      success: false,
+      message: error.message
+    });
+  }
+};
+

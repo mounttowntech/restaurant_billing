@@ -1,78 +1,250 @@
 const express = require("express");
 
-const router = express.Router();
+const router =
+  express.Router();
 
-const paymentController = require("../controllers/paymentController");
+const paymentController =
+  require("../controllers/paymentController");
 
-// Authentication middleware
-const { verifyToken } = require("../middleware/auth");
+const {
+  verifyToken,
+} = require("../middleware/auth");
 
-// Create Payment
+/* ==========================================================
+   NORMAL PAYMENT CRUD
+========================================================== */
 
-router.post("/create", verifyToken, paymentController.createPayment);
+/*
+   Create Payment
+   POST /api/payment/create
+*/
 
-// Get Payments
+router.post(
+  "/create",
+  verifyToken,
+  paymentController.createPayment
+);
 
-router.get("/all", verifyToken, paymentController.getPayments);
+/*
+   Get All Payments
+   GET /api/payment/all
+*/
 
-// Get Single Payment
+router.get(
+  "/all",
+  verifyToken,
+  paymentController.getPayments
+);
 
-router.get("/:id", verifyToken, paymentController.getPaymentById);
+/*
+   Get Payment By ID
+   GET /api/payment/:id
+*/
 
-// Update
+router.get(
+  "/:id",
+  verifyToken,
+  paymentController.getPaymentById
+);
 
-router.put("/:id", verifyToken, paymentController.updatePayment);
+/*
+   Update Payment
+   PUT /api/payment/:id
+*/
 
-// Delete
+router.put(
+  "/update/:id",
+  verifyToken,
+  paymentController.updatePayment
+);
 
-router.delete("/:id", verifyToken, paymentController.deletePayment);
+/*
+   Delete Payment
+   DELETE /api/payment/:id
+*/
 
-// Restore
+router.delete(
+  "/delete/:id",
+  verifyToken,
+  paymentController.deletePayment
+);
 
-router.put("/restore/:id", verifyToken, paymentController.restorePayment);
+/* ==========================================================
+   RESTORE
+========================================================== */
 
-// Mark Paid
+/*
+   PUT /api/payment/restore/:id
+*/
 
-router.put("/mark-paid/:id", verifyToken, paymentController.markPaymentPaid);
+router.put(
+  "/restore/:id",
+  verifyToken,
+  paymentController.restorePayment
+);
 
-// Refund
+/* ==========================================================
+   PAYMENT ACTIONS
+========================================================== */
 
-router.put("/refund/:id", verifyToken, paymentController.refundPayment);
+/*
+   Mark Paid
 
-// Cancel
+   PUT /api/payment/mark-paid/:id
+*/
 
-router.put("/cancel/:id", verifyToken, paymentController.cancelPayment);
+router.put(
+  "/mark-paid/:id",
+  verifyToken,
+  paymentController.markPaymentPaid
+);
 
-// Reports
+/*
+   Refund
 
-router.get("/reports/today", verifyToken, paymentController.todayCollection);
+   PUT /api/payment/refund/:id
+*/
 
-router.get("/reports/pending", verifyToken, paymentController.pendingPayments);
+router.put(
+  "/refund/:id",
+  verifyToken,
+  paymentController.refundPayment
+);
 
-router.get("/reports/summary", verifyToken, paymentController.paymentSummary);
+/*
+   Cancel
+
+   PUT /api/payment/cancel/:id
+*/
+
+router.put(
+  "/cancel/:id",
+  verifyToken,
+  paymentController.cancelPayment
+);
+
+/* ==========================================================
+   REPORTS
+========================================================== */
+
+/*
+   Today's Collection
+
+   GET /api/payment/reports/today
+*/
+
+router.get(
+  "/reports/today",
+  verifyToken,
+  paymentController.todayCollection
+);
+
+/*
+   Pending Payments
+
+   GET /api/payment/reports/pending
+*/
+
+router.get(
+  "/reports/pending",
+  verifyToken,
+  paymentController.pendingPayments
+);
+
+/*
+   Payment Summary
+
+   GET /api/payment/reports/summary
+*/
+
+router.get(
+  "/reports/summary",
+  verifyToken,
+  paymentController.paymentSummary
+);
+
+/*
+   Store Collection
+
+   GET /api/payment/reports/store/:storeId
+*/
 
 router.get(
   "/reports/store/:storeId",
   verifyToken,
-  paymentController.storeCollection,
+  paymentController.storeCollection
 );
 
-// Cashfree
+/* ==========================================================
+   CASHFREE
+========================================================== */
+
+/*
+   Create Cashfree Order
+
+   POST /api/payment/cashfree/create-order
+*/
 
 router.post(
   "/cashfree/create-order",
   verifyToken,
-  paymentController.createCashfreeOrder,
+  paymentController.createCashfreeOrder
 );
+
+/*
+   Verify Cashfree Payment
+
+   GET /api/payment/cashfree/verify/:orderId
+*/
 
 router.get(
   "/cashfree/verify/:orderId",
   verifyToken,
-  paymentController.verifyCashfreePayment,
+  paymentController.verifyCashfreePayment
 );
 
-// Webhook (No auth)
+/*
+   Get Cashfree Order
 
-router.post("/cashfree/webhook", paymentController.cashfreeWebhook);
+   GET /api/payment/cashfree/order/:orderId
+*/
+
+router.get(
+  "/cashfree/order/:orderId",
+  verifyToken,
+  paymentController.getCashfreeOrder
+);
+
+/*
+   Get Cashfree Transactions
+
+   GET /api/payment/cashfree/payments/:orderId
+*/
+
+router.get(
+  "/cashfree/payments/:orderId",
+  verifyToken,
+  paymentController.getCashfreePayments
+);
+
+/* ==========================================================
+   CASHFREE WEBHOOK
+========================================================== */
+
+/*
+   IMPORTANT:
+   No verifyToken here.
+
+   Cashfree calls this endpoint directly.
+*/
+
+router.post(
+  "/cashfree/webhook",
+  paymentController.cashfreeWebhook
+);
+
+/* ==========================================================
+   EXPORT
+========================================================== */
 
 module.exports = router;

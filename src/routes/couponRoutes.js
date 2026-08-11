@@ -18,28 +18,28 @@ const {
 const { verifyToken } = require("../middleware/auth");
 
 // CRUD
-router.post("/create", verifyToken, createCoupon);
+router.post("/create",verifyToken,createCoupon);
 
-router.get("/all", verifyToken, getAllCoupons);
+router.get("/all",  getAllCoupons);
 
-router.get("/:id", verifyToken, getCouponById);
+router.get("/:id", getCouponById);
 
-router.put("/update/:id", verifyToken, updateCoupon);
+router.put("/update/:id",  verifyToken,updateCoupon);
 
 router.delete("/delete/:id", verifyToken, deleteCoupon);
 
 // Status
-router.patch("/:id/status", verifyToken, changeStatus);
+router.patch("/status/:id",  changeStatus);
 
 // Coupon APIs
-router.get("/list/active", verifyToken, getActiveCoupons);
+router.get("/list/active",  getActiveCoupons);
 
-router.get("/list/auto-apply", verifyToken, getAutoApplyCoupons);
+router.get("/list/auto-apply",  getAutoApplyCoupons);
 
-router.get("/list/expired", verifyToken, getExpiredCoupons);
+router.get("/list/expired",  getExpiredCoupons);
 
-router.post("/validate", verifyToken, validateCoupon);
+router.post("/validate", validateCoupon);
 
-router.patch("/:id/increment", verifyToken, incrementUsage);
+router.patch("/increment/:id",  incrementUsage);
 
 module.exports = router;

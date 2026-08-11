@@ -281,7 +281,7 @@ const couponSchema = new mongoose.Schema(
    Pre-save Validation
 ========================================================== */
 
-couponSchema.pre("save", function (next) {
+couponSchema.pre("save", function () {
 
   // Coupon Code
   if (this.couponCode) {
@@ -292,7 +292,7 @@ couponSchema.pre("save", function (next) {
 
   // Date Validation
   if (this.endDate <= this.startDate) {
-    return next(
+    return (
       new Error("End Date must be greater than Start Date.")
     );
   }
@@ -302,7 +302,7 @@ couponSchema.pre("save", function (next) {
     this.discountType === "Percentage" &&
     this.discountValue > 100
   ) {
-    return next(
+    return (
       new Error(
         "Percentage discount cannot exceed 100."
       )
@@ -314,14 +314,14 @@ couponSchema.pre("save", function (next) {
     this.usageLimit > 0 &&
     this.usageCount > this.usageLimit
   ) {
-    return next(
+    return (
       new Error(
         "Usage count cannot exceed usage limit."
       )
     );
   }
 
-  next();
+
 
 });
 /* ==========================================================
@@ -403,7 +403,7 @@ couponSchema.index({
    Query Middleware
 ========================================================== */
 
-couponSchema.pre(/^find/, function (next) {
+couponSchema.pre(/^find/, function () {
 
   if (this.getFilter().isDeleted === undefined) {
 
@@ -413,7 +413,7 @@ couponSchema.pre(/^find/, function (next) {
 
   }
 
-  next();
+
 
 });
 

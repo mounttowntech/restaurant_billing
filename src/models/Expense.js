@@ -78,7 +78,7 @@ const expenseSchema = new mongoose.Schema(
 
     category: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "ExpenseCategory",
+      ref: "Category",
       required: true,
     },
 
@@ -303,7 +303,7 @@ const expenseSchema = new mongoose.Schema(
    Pre-save Calculations
 ========================================================== */
 
-expenseSchema.pre("save", function (next) {
+expenseSchema.pre("save", function () {
 
   // Gross Amount
   this.grossAmount =
@@ -365,7 +365,7 @@ expenseSchema.pre("save", function (next) {
     this.paymentStatus = "Paid";
   }
 
-  next();
+ 
 });
 /* ==========================================================
    Virtuals
@@ -438,7 +438,7 @@ expenseSchema.index({
 ========================================================== */
 
 // Hide Soft Deleted Records
-expenseSchema.pre(/^find/, function (next) {
+expenseSchema.pre(/^find/, function () {
 
   if (this.getFilter().isDeleted === undefined) {
     this.where({
@@ -446,12 +446,12 @@ expenseSchema.pre(/^find/, function (next) {
     });
   }
 
-  next();
+
 
 });
 
 // Format Expense Number
-expenseSchema.pre("validate", function (next) {
+expenseSchema.pre("validate", function () {
 
   if (this.expenseNo) {
     this.expenseNo = this.expenseNo
@@ -459,7 +459,7 @@ expenseSchema.pre("validate", function (next) {
       .toUpperCase();
   }
 
-  next();
+ 
 
 });
 

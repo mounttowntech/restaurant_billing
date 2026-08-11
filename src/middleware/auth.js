@@ -1,13 +1,22 @@
+
 const jwt = require("jsonwebtoken");
 const User = require("../models/User");
 const Store = require("../models/storeModel");
 const Restaurant = require("../models/Restaurant");
+
+// ======================================================
+// Verify Token
+// ======================================================
 
 exports.verifyToken = async (req, res, next) => {
   try {
     console.log("========================================");
     console.log("VERIFY TOKEN START");
     console.log("========================================");
+
+    // ==================================================
+    // Authorization Header
+    // ==================================================
 
     const authHeader = req.headers.authorization;
 
@@ -34,9 +43,9 @@ exports.verifyToken = async (req, res, next) => {
       });
     }
 
-    // ==========================================
-    // Decode Token
-    // ==========================================
+    // ==================================================
+    // Verify Token
+    // ==================================================
 
     const decoded = jwt.verify(
       token,
@@ -45,11 +54,29 @@ exports.verifyToken = async (req, res, next) => {
 
     console.log("DECODED TOKEN:", decoded);
 
-    // ==========================================
-    // Find User
-    // ==========================================
+    // ==================================================
+    // Get User ID
+    // ==================================================
 
-    const user = await User.findById(decoded.id)
+    const userId =
+      decoded.id ||
+      decoded._id ||
+      decoded.userId;
+
+    if (!userId) {
+      return res.status(401).json({
+        success: false,
+        message: "User ID not found in token.",
+      });
+    }
+
+    console.log("TOKEN USER ID:", userId);
+
+    // ==================================================
+    // Find User
+    // ==================================================
+
+    const user = await User.findById(userId)
       .populate("store");
 
     if (!user) {
@@ -59,6 +86,10 @@ exports.verifyToken = async (req, res, next) => {
       });
     }
 
+    // ==================================================
+    // Check User Status
+    // ==================================================
+
     if (user.status !== "active") {
       return res.status(403).json({
         success: false,
@@ -66,58 +97,88 @@ exports.verifyToken = async (req, res, next) => {
       });
     }
 
-    // ==========================================
+    // ==================================================
     // Attach User
-    // ==========================================
+    // ==================================================
 
     req.user = user;
 
-    // ==========================================
-    // Attach Company ID if available
-    // ==========================================
+    // Also attach User ID
+    req.userId = user._id;
+
+    // ==================================================
+    // Restaurant / Company
+    // ==================================================
 
     if (user.store) {
-      const Store = require("../models/storeModel");
-      const Restaurant = require("../models/Restaurant");
 
-      const store = await Store.findById(user.store._id);
+      const store = await Store.findById(
+        user.store._id
+      );
 
       if (store) {
+
         const restaurant = await Restaurant.findById(
           store.restaurant
         );
 
         if (restaurant) {
+
           req.restaurantId = restaurant._id;
           req.companyId = restaurant.companyId;
         }
       }
     }
 
+    // ==================================================
+    // Debug
+    // ==================================================
+
     console.log("USER ID:", user._id);
     console.log("USER ROLE:", user.role);
-    console.log("USER STORE:", user.store?._id);
-    console.log("RESTAURANT ID:", req.restaurantId);
-    console.log("COMPANY ID:", req.companyId);
+    console.log(
+      "USER STORE:",
+      user.store?._id
+    );
+    console.log(
+      "RESTAURANT ID:",
+      req.restaurantId
+    );
+    console.log(
+      "COMPANY ID:",
+      req.companyId
+    );
 
+    console.log("========================================");
+    console.log("VERIFY TOKEN SUCCESS");
     console.log("========================================");
 
     next();
+
   } catch (error) {
-    console.error("VERIFY TOKEN ERROR:", error);
+
+    console.error(
+      "VERIFY TOKEN ERROR:",
+      error
+    );
 
     return res.status(401).json({
       success: false,
       message: "Invalid or expired token.",
+      error: error.message,
     });
   }
 };
+
+
 // ======================================================
 // Role Authorization
 // ======================================================
 
 exports.allowRoles = (...allowedRoles) => {
+
   return (req, res, next) => {
+
     if (!req.user) {
       return res.status(401).json({
         success: false,
@@ -130,7 +191,9 @@ exports.allowRoles = (...allowedRoles) => {
       .toLowerCase();
 
     const allowed = allowedRoles.map((role) =>
-      String(role).trim().toLowerCase()
+      String(role)
+        .trim()
+        .toLowerCase()
     );
 
     if (!allowed.includes(userRole)) {
@@ -144,3 +207,4 @@ exports.allowRoles = (...allowedRoles) => {
     next();
   };
 };
+

@@ -11,42 +11,42 @@ const { verifyToken } = require("../middleware/auth");
 // Create Expense
 router.post(
   "/create",
-  verifyToken,
+  
   expenseController.createExpense
 );
 
 // Get All Expenses
 router.get(
   "/all",
-  verifyToken,
+
   expenseController.getAllExpenses
 );
 
 // Get Expense By ID
 router.get(
   "/:id",
-  verifyToken,
+
   expenseController.getExpenseById
 );
 
 // Update Expense
 router.put(
-  "/:id",
-  verifyToken,
+  "/update/:id",
+  
   expenseController.updateExpense
 );
 
 // Delete Expense (Soft Delete)
 router.delete(
-  "/:id",
-  verifyToken,
+  "/delete/:id",
+
   expenseController.deleteExpense
 );
 
 // Restore Expense
 router.put(
   "/restore/:id",
-  verifyToken,
+ 
   expenseController.restoreExpense
 );
 
@@ -57,14 +57,14 @@ router.put(
 // Mark Paid
 router.put(
   "/mark-paid/:id",
-  verifyToken,
+  
   expenseController.markPaid
 );
 
 // Cancel Expense
 router.put(
   "/cancel/:id",
-  verifyToken,
+  
   expenseController.cancelExpense
 );
 
@@ -75,14 +75,14 @@ router.put(
 // Approve Expense
 router.put(
   "/approve/:id",
-  verifyToken,
+ 
   expenseController.approveExpense
 );
 
 // Reject Expense
 router.put(
   "/reject/:id",
-  verifyToken,
+
   expenseController.rejectExpense
 );
 
@@ -93,35 +93,35 @@ router.put(
 // Today's Expenses
 router.get(
   "/reports/today",
-  verifyToken,
+
   expenseController.getTodayExpenses
 );
 
 // Expense Summary
 router.get(
   "/reports/summary",
-  verifyToken,
+
   expenseController.getExpenseSummary
 );
 
 // Store Expenses
 router.get(
   "/reports/store/:storeId",
-  verifyToken,
+ 
   expenseController.getStoreExpenses
 );
 
 // Pending Approvals
 router.get(
   "/reports/pending-approvals",
-  verifyToken,
+ 
   expenseController.getPendingApprovals
 );
 
 // Category Wise Expense
 router.get(
   "/reports/category-wise",
-  verifyToken,
+
   expenseController.getCategoryWiseExpense
 );
 

@@ -25,11 +25,20 @@ const splitPaymentSchema = new mongoose.Schema(
       min: 0,
     },
 
-    transactionId: String,
+    transactionId: {
+      type: String,
+      trim: true,
+    },
 
-    referenceNo: String,
+    referenceNo: {
+      type: String,
+      trim: true,
+    },
 
-    remarks: String,
+    remarks: {
+      type: String,
+      trim: true,
+    },
   },
   {
     _id: false,
@@ -42,6 +51,10 @@ const splitPaymentSchema = new mongoose.Schema(
 
 const paymentSchema = new mongoose.Schema(
   {
+    /* -------------------------------------------------------
+       Payment Number
+    ------------------------------------------------------- */
+
     paymentNo: {
       type: String,
       required: true,
@@ -55,37 +68,55 @@ const paymentSchema = new mongoose.Schema(
       default: Date.now,
     },
 
+    /* -------------------------------------------------------
+       Restaurant / Store
+    ------------------------------------------------------- */
+
     restaurant: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Restaurant",
       required: true,
+      index: true,
     },
 
     store: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Store",
       required: true,
+      index: true,
     },
+
+    /* -------------------------------------------------------
+       References
+    ------------------------------------------------------- */
 
     invoice: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Invoice",
+      index: true,
     },
 
     order: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Order",
+      index: true,
     },
 
     customer: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Customer",
+      index: true,
     },
 
     supplier: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Supplier",
+      index: true,
     },
+
+    /* -------------------------------------------------------
+       Payment Type
+    ------------------------------------------------------- */
 
     paymentType: {
       type: String,
@@ -99,6 +130,30 @@ const paymentSchema = new mongoose.Schema(
       required: true,
     },
 
+    /* -------------------------------------------------------
+       Payment Gateway
+    ------------------------------------------------------- */
+
+    paymentGateway: {
+      type: String,
+      enum: [
+        "Manual",
+        "Cashfree",
+      ],
+      default: "Manual",
+      index: true,
+    },
+
+    /* -------------------------------------------------------
+       Payment Method
+
+       Cashfree is included because you may want to display
+       "Cashfree" directly in the POS payment screen.
+
+       For more detailed Cashfree information, the actual
+       gateway method is stored in cashfreePaymentMethod.
+    ------------------------------------------------------- */
+
     paymentMethod: {
       type: String,
       enum: [
@@ -109,9 +164,15 @@ const paymentSchema = new mongoose.Schema(
         "Net Banking",
         "Cheque",
         "Split",
+        "Cashfree",
       ],
       required: true,
+      index: true,
     },
+
+    /* -------------------------------------------------------
+       Amounts
+    ------------------------------------------------------- */
 
     amount: {
       type: Number,
@@ -122,36 +183,136 @@ const paymentSchema = new mongoose.Schema(
     receivedAmount: {
       type: Number,
       default: 0,
+      min: 0,
     },
 
     balanceAmount: {
       type: Number,
       default: 0,
+      min: 0,
     },
 
     changeAmount: {
       type: Number,
       default: 0,
+      min: 0,
     },
 
-    transactionId: String,
+    /* -------------------------------------------------------
+       Manual Payment Details
+    ------------------------------------------------------- */
 
-    referenceNo: String,
+    transactionId: {
+      type: String,
+      trim: true,
+      index: true,
+    },
 
-    bankName: String,
+    referenceNo: {
+      type: String,
+      trim: true,
+      index: true,
+    },
 
-    cardLast4: String,
+    bankName: {
+      type: String,
+      trim: true,
+    },
 
-    approvalCode: String,
+    cardLast4: {
+      type: String,
+      trim: true,
+      maxlength: 4,
+    },
 
-    splitPayments: [splitPaymentSchema],
+    approvalCode: {
+      type: String,
+      trim: true,
+    },
+
+    /* -------------------------------------------------------
+       Split Payments
+    ------------------------------------------------------- */
+
+    splitPayments: {
+      type: [splitPaymentSchema],
+      default: [],
+    },
+
+    /* -------------------------------------------------------
+       Cashfree Details
+    ------------------------------------------------------- */
+
+    cashfreeOrderId: {
+      type: String,
+      trim: true,
+      index: true,
+      sparse: true,
+    },
+
+    cashfreePaymentSessionId: {
+      type: String,
+      trim: true,
+    },
+
+    cashfreePaymentId: {
+      type: String,
+      trim: true,
+      index: true,
+      sparse: true,
+    },
+
+    cashfreeOrderStatus: {
+      type: String,
+      trim: true,
+    },
+
+    cashfreePaymentStatus: {
+      type: String,
+      trim: true,
+    },
+
+    cashfreePaymentMethod: {
+      type: String,
+      trim: true,
+    },
+
+    cashfreePaymentMessage: {
+      type: String,
+      trim: true,
+    },
+
+    cashfreeBankReference: {
+      type: String,
+      trim: true,
+    },
+
+    cashfreeWebhookReceivedAt: {
+      type: Date,
+    },
+
+    /* -------------------------------------------------------
+       Refund
+    ------------------------------------------------------- */
 
     refundAmount: {
       type: Number,
       default: 0,
+      min: 0,
     },
 
-    refundReason: String,
+    refundReason: {
+      type: String,
+      trim: true,
+    },
+
+    refundedAt: {
+      type: Date,
+    },
+
+    /* -------------------------------------------------------
+       Payment Status
+    ------------------------------------------------------- */
 
     paymentStatus: {
       type: String,
@@ -159,18 +320,36 @@ const paymentSchema = new mongoose.Schema(
         "Pending",
         "Partial",
         "Paid",
+        "Failed",
         "Refunded",
         "Cancelled",
       ],
       default: "Pending",
+      index: true,
     },
 
-    remarks: String,
+    /* -------------------------------------------------------
+       Remarks
+    ------------------------------------------------------- */
+
+    remarks: {
+      type: String,
+      trim: true,
+    },
+
+    /* -------------------------------------------------------
+       Soft Delete
+    ------------------------------------------------------- */
 
     isDeleted: {
       type: Boolean,
       default: false,
+      index: true,
     },
+
+    /* -------------------------------------------------------
+       Users
+    ------------------------------------------------------- */
 
     createdBy: {
       type: mongoose.Schema.Types.ObjectId,
@@ -189,361 +368,526 @@ const paymentSchema = new mongoose.Schema(
 );
 
 /* ==========================================================
-   Pre-save Calculations
+   Pre Validate
 ========================================================== */
 
-paymentSchema.pre("save", function (next) {
-
-  if (this.paymentMethod === "Split") {
-
-    this.receivedAmount = this.splitPayments.reduce(
-      (sum, item) => sum + Number(item.amount || 0),
-      0
-    );
-
-  } else {
-
-    this.receivedAmount = Number(this.amount);
-
-  }
-
-  this.balanceAmount =
-    Number(this.amount) - Number(this.receivedAmount);
-
-  if (this.balanceAmount < 0) {
-
-    this.changeAmount = Math.abs(this.balanceAmount);
-
-    this.balanceAmount = 0;
-
-  }
-
-  if (this.receivedAmount <= 0) {
-
-    this.paymentStatus = "Pending";
-
-  } else if (this.receivedAmount < this.amount) {
-
-    this.paymentStatus = "Partial";
-
-  } else {
-
-    this.paymentStatus = "Paid";
-
-  }
-
-  next();
-
-});
-/* ==========================================================
-   Virtuals
-========================================================== */
-
-// Pending Amount
-paymentSchema.virtual("pendingAmount").get(function () {
-  return Math.max(
-    Number(this.amount || 0) - Number(this.receivedAmount || 0),
-    0
-  );
-});
-
-// Is Paid
-paymentSchema.virtual("isPaid").get(function () {
-  return this.paymentStatus === "Paid";
-});
-
-// Is Refunded
-paymentSchema.virtual("isRefunded").get(function () {
-  return this.paymentStatus === "Refunded";
-});
-
-// Is Cancelled
-paymentSchema.virtual("isCancelled").get(function () {
-  return this.paymentStatus === "Cancelled";
-});
-
-// Total Split Payments
-paymentSchema.virtual("totalSplitPayments").get(function () {
-  return this.splitPayments.length;
-});
-
-/* ==========================================================
-   Database Indexes
-========================================================== */
-
-paymentSchema.index({ paymentNo: 1 }, { unique: true });
-
-paymentSchema.index({ paymentDate: -1 });
-
-paymentSchema.index({ restaurant: 1 });
-
-paymentSchema.index({ store: 1 });
-
-paymentSchema.index({ invoice: 1 });
-
-paymentSchema.index({ order: 1 });
-
-paymentSchema.index({ customer: 1 });
-
-paymentSchema.index({ supplier: 1 });
-
-paymentSchema.index({ paymentType: 1 });
-
-paymentSchema.index({ paymentMethod: 1 });
-
-paymentSchema.index({ paymentStatus: 1 });
-
-paymentSchema.index({ transactionId: 1 });
-
-paymentSchema.index({ isDeleted: 1 });
-
-paymentSchema.index({ createdAt: -1 });
-
-paymentSchema.index({
-  paymentNo: "text",
-  referenceNo: "text",
-  transactionId: "text",
-});
-
-/* ==========================================================
-   Query Middleware
-========================================================== */
-
-// Hide Soft Deleted Records
-paymentSchema.pre(/^find/, function (next) {
-
-  if (this.getFilter().isDeleted === undefined) {
-    this.where({
-      isDeleted: false,
-    });
-  }
-
-  next();
-
-});
-
-// Format Payment Number
-paymentSchema.pre("validate", function (next) {
-
+paymentSchema.pre("validate", function () {
   if (this.paymentNo) {
     this.paymentNo = this.paymentNo
       .trim()
       .toUpperCase();
   }
 
-  next();
+  
+});
 
+/* ==========================================================
+   Pre Save Calculations
+========================================================== */
+
+paymentSchema.pre("save", function () {
+  const amount = Number(this.amount || 0);
+
+  /* --------------------------------------------------------
+     Split Payment
+  -------------------------------------------------------- */
+
+  if (
+    this.paymentMethod === "Split" &&
+    Array.isArray(this.splitPayments)
+  ) {
+    this.receivedAmount =
+      this.splitPayments.reduce(
+        (sum, item) =>
+          sum + Number(item.amount || 0),
+        0
+      );
+  }
+
+  /* --------------------------------------------------------
+     Cashfree
+  -------------------------------------------------------- */
+
+  else if (
+    this.paymentGateway === "Cashfree"
+  ) {
+    /*
+      Cashfree payment should remain pending until
+      Cashfree confirms SUCCESS.
+    */
+
+    if (
+      this.paymentStatus === "Paid"
+    ) {
+      this.receivedAmount = amount;
+    }
+  }
+
+  /* --------------------------------------------------------
+     Manual Payment
+  -------------------------------------------------------- */
+
+  else if (
+    this.isModified("receivedAmount") === false &&
+    this.paymentStatus !== "Refunded" &&
+    this.paymentStatus !== "Cancelled" &&
+    this.paymentStatus !== "Failed"
+  ) {
+    this.receivedAmount = amount;
+  }
+
+  /* --------------------------------------------------------
+     Calculate Balance / Change
+  -------------------------------------------------------- */
+
+  const received =
+    Number(this.receivedAmount || 0);
+
+  let balance =
+    amount - received;
+
+  if (balance < 0) {
+    this.changeAmount =
+      Math.abs(balance);
+
+    balance = 0;
+  } else {
+    this.changeAmount = 0;
+  }
+
+  this.balanceAmount = balance;
+
+  /* --------------------------------------------------------
+     Do NOT overwrite terminal statuses
+  -------------------------------------------------------- */
+
+  if (
+    this.paymentStatus !== "Refunded" &&
+    this.paymentStatus !== "Cancelled" &&
+    this.paymentStatus !== "Failed"
+  ) {
+    if (received <= 0) {
+      this.paymentStatus = "Pending";
+    } else if (received < amount) {
+      this.paymentStatus = "Partial";
+    } else {
+      this.paymentStatus = "Paid";
+    }
+  }
+
+ 
+});
+
+/* ==========================================================
+   Query Middleware
+========================================================== */
+
+paymentSchema.pre(/^find/, function () {
+  const filter = this.getFilter();
+
+  if (
+    filter.isDeleted === undefined
+  ) {
+    this.where({
+      isDeleted: false,
+    });
+  }
+
+
+});
+
+/* ==========================================================
+   Virtuals
+========================================================== */
+
+paymentSchema.virtual("pendingAmount").get(function () {
+  return Math.max(
+    Number(this.amount || 0) -
+      Number(this.receivedAmount || 0),
+    0
+  );
+});
+
+paymentSchema.virtual("isPaid").get(function () {
+  return this.paymentStatus === "Paid";
+});
+
+paymentSchema.virtual("isRefunded").get(function () {
+  return this.paymentStatus === "Refunded";
+});
+
+paymentSchema.virtual("isCancelled").get(function () {
+  return this.paymentStatus === "Cancelled";
+});
+
+paymentSchema.virtual("isFailed").get(function () {
+  return this.paymentStatus === "Failed";
+});
+
+paymentSchema.virtual("isCashfree").get(function () {
+  return this.paymentGateway === "Cashfree";
+});
+
+paymentSchema.virtual("totalSplitPayments").get(function () {
+  return Array.isArray(this.splitPayments)
+    ? this.splitPayments.length
+    : 0;
 });
 
 /* ==========================================================
    Instance Methods
 ========================================================== */
 
-// Mark Paid
+/* ----------------------------------------------------------
+   Mark Paid
+---------------------------------------------------------- */
+
 paymentSchema.methods.markPaid = async function (
   paymentMethod = "Cash",
   transactionId = ""
 ) {
+  this.paymentGateway = "Manual";
 
-  this.paymentMethod = paymentMethod;
-  this.transactionId = transactionId;
+  this.paymentMethod =
+    paymentMethod;
 
-  this.receivedAmount = this.amount;
+  this.transactionId =
+    transactionId;
+
+  this.receivedAmount =
+    Number(this.amount);
 
   this.balanceAmount = 0;
-
   this.changeAmount = 0;
-
   this.paymentStatus = "Paid";
 
   return await this.save();
-
 };
 
-// Refund Payment
-paymentSchema.methods.refundPayment = async function (
-  refundAmount,
-  refundReason = ""
-) {
+/* ----------------------------------------------------------
+   Mark Failed
+---------------------------------------------------------- */
 
-  this.refundAmount = refundAmount;
+paymentSchema.methods.markFailed =
+  async function (reason = "") {
+    this.paymentStatus = "Failed";
 
-  this.refundReason = refundReason;
+    if (reason) {
+      this.cashfreePaymentMessage =
+        reason;
+    }
 
-  this.paymentStatus = "Refunded";
+    return await this.save();
+  };
 
-  return await this.save();
+/* ----------------------------------------------------------
+   Refund
+---------------------------------------------------------- */
 
-};
+paymentSchema.methods.refundPayment =
+  async function (
+    refundAmount,
+    refundReason = ""
+  ) {
+    const amount =
+      Number(refundAmount);
 
-// Cancel Payment
-paymentSchema.methods.cancelPayment = async function (
-  remarks = ""
-) {
+    if (
+      !Number.isFinite(amount) ||
+      amount <= 0
+    ) {
+      throw new Error(
+        "Refund amount must be greater than 0"
+      );
+    }
 
-  this.paymentStatus = "Cancelled";
+    if (amount > this.receivedAmount) {
+      throw new Error(
+        "Refund amount cannot exceed received amount"
+      );
+    }
 
-  this.remarks = remarks;
+    this.refundAmount = amount;
 
-  return await this.save();
+    this.refundReason =
+      refundReason;
 
-};
+    this.refundedAt =
+      new Date();
 
-// Soft Delete
-paymentSchema.methods.softDelete = async function (
-  userId
-) {
+    this.paymentStatus =
+      "Refunded";
 
-  this.isDeleted = true;
+    return await this.save();
+  };
 
-  this.updatedBy = userId;
+/* ----------------------------------------------------------
+   Cancel
+---------------------------------------------------------- */
 
-  return await this.save();
+paymentSchema.methods.cancelPayment =
+  async function (
+    remarks = ""
+  ) {
+    if (this.paymentStatus === "Paid") {
+      throw new Error(
+        "Paid payment cannot be cancelled"
+      );
+    }
 
-};
+    this.paymentStatus =
+      "Cancelled";
 
-// Restore
-paymentSchema.methods.restore = async function () {
+    this.remarks =
+      remarks || this.remarks;
 
-  this.isDeleted = false;
+    return await this.save();
+  };
 
-  return await this.save();
+/* ----------------------------------------------------------
+   Soft Delete
+---------------------------------------------------------- */
 
-};
+paymentSchema.methods.softDelete =
+  async function (userId) {
+    this.isDeleted = true;
+
+    if (userId) {
+      this.updatedBy = userId;
+    }
+
+    return await this.save();
+  };
+
+/* ----------------------------------------------------------
+   Restore
+---------------------------------------------------------- */
+
+paymentSchema.methods.restore =
+  async function () {
+    this.isDeleted = false;
+
+    return await this.save();
+  };
 
 /* ==========================================================
    Static Methods
 ========================================================== */
 
-// Today's Collection
-paymentSchema.statics.getTodayCollection = async function () {
+/* ----------------------------------------------------------
+   Today Collection
+---------------------------------------------------------- */
 
-  const start = new Date();
-  start.setHours(0, 0, 0, 0);
+paymentSchema.statics.getTodayCollection =
+  async function (storeId = null) {
+    const start = new Date();
 
-  const end = new Date();
-  end.setHours(23, 59, 59, 999);
+    start.setHours(
+      0,
+      0,
+      0,
+      0
+    );
 
-  const result = await this.aggregate([
-    {
-      $match: {
-        paymentDate: {
-          $gte: start,
-          $lte: end,
-        },
-        isDeleted: false,
-        paymentStatus: {
-          $ne: "Cancelled",
-        },
+    const end = new Date();
+
+    end.setHours(
+      23,
+      59,
+      59,
+      999
+    );
+
+    const match = {
+      paymentDate: {
+        $gte: start,
+        $lte: end,
       },
-    },
-    {
-      $group: {
-        _id: null,
-        totalCollection: {
-          $sum: "$receivedAmount",
-        },
-        totalPayments: {
-          $sum: 1,
-        },
-      },
-    },
-  ]);
 
-  return (
-    result[0] || {
-      totalCollection: 0,
-      totalPayments: 0,
+      isDeleted: false,
+
+      paymentStatus: {
+        $ne: "Cancelled",
+      },
+    };
+
+    if (storeId) {
+      match.store =
+        new mongoose.Types.ObjectId(
+          storeId
+        );
     }
-  );
 
-};
-
-// Pending Payments
-paymentSchema.statics.getPendingPayments = function () {
-
-  return this.find({
-    paymentStatus: {
-      $in: ["Pending", "Partial"],
-    },
-    isDeleted: false,
-  }).sort({
-    paymentDate: -1,
-  });
-
-};
-
-// Payment Summary
-paymentSchema.statics.getPaymentSummary =
-  async function () {
-
-    const result = await this.aggregate([
-      {
-        $match: {
-          isDeleted: false,
+    const result =
+      await this.aggregate([
+        {
+          $match: match,
         },
+
+        {
+          $group: {
+            _id: null,
+
+            totalCollection: {
+              $sum: "$receivedAmount",
+            },
+
+            totalRefund: {
+              $sum: "$refundAmount",
+            },
+
+            totalPayments: {
+              $sum: 1,
+            },
+          },
+        },
+      ]);
+
+    return (
+      result[0] || {
+        totalCollection: 0,
+        totalRefund: 0,
+        totalPayments: 0,
+      }
+    );
+  };
+
+/* ----------------------------------------------------------
+   Pending Payments
+---------------------------------------------------------- */
+
+paymentSchema.statics.getPendingPayments =
+  function (storeId = null) {
+    const query = {
+      paymentStatus: {
+        $in: [
+          "Pending",
+          "Partial",
+        ],
       },
+
+      isDeleted: false,
+    };
+
+    if (storeId) {
+      query.store = storeId;
+    }
+
+    return this.find(query)
+      .populate(
+        "customer",
+        "name phone"
+      )
+      .populate(
+        "invoice",
+        "invoiceNo"
+      )
+      .populate(
+        "order",
+        "orderNo"
+      )
+      .sort({
+        paymentDate: -1,
+      });
+  };
+
+/* ----------------------------------------------------------
+   Payment Summary
+---------------------------------------------------------- */
+
+paymentSchema.statics.getPaymentSummary =
+  async function (
+    storeId = null
+  ) {
+    const match = {
+      isDeleted: false,
+    };
+
+    if (storeId) {
+      match.store =
+        new mongoose.Types.ObjectId(
+          storeId
+        );
+    }
+
+    return await this.aggregate([
+      {
+        $match: match,
+      },
+
       {
         $group: {
-          _id: "$paymentMethod",
+          _id: {
+            gateway:
+              "$paymentGateway",
+
+            method:
+              "$paymentMethod",
+          },
+
           totalAmount: {
             $sum: "$receivedAmount",
           },
+
           totalPayments: {
             $sum: 1,
           },
         },
       },
+
+      {
+        $sort: {
+          totalAmount: -1,
+        },
+      },
     ]);
-
-    return result;
-
   };
 
-// Store Collection
+/* ----------------------------------------------------------
+   Store Collection
+---------------------------------------------------------- */
+
 paymentSchema.statics.getStoreCollection =
   function (storeId) {
-
     return this.find({
       store: storeId,
+
       isDeleted: false,
+
       paymentStatus: {
         $ne: "Cancelled",
       },
-    }).sort({
-      paymentDate: -1,
-    });
-
+    })
+      .populate(
+        "customer",
+        "name phone"
+      )
+      .populate(
+        "invoice",
+        "invoiceNo"
+      )
+      .populate(
+        "order",
+        "orderNo"
+      )
+      .sort({
+        paymentDate: -1,
+      });
   };
 
 /* ==========================================================
-   JSON Settings
+   Indexes
 ========================================================== */
 
-paymentSchema.set("toJSON", {
-  virtuals: true,
-  versionKey: false,
+paymentSchema.index({
+  paymentDate: -1,
 });
 
-paymentSchema.set("toObject", {
-  virtuals: true,
-  versionKey: false,
+paymentSchema.index({
+  restaurant: 1,
+  paymentDate: -1,
 });
 
-/* ==========================================================
-   Production Optimizations
-========================================================== */
-
-// Enable virtuals in lean() queries
-paymentSchema.set("toJSON", {
-  virtuals: true,
-});
-
-paymentSchema.set("toObject", {
-  virtuals: true,
-});
-
-// Optional compound indexes for reporting
 paymentSchema.index({
   store: 1,
   paymentDate: -1,
@@ -557,6 +901,47 @@ paymentSchema.index({
 paymentSchema.index({
   supplier: 1,
   paymentDate: -1,
+});
+
+paymentSchema.index({
+  paymentStatus: 1,
+});
+
+paymentSchema.index({
+  paymentGateway: 1,
+});
+
+paymentSchema.index({
+  cashfreeOrderId: 1,
+});
+
+paymentSchema.index({
+  cashfreePaymentId: 1,
+});
+
+paymentSchema.index({
+  isDeleted: 1,
+});
+
+paymentSchema.index({
+  paymentNo: "text",
+  referenceNo: "text",
+  transactionId: "text",
+  cashfreeOrderId: "text",
+});
+
+/* ==========================================================
+   JSON / Object Settings
+========================================================== */
+
+paymentSchema.set("toJSON", {
+  virtuals: true,
+  versionKey: false,
+});
+
+paymentSchema.set("toObject", {
+  virtuals: true,
+  versionKey: false,
 });
 
 /* ==========================================================

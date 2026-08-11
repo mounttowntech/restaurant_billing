@@ -396,7 +396,7 @@ const deliveryPartnerSchema = new mongoose.Schema(
 // Pre Save Validation
 // =====================================
 
-deliveryPartnerSchema.pre("save", function (next) {
+deliveryPartnerSchema.pre("save", function () {
   try {
     // Vehicle Number Uppercase
 
@@ -433,9 +433,9 @@ deliveryPartnerSchema.pre("save", function (next) {
         ).toFixed(2) * 1;
     }
 
-    next();
+   
   } catch (error) {
-    next(error);
+    return error;
   }
 });
 // =====================================
@@ -544,7 +544,7 @@ deliveryPartnerSchema.index({
 
 // Find queries
 
-deliveryPartnerSchema.pre(/^find/, function (next) {
+deliveryPartnerSchema.pre(/^find/, function () {
   const filter = this.getFilter();
 
   // Allow admin to get deleted records
@@ -557,12 +557,12 @@ deliveryPartnerSchema.pre(/^find/, function (next) {
 
   delete filter.includeDeleted;
 
-  next();
+ 
 });
 
 // Count Queries
 
-deliveryPartnerSchema.pre("countDocuments", function (next) {
+deliveryPartnerSchema.pre("countDocuments", function () {
   const filter = this.getFilter();
 
   if (!filter.includeDeleted) {
@@ -573,19 +573,19 @@ deliveryPartnerSchema.pre("countDocuments", function (next) {
 
   delete filter.includeDeleted;
 
-  next();
+
 });
 
 // Aggregate Queries
 
-deliveryPartnerSchema.pre("aggregate", function (next) {
+deliveryPartnerSchema.pre("aggregate", function () {
   this.pipeline().unshift({
     $match: {
       isDeleted: false,
     },
   });
 
-  next();
+
 });
 
 // =====================================
