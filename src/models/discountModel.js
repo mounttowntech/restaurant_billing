@@ -290,11 +290,11 @@ const discountSchema = new mongoose.Schema(
    Pre-save Validation
 ========================================================== */
 
-discountSchema.pre("save", function (next) {
+discountSchema.pre("save", function () {
 
   // Date Validation
   if (this.endDate <= this.startDate) {
-    return next(
+    return (
       new Error("End Date must be greater than Start Date.")
     );
   }
@@ -304,7 +304,7 @@ discountSchema.pre("save", function (next) {
     this.discountType === "Percentage" &&
     this.discountValue > 100
   ) {
-    return next(
+    return (
       new Error(
         "Percentage discount cannot exceed 100."
       )
@@ -317,7 +317,7 @@ discountSchema.pre("save", function (next) {
     this.maximumDiscount > 0 &&
     this.maximumDiscount < this.discountValue
   ) {
-    return next(
+    return (
       new Error(
         "Maximum discount cannot be less than flat discount."
       )
@@ -330,14 +330,14 @@ discountSchema.pre("save", function (next) {
     this.maximumOrderAmount <
       this.minimumOrderAmount
   ) {
-    return next(
+    return (
       new Error(
         "Maximum order amount must be greater than minimum order amount."
       )
     );
   }
 
-  next();
+ 
 
 });
 /* ==========================================================
@@ -406,7 +406,7 @@ discountSchema.index({
    Query Middleware
 ========================================================== */
 
-discountSchema.pre(/^find/, function (next) {
+discountSchema.pre(/^find/, function () {
 
   if (this.getFilter().isDeleted === undefined) {
     this.where({
@@ -414,7 +414,7 @@ discountSchema.pre(/^find/, function (next) {
     });
   }
 
-  next();
+  
 
 });
 

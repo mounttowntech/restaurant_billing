@@ -196,7 +196,7 @@ const invoiceItemSchema = new mongoose.Schema(
    Item Calculations
 ========================================================== */
 
-invoiceItemSchema.pre("validate", function (next) {
+invoiceItemSchema.pre("validate", function () {
 
   // Addon Total
   this.addonAmount = this.addons.reduce(
@@ -240,7 +240,7 @@ invoiceItemSchema.pre("validate", function (next) {
     this.taxableAmount +
     this.gstAmount;
 
-  next();
+
 });
 /* ==========================================================
    Invoice Header Schema
@@ -608,7 +608,7 @@ const invoiceSchema = new mongoose.Schema(
    Pre-save Calculations
 ========================================================== */
 
-invoiceSchema.pre("save", function (next) {
+invoiceSchema.pre("save", function () {
   // ============================================
   // Total Items & Quantity
   // ============================================
@@ -756,7 +756,6 @@ invoiceSchema.pre("save", function (next) {
     }
   }
 
-  next();
 });
 /* ==========================================================
    Virtuals
@@ -843,23 +842,23 @@ invoiceSchema.index({
 ========================================================== */
 
 // Hide Soft Deleted Records
-invoiceSchema.pre(/^find/, function (next) {
+invoiceSchema.pre(/^find/, function () {
   if (this.getFilter().isDeleted === undefined) {
     this.where({ isDeleted: false });
   }
 
-  next();
+
 });
 
 // Format Invoice Number
-invoiceSchema.pre("validate", function (next) {
+invoiceSchema.pre("validate", function () {
   if (this.invoiceNo) {
     this.invoiceNo = this.invoiceNo
       .trim()
       .toUpperCase();
   }
 
-  next();
+
 });
 
 /* ==========================================================
