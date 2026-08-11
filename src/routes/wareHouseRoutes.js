@@ -2,150 +2,110 @@ const express = require("express");
 
 const router = express.Router();
 
-const purchaseController = require("../controllers/purchaseController");
+const warehouseController = require("../controllers/wareHouseController");
 
 const {
   verifyToken,
 } = require("../middleware/auth");
 
 /* ==========================================================
-   CREATE
+   Create
 ========================================================== */
 
 router.post(
   "/create",
   verifyToken,
-  purchaseController.createPurchase
+  warehouseController.createWarehouse
 );
 
 /* ==========================================================
-   GET ALL
-========================================================== */
-
-router.get(
-  "/all",
-  verifyToken,
-  purchaseController.getPurchases
-);
-
-/* ==========================================================
-   SEARCH
+   Search
 ========================================================== */
 
 router.get(
   "/search",
   verifyToken,
-  purchaseController.searchPurchase
+  warehouseController.searchWarehouse
 );
 
 /* ==========================================================
-   TODAY
-========================================================== */
-
-router.get(
-  "/today",
-  verifyToken,
-  purchaseController.todayPurchases
-);
-
-/* ==========================================================
-   SUMMARY
+   Summary
 ========================================================== */
 
 router.get(
   "/summary",
   verifyToken,
-  purchaseController.purchaseSummary
+  warehouseController.getWarehouseSummary
 );
 
 /* ==========================================================
-   SUPPLIER WISE
+   Default Warehouse
 ========================================================== */
 
 router.get(
-  "/supplier/:supplierId",
+  "/default",
   verifyToken,
-  purchaseController.supplierWisePurchase
+  warehouseController.getDefaultWarehouse
 );
 
 /* ==========================================================
-   STORE WISE
+   Get All
 ========================================================== */
 
 router.get(
-  "/store/:storeId",
+  "/all",
   verifyToken,
-  purchaseController.storeWisePurchase
+  warehouseController.getWarehouses
 );
 
 /* ==========================================================
-   RESTORE
+   Set Default
+========================================================== */
+
+router.put(
+  "/set-default/:id",
+  verifyToken,
+  warehouseController.setDefaultWarehouse
+);
+
+/* ==========================================================
+   Restore
 ========================================================== */
 
 router.put(
   "/restore/:id",
   verifyToken,
-  purchaseController.restorePurchase
+  warehouseController.restoreWarehouse
 );
 
 /* ==========================================================
-   RECEIVE
-========================================================== */
-
-router.put(
-  "/receive/:id",
-  verifyToken,
-  purchaseController.receivePurchase
-);
-
-/* ==========================================================
-   CANCEL
-========================================================== */
-
-router.put(
-  "/cancel/:id",
-  verifyToken,
-  purchaseController.cancelPurchase
-);
-
-/* ==========================================================
-   PAYMENT
-========================================================== */
-
-router.put(
-  "/payment/:id",
-  verifyToken,
-  purchaseController.updatePaymentStatus
-);
-
-/* ==========================================================
-   SINGLE
+   Single Warehouse
 ========================================================== */
 
 router.get(
   "/:id",
   verifyToken,
-  purchaseController.getPurchaseById
+  warehouseController.getWarehouseById
 );
 
 /* ==========================================================
-   UPDATE
+   Update
 ========================================================== */
 
 router.put(
   "/update/:id",
   verifyToken,
-  purchaseController.updatePurchase
+  warehouseController.updateWarehouse
 );
 
 /* ==========================================================
-   DELETE
+   Delete
 ========================================================== */
 
 router.delete(
   "/delete/:id",
   verifyToken,
-  purchaseController.deletePurchase
+  warehouseController.deleteWarehouse
 );
 
 module.exports = router;

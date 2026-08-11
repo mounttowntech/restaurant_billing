@@ -1,4 +1,4 @@
-const Chef = require("../models/Chef");
+const Chef = require("../models/chefModel");
 
 // =============================================
 // Create Chef

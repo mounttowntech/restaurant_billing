@@ -220,38 +220,39 @@ exports.deleteKOT = async(req,res)=>{
 // Restore KOT
 // ==========================================================
 
-exports.restoreKOT = async(req,res)=>{
+// ==========================================================
+// Restore KOT
+// ==========================================================
 
-    try{
+exports.restoreKOT = async (req, res) => {
+  try {
+    const kot = await KOT.findOne({
+      _id: req.params.id,
+      isDeleted: true
+    });
 
-
-        const kot = await KOT.findById(req.params.id);
-
-
-        await kot.restore();
-
-
-        res.json({
-
-            success:true,
-            message:"KOT restored successfully",
-            data:kot
-
-        });
-
-
-
-    }catch(error){
-
-        res.status(500).json({
-            success:false,
-            message:error.message
-        });
-
+    if (!kot) {
+      return res.status(404).json({
+        success: false,
+        message: "Deleted KOT not found"
+      });
     }
 
-};
+    await kot.restore();
 
+    res.status(200).json({
+      success: true,
+      message: "KOT restored successfully",
+      data: kot
+    });
+
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: error.message
+    });
+  }
+};
 
 
 

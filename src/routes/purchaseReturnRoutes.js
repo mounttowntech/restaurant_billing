@@ -2,68 +2,66 @@ const express = require("express");
 
 const router = express.Router();
 
-const {
-  createPurchaseReturn,
+const purchaseReturnController = require("../controllers/purchaseReturnController");
 
-  getPurchaseReturns,
+// ==========================================================
+// CREATE PURCHASE RETURN
+// POST /api/purchase-returns
+// ==========================================================
 
-  getPurchaseReturnById,
+router.post(
+  "/create",
+  purchaseReturnController.createPurchaseReturn
+);
 
-  updatePurchaseReturn,
+// ==========================================================
+// GET ALL PURCHASE RETURNS
+// GET /api/purchase-returns
+// ==========================================================
 
-  deletePurchaseReturn,
+router.get(
+  "/all",
+  purchaseReturnController.getPurchaseReturns
+);
 
-  restorePurchaseReturn,
+// ==========================================================
+// GET PURCHASE RETURN BY ID
+// GET /api/purchase-returns/:id
+// ==========================================================
 
-  updateReturnStatus,
+router.get(
+  "/:id",
+  purchaseReturnController.getPurchaseReturnById
+);
 
-  getSupplierReturns,
+// ==========================================================
+// CANCEL PURCHASE RETURN
+// PATCH /api/purchase-returns/:id/cancel
+// ==========================================================
 
-  getStoreReturns,
+router.patch(
+  "/cancel/:id",
+  purchaseReturnController.cancelPurchaseReturn
+);
 
-  getPurchaseReturnSummary,
-} = require("../controllers/purchaseReturnController");
+// ==========================================================
+// UPDATE PAYMENT STATUS
+// PATCH /api/purchase-returns/:id/payment-status
+// ==========================================================
 
-const { verifyToken} = require("../middleware/auth");
+router.patch(
+  "/payment-status/:id",
+  purchaseReturnController.updatePaymentStatus
+);
 
-// Create
+// ==========================================================
+// DELETE PURCHASE RETURN
+// DELETE /api/purchase-returns/:id
+// ==========================================================
 
-router.post("/create", verifyToken, createPurchaseReturn);
-
-// Get All
-
-router.get("/all", verifyToken, getPurchaseReturns);
-
-// Summary
-
-router.get("/summary", verifyToken, getPurchaseReturnSummary);
-
-// Supplier Wise
-
-router.get("/supplier/:supplierId", verifyToken, getSupplierReturns);
-
-// Store Wise
-
-router.get("/store/:storeId", verifyToken, getStoreReturns);
-
-// Single
-
-router.get("/:id", verifyToken, getPurchaseReturnById);
-
-// Update
-
-router.put("/:id", verifyToken, updatePurchaseReturn);
-
-// Update Status
-
-router.patch("/:id/status", verifyToken, updateReturnStatus);
-
-// Delete
-
-router.delete("/:id", verifyToken, deletePurchaseReturn);
-
-// Restore
-
-router.patch("/:id/restore", verifyToken, restorePurchaseReturn);
+router.delete(
+  "/delete/:id",
+  purchaseReturnController.deletePurchaseReturn
+);
 
 module.exports = router;

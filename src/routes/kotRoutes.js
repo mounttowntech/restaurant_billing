@@ -29,10 +29,10 @@ router.get("/chef/:chefId", kotController.getChefOrders);
 router.get("/:id", kotController.getKOTById);
 
 // Update
-router.put("/:id", kotController.updateKOT);
+router.put("/update/:id", kotController.updateKOT);
 
 // Delete
-router.delete("/:id", kotController.deleteKOT);
+router.delete("/delete/:id", kotController.deleteKOT);
 
 // Restore
 router.patch("/restore/:id", kotController.restoreKOT);

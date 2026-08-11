@@ -75,11 +75,11 @@ const recipeSchema = new mongoose.Schema(
       trim: true,
     },
 
-    menuItem: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "Menu",
-      required: true,
-    },
+menuItem: {
+  type: mongoose.Schema.Types.ObjectId,
+  ref: "MenuItem",
+  required: true,
+},
 
     menuCategory: {
       type: mongoose.Schema.Types.ObjectId,
@@ -171,7 +171,7 @@ const recipeSchema = new mongoose.Schema(
    Auto Calculations
 ========================================================== */
 
-recipeSchema.pre("save", function (next) {
+recipeSchema.pre("save", function () {
   let totalCost = 0;
 
   this.items.forEach((item) => {
@@ -202,7 +202,6 @@ recipeSchema.pre("save", function (next) {
         )
       : 0;
 
-  next();
 });
 
 /* ==========================================================
@@ -237,24 +236,24 @@ recipeSchema.index({ createdAt: -1 });
    Middleware
 ========================================================== */
 
-recipeSchema.pre(/^find/, function (next) {
+recipeSchema.pre(/^find/, function () {
   if (this.getFilter().isDeleted === undefined) {
     this.where({
       isDeleted: false,
     });
   }
 
-  next();
+  
 });
 
-recipeSchema.pre("validate", function (next) {
+recipeSchema.pre("validate", function () {
   if (this.recipeCode) {
     this.recipeCode = this.recipeCode
       .trim()
       .toUpperCase();
   }
 
-  next();
+  
 });
 
 /* ==========================================================

@@ -361,7 +361,7 @@ const orderSchema = new mongoose.Schema(
    Pre Save Calculation
 ========================================================== */
 
-orderSchema.pre("save", function (next) {
+orderSchema.pre("save", function () {
 
   this.totalItems = this.items.length;
 
@@ -418,7 +418,7 @@ orderSchema.pre("save", function (next) {
     this.grandTotal -
     Number(this.paidAmount || 0);
 
-  next();
+ 
 });
 
 /* ==========================================================
@@ -521,7 +521,7 @@ orderSchema.index({
 ========================================================== */
 
 // Hide Soft Deleted Records
-orderSchema.pre(/^find/, function (next) {
+orderSchema.pre(/^find/, function () {
 
   if (this.getFilter().isDeleted === undefined) {
     this.where({
@@ -529,11 +529,11 @@ orderSchema.pre(/^find/, function (next) {
     });
   }
 
-  next();
+ 
 });
 
 // Format Order Number
-orderSchema.pre("validate", function (next) {
+orderSchema.pre("validate", function () {
 
   if (this.orderNo) {
     this.orderNo = this.orderNo
@@ -541,7 +541,7 @@ orderSchema.pre("validate", function (next) {
       .toUpperCase();
   }
 
-  next();
+  
 });
 
 /* ==========================================================

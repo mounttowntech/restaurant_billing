@@ -1,116 +1,187 @@
+
 const express = require("express");
+
 const router = express.Router();
 
 const ingredientController = require("../controllers/ingradientController");
+
 const { verifyToken } = require("../middleware/auth");
 
 /* ==========================================================
-   CRUD APIs
+   Create
+   POST /api/ingredients/create
 ========================================================== */
 
-// Create Ingredient
 router.post(
   "/create",
   verifyToken,
   ingredientController.createIngredient
 );
 
-// Get All Ingredients
+/* ==========================================================
+   Search
+   GET /api/ingredients/search?keyword=tomato
+========================================================== */
+
 router.get(
-  "/all",
+  "/search",
   verifyToken,
-  ingredientController.getAllIngredients
+  ingredientController.searchIngredients
 );
 
-// Get Available Ingredients
+/* ==========================================================
+   Low Stock
+   GET /api/ingredients/low-stock
+========================================================== */
+
+router.get(
+  "/low-stock",
+  verifyToken,
+  ingredientController.getLowStock
+);
+
+/* ==========================================================
+   Out Of Stock
+   GET /api/ingredients/out-of-stock
+========================================================== */
+
+router.get(
+  "/out-of-stock",
+  verifyToken,
+  ingredientController.getOutOfStock
+);
+
+/* ==========================================================
+   Available
+   GET /api/ingredients/available
+========================================================== */
+
 router.get(
   "/available",
   verifyToken,
   ingredientController.getAvailableIngredients
 );
 
-// Get Low Stock Ingredients
+/* ==========================================================
+   Summary
+   GET /api/ingredients/summary
+========================================================== */
+
 router.get(
-  "/low-stock",
+  "/summary",
   verifyToken,
-  ingredientController.getLowStockIngredients
+  ingredientController.getIngredientSummary
 );
 
-// Get Out Of Stock Ingredients
-router.get(
-  "/out-of-stock",
-  verifyToken,
-  ingredientController.getOutOfStockIngredients
-);
+/* ==========================================================
+   Add Stock
+   PUT /api/ingredients/add-stock/:id
+========================================================== */
 
-// Stock Summary
-router.get(
-  "/stock-summary",
-  verifyToken,
-  ingredientController.getStockSummary
-);
-
-// Category Ingredients
-router.get(
-  "/category/:categoryId",
-  verifyToken,
-  ingredientController.getCategoryIngredients
-);
-
-// Supplier Ingredients
-router.get(
-  "/supplier/:supplierId",
-  verifyToken,
-  ingredientController.getSupplierIngredients
-);
-
-// Veg Ingredients
-router.get(
-  "/veg",
-  verifyToken,
-  ingredientController.getVegIngredients
-);
-
-// Get Ingredient By ID
-router.get(
-  "/:id",
-  verifyToken,
-  ingredientController.getIngredientById
-);
-
-// Update Ingredient
 router.put(
-  "/:id",
+  "/add-stock/:id",
   verifyToken,
-  ingredientController.updateIngredient
+  ingredientController.addStock
 );
 
-// Delete Ingredient
-router.delete(
-  "/:id",
-  verifyToken,
-  ingredientController.deleteIngredient
-);
+/* ==========================================================
+   Remove Stock
+   PUT /api/ingredients/remove-stock/:id
+========================================================== */
 
-// Restore Ingredient
 router.put(
-  "/restore/:id",
+  "/remove-stock/:id",
   verifyToken,
-  ingredientController.restoreIngredient
+  ingredientController.removeStock
 );
 
-// Activate Ingredient
+/* ==========================================================
+   Adjust Stock
+   PUT /api/ingredients/adjust-stock/:id
+========================================================== */
+
+router.put(
+  "/adjust-stock/:id",
+  verifyToken,
+  ingredientController.adjustStock
+);
+
+/* ==========================================================
+   Activate
+   PUT /api/ingredients/activate/:id
+========================================================== */
+
 router.put(
   "/activate/:id",
   verifyToken,
   ingredientController.activateIngredient
 );
 
-// Deactivate Ingredient
+/* ==========================================================
+   Deactivate
+   PUT /api/ingredients/deactivate/:id
+========================================================== */
+
 router.put(
   "/deactivate/:id",
   verifyToken,
   ingredientController.deactivateIngredient
 );
 
+/* ==========================================================
+   Get All
+   GET /api/ingredients/all
+========================================================== */
+
+router.get(
+  "/all",
+  verifyToken,
+  ingredientController.getIngredients
+);
+
+/* ==========================================================
+   Restore
+   PUT /api/ingredients/restore/:id
+========================================================== */
+
+router.put(
+  "/restore/:id",
+  verifyToken,
+  ingredientController.restoreIngredient
+);
+
+/* ==========================================================
+   Get By ID
+   GET /api/ingredients/:id
+========================================================== */
+
+router.get(
+  "/:id",
+  verifyToken,
+  ingredientController.getIngredientById
+);
+
+/* ==========================================================
+   Update
+   PUT /api/ingredients/:id
+========================================================== */
+
+router.put(
+  "/update/:id",
+  verifyToken,
+  ingredientController.updateIngredient
+);
+
+/* ==========================================================
+   Delete
+   DELETE /api/ingredients/:id
+========================================================== */
+
+router.delete(
+  "/delete/:id",
+  verifyToken,
+  ingredientController.deleteIngredient
+);
+
 module.exports = router;
+

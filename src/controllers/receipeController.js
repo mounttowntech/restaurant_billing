@@ -1,4 +1,5 @@
 const Recipe = require("../models/receipeModel");
+const MenuItem =require("../models/MenuItem")
 const mongoose = require("mongoose");
 /* ==========================================================
    Create Recipe
@@ -545,27 +546,27 @@ exports.getRecipeSummary = async (req, res) => {
 
 exports.getRecipeCostAnalysis = async (req, res) => {
   try {
-    const recipes = await Recipe.find()
-
+    const recipes = await Recipe.find({
+      isDeleted: false,
+    })
       .select(
-        "recipeCode recipeName totalCost sellingPrice profitAmount profitPercentage",
+        "recipeCode recipeName totalCost sellingPrice profitAmount profitPercentage"
       )
-
       .sort({
         profitPercentage: -1,
-      });
+      })
+      .lean();
 
-    res.status(200).json({
+    return res.status(200).json({
       success: true,
-
-      count: recipes.length,
-
-      data: recipes,
+      count: Array.isArray(recipes) ? recipes.length : 0,
+      data: Array.isArray(recipes) ? recipes : [],
     });
   } catch (error) {
-    res.status(500).json({
-      success: false,
+    console.error("GET RECIPE COST ANALYSIS ERROR:", error);
 
+    return res.status(500).json({
+      success: false,
       message: error.message,
     });
   }
@@ -723,27 +724,28 @@ exports.getStoreRecipes = async (req, res) => {
 
 exports.getTopProfitableRecipes = async (req, res) => {
   try {
-    const recipes = await Recipe.find()
-
+    const recipes = await Recipe.find({
+      isDeleted: false,
+    })
       .sort({
         profitPercentage: -1,
       })
-
       .limit(10)
-
       .select(
-        "recipeCode recipeName sellingPrice totalCost profitAmount profitPercentage",
-      );
+        "recipeCode recipeName sellingPrice totalCost profitAmount profitPercentage"
+      )
+      .lean();
 
-    res.status(200).json({
+    return res.status(200).json({
       success: true,
-
+      count: recipes.length,
       data: recipes,
     });
   } catch (error) {
-    res.status(500).json({
-      success: false,
+    console.error("GET TOP PROFITABLE RECIPES ERROR:", error);
 
+    return res.status(500).json({
+      success: false,
       message: error.message,
     });
   }
