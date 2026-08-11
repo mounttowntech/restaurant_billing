@@ -1,161 +1,123 @@
+
 const express = require("express");
 
 const router = express.Router();
 
 const {
-  // CRUD
   createShift,
-  getShifts,
+  getAllShifts,
   getShiftById,
-
-  // Update
   updateShift,
   deleteShift,
   restoreShift,
   updateShiftStatus,
-  activateShift,
-  deactivateShift,
-
-  // Reports
-  searchShifts,
   getActiveShifts,
-  getInactiveShifts,
-  getDeletedShifts,
-  getNightShifts,
-  getStoreShifts,
-  getRoleShifts,
-  getTodayShifts,
-  getShiftSummary,
-  getShiftAnalytics,
-
+  getShiftWaiters,
 } = require("../controllers/shiftController");
 
-// const { protect, authorize } = require("../middleware/auth");
+// If authentication is available:
+//
+// const {
+//   verifyToken,
+//   allowRoles,
+// } = require("../middleware/auth");
 
-/* ==========================================================
-   CRUD
-========================================================== */
+// ============================================================
+// CREATE SHIFT
+// ============================================================
 
 router.post(
   "/create",
-  // protect,
+  // verifyToken,
+  // allowRoles("admin", "manager"),
   createShift
 );
 
+// ============================================================
+// GET ALL SHIFTS
+// ============================================================
+
 router.get(
   "/all",
-  // protect,
-  getShifts
+  // verifyToken,
+  getAllShifts
 );
+
+// ============================================================
+// GET ACTIVE SHIFTS
+// IMPORTANT: Before /:id
+// ============================================================
 
 router.get(
-  "/:id",
-  // protect,
-  getShiftById
-);
-
-/* ==========================================================
-   Update
-========================================================== */
-
-router.put(
-  "/:id",
-  // protect,
-  updateShift
-);
-
-router.delete(
-  "/:id",
-  // protect,
-  deleteShift
-);
-
-router.put(
-  "/restore/:id",
-  // protect,
-  restoreShift
-);
-
-router.patch(
-  "/status/:id",
-  // protect,
-  updateShiftStatus
-);
-
-router.patch(
-  "/activate/:id",
-  // protect,
-  activateShift
-);
-
-router.patch(
-  "/deactivate/:id",
-  // protect,
-  deactivateShift
-);
-
-/* ==========================================================
-   Search & Reports
-========================================================== */
-
-router.get(
-  "/reports/search",
-  // protect,
-  searchShifts
-);
-
-router.get(
-  "/reports/active",
-  // protect,
+  "/active/:id",
+  // verifyToken,
   getActiveShifts
 );
 
-router.get(
-  "/reports/inactive",
-  // protect,
-  getInactiveShifts
-);
+// ============================================================
+// GET WAITERS OF A SHIFT
+// IMPORTANT: Before /:id
+// ============================================================
 
 router.get(
-  "/reports/deleted",
-  // protect,
-  getDeletedShifts
+  "/waiters/:id",
+  // verifyToken,
+  getShiftWaiters
 );
 
-router.get(
-  "/reports/night",
-  // protect,
-  getNightShifts
-);
+// ============================================================
+// GET SHIFT BY ID
+// ============================================================
 
 router.get(
-  "/reports/today",
-  // protect,
-  getTodayShifts
+  "/:id",
+  // verifyToken,
+  getShiftById
 );
 
-router.get(
-  "/reports/summary",
-  // protect,
-  getShiftSummary
+// ============================================================
+// UPDATE SHIFT
+// ============================================================
+
+router.put(
+  "/update/:id",
+  // verifyToken,
+  // allowRoles("admin", "manager"),
+  updateShift
 );
 
-router.get(
-  "/reports/analytics",
-  // protect,
-  getShiftAnalytics
+// ============================================================
+// DELETE SHIFT
+// ============================================================
+
+router.delete(
+  "/delete/:id",
+  // verifyToken,
+  // allowRoles("admin", "manager"),
+  deleteShift
 );
 
-router.get(
-  "/store/:storeId",
-  // protect,
-  getStoreShifts
+// ============================================================
+// RESTORE SHIFT
+// ============================================================
+
+router.patch(
+  "/restore/:id",
+  // verifyToken,
+  // allowRoles("admin", "manager"),
+  restoreShift
 );
 
-router.get(
-  "/role/:roleId",
-  // protect,
-  getRoleShifts
+// ============================================================
+// UPDATE SHIFT STATUS
+// ============================================================
+
+router.patch(
+  "/status/:id",
+  // verifyToken,
+  // allowRoles("admin", "manager"),
+  updateShiftStatus
 );
 
 module.exports = router;
+

@@ -239,7 +239,7 @@ customerSchema.index({ createdAt: -1 });
    Middleware
 ========================================================== */
 
-customerSchema.pre(/^find/, function (next) {
+customerSchema.pre(/^find/, function () {
 
   if (this.getFilter().isDeleted === undefined) {
 
@@ -249,11 +249,11 @@ customerSchema.pre(/^find/, function (next) {
 
   }
 
-  next();
+
 
 });
 
-customerSchema.pre("validate", function (next) {
+customerSchema.pre("validate", function () {
 
   if (this.customerCode) {
 
@@ -263,7 +263,7 @@ customerSchema.pre("validate", function (next) {
 
   }
 
-  next();
+ 
 
 });
 

@@ -62,7 +62,7 @@ router.get(
 );
 
 router.put(
-  "/:id",
+  "/update/:id",
   // protect,
   updateSupplier
 );
@@ -72,7 +72,7 @@ router.put(
 ========================================================== */
 
 router.delete(
-  "/:id",
+  "/delete/:id",
   // protect,
   deleteSupplier
 );

@@ -2,35 +2,81 @@ const express = require("express");
 
 const router = express.Router();
 
+const restaurantController =
+  require("../controllers/restaurantController");
+
 const {
-  createRestaurant,
-  getRestaurants,
-  getRestaurantById,
-  updateRestaurant,
-  deleteRestaurant,
-  updateRestaurantStatus
-} = require("../controllers/restaurantController");
+  verifyToken,
+} = require("../middleware/auth");
 
-// middleware
-const { verifyToken } = require("../middleware/auth");
+// =====================================================
+// Create Restaurant
+// =====================================================
 
+router.post(
+  "/create",
+  // verifyToken,
+  restaurantController.createRestaurant
+);
 
-// Create
-router.post("/create", verifyToken, createRestaurant);
+// =====================================================
+// Get All Restaurants
+// =====================================================
 
-// Get All
-router.get("/all", verifyToken, getRestaurants);
+router.get(
+  "/all",
+  verifyToken,
+  restaurantController.getAllRestaurants
+);
 
-// Get By Id
-router.get("/:id", verifyToken, getRestaurantById);
+// =====================================================
+// Get Restaurant By ID
+// =====================================================
 
-// Update
-router.put("/update/:id", verifyToken, updateRestaurant);
+router.get(
+  "/:id",
+  verifyToken,
+  restaurantController.getRestaurantById
+);
 
-// Soft Delete
-router.delete("/delete/:id", verifyToken, deleteRestaurant);
+// =====================================================
+// Update Restaurant
+// =====================================================
 
-// Change Status
-router.patch("/:id/status", verifyToken, updateRestaurantStatus);
+router.put(
+  "/update/:id",
+  verifyToken,
+  restaurantController.updateRestaurant
+);
+
+// =====================================================
+// Delete Restaurant
+// =====================================================
+
+router.delete(
+  "/delete/:id",
+  verifyToken,
+  restaurantController.deleteRestaurant
+);
+
+// =====================================================
+// Restore Restaurant
+// =====================================================
+
+router.patch(
+  "/:id/restore",
+  verifyToken,
+  restaurantController.restoreRestaurant
+);
+
+// =====================================================
+// Toggle Status
+// =====================================================
+
+router.patch(
+  "/:id/toggle-status",
+  verifyToken,
+  restaurantController.toggleRestaurantStatus
+);
 
 module.exports = router;

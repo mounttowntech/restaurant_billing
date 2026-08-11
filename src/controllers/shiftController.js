@@ -1,908 +1,943 @@
-const Shift = require("../models/shiftModel");
 
-/* ==========================================================
-   Create Shift
-========================================================== */
+const mongoose = require("mongoose");
+
+const Shift = require("../models/shiftModel");
+const Restaurant = require("../models/Restaurant");
+const Store = require("../models/storeModel");
+const Waiter = require("../models/waiterModel");
+
+// ============================================================
+// HELPER
+// ============================================================
+
+const isValidObjectId = (id) => {
+  return mongoose.Types.ObjectId.isValid(id);
+};
+
+// ============================================================
+// CREATE SHIFT
+// ============================================================
 
 exports.createShift = async (req, res) => {
   try {
-    const existingShift = await Shift.findOne({
-      shiftCode: req.body.shiftCode.toUpperCase(),
-      isDeleted: false,
-    });
+    const {
+      restaurant,
+      store,
+      shiftCode,
+      shiftName,
+      startTime,
+      endTime,
+      isOvernight,
+      breakStartTime,
+      breakEndTime,
+      breakDuration,
+      gracePeriod,
+      workingHours,
+      applicableDays,
+      description,
+      color,
+      isActive,
+    } = req.body;
 
-    if (existingShift) {
+    // --------------------------------------------------------
+    // REQUIRED VALIDATION
+    // --------------------------------------------------------
+
+    if (!restaurant) {
       return res.status(400).json({
         success: false,
-        message: "Shift code already exists.",
+        message: "Restaurant is required",
       });
     }
 
-    const shift = await Shift.create({
-      ...req.body,
-      createdBy: req.user?.id || req.body.createdBy,
+    if (!store) {
+      return res.status(400).json({
+        success: false,
+        message: "Store is required",
+      });
+    }
+
+    if (!shiftCode) {
+      return res.status(400).json({
+        success: false,
+        message: "Shift code is required",
+      });
+    }
+
+    if (!shiftName) {
+      return res.status(400).json({
+        success: false,
+        message: "Shift name is required",
+      });
+    }
+
+    if (!startTime) {
+      return res.status(400).json({
+        success: false,
+        message: "Start time is required",
+      });
+    }
+
+    if (!endTime) {
+      return res.status(400).json({
+        success: false,
+        message: "End time is required",
+      });
+    }
+
+    // --------------------------------------------------------
+    // OBJECT ID VALIDATION
+    // --------------------------------------------------------
+
+    if (!isValidObjectId(restaurant)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid restaurant ID",
+      });
+    }
+
+    if (!isValidObjectId(store)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid store ID",
+      });
+    }
+
+    // --------------------------------------------------------
+    // CHECK RESTAURANT
+    // --------------------------------------------------------
+
+    const restaurantExists = await Restaurant.findById(restaurant);
+
+    if (!restaurantExists) {
+      return res.status(404).json({
+        success: false,
+        message: "Restaurant not found",
+      });
+    }
+
+    // --------------------------------------------------------
+    // CHECK STORE
+    // --------------------------------------------------------
+
+    const storeExists = await Store.findById(store);
+
+    if (!storeExists) {
+      return res.status(404).json({
+        success: false,
+        message: "Store not found",
+      });
+    }
+
+    // --------------------------------------------------------
+    // DUPLICATE SHIFT CODE
+    // --------------------------------------------------------
+
+    const normalizedCode = shiftCode.trim().toUpperCase();
+
+    const existingShift = await Shift.findOne({
+      shiftCode: normalizedCode,
     });
 
+    if (existingShift) {
+      return res.status(409).json({
+        success: false,
+        message: "Shift code already exists",
+      });
+    }
+
+    // --------------------------------------------------------
+    // CHECK SHIFT NAME
+    // --------------------------------------------------------
+
+    const existingName = await Shift.findOne({
+      restaurant,
+      store,
+      shiftName: {
+        $regex: `^${shiftName.trim()}$`,
+        $options: "i",
+      },
+      isDeleted: false,
+    });
+
+    if (existingName) {
+      return res.status(409).json({
+        success: false,
+        message: "Shift name already exists for this store",
+      });
+    }
+
+    // --------------------------------------------------------
+    // TIME VALIDATION
+    // --------------------------------------------------------
+
+    const timeRegex = /^([01]\d|2[0-3]):([0-5]\d)$/;
+
+    if (!timeRegex.test(startTime)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid startTime. Use HH:mm format",
+      });
+    }
+
+    if (!timeRegex.test(endTime)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid endTime. Use HH:mm format",
+      });
+    }
+
+    if (breakStartTime && !timeRegex.test(breakStartTime)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid breakStartTime. Use HH:mm format",
+      });
+    }
+
+    if (breakEndTime && !timeRegex.test(breakEndTime)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid breakEndTime. Use HH:mm format",
+      });
+    }
+
+    // --------------------------------------------------------
+    // CREATE SHIFT
+    // --------------------------------------------------------
+
+    const shift = await Shift.create({
+      restaurant,
+      store,
+      shiftCode: normalizedCode,
+      shiftName: shiftName.trim(),
+      startTime,
+      endTime,
+      isOvernight: Boolean(isOvernight),
+      breakStartTime: breakStartTime || "",
+      breakEndTime: breakEndTime || "",
+      breakDuration: breakDuration || 0,
+      gracePeriod: gracePeriod || 15,
+      workingHours: workingHours || 0,
+      applicableDays:
+        applicableDays && applicableDays.length
+          ? applicableDays
+          : [
+              "Monday",
+              "Tuesday",
+              "Wednesday",
+              "Thursday",
+              "Friday",
+              "Saturday",
+              "Sunday",
+            ],
+      description: description || "",
+      color: color || "",
+      isActive:
+        isActive !== undefined
+          ? isActive
+          : true,
+      createdBy: req.user?._id || req.user?.id,
+      updatedBy: req.user?._id || req.user?.id,
+    });
+
+    // --------------------------------------------------------
+    // POPULATE
+    // --------------------------------------------------------
+
     const populatedShift = await Shift.findById(shift._id)
-      .populate("restaurant", "restaurantName restaurantCode")
-      .populate("store", "storeName storeCode")
-      .populate("applicableRoles", "roleName roleCode")
-      .populate("createdBy", "name");
+      .populate(
+        "restaurant",
+        "restaurantName restaurantCode"
+      )
+      .populate(
+        "store",
+        "storeName storeCode"
+      );
 
     return res.status(201).json({
       success: true,
-      message: "Shift created successfully.",
+      message: "Shift created successfully",
       data: populatedShift,
     });
   } catch (error) {
-    console.error("createShift Error:", error);
+    console.error("Create Shift Error:", error);
+
+    if (error.code === 11000) {
+      return res.status(409).json({
+        success: false,
+        message: "Shift code already exists",
+        error: error.keyValue,
+      });
+    }
 
     return res.status(500).json({
       success: false,
-      message: "Failed to create shift.",
+      message: "Failed to create shift",
       error: error.message,
     });
   }
 };
 
-/* ==========================================================
-   Get All Shifts
-========================================================== */
+// ============================================================
+// GET ALL SHIFTS
+// ============================================================
 
-exports.getShifts = async (req, res) => {
+exports.getAllShifts = async (req, res) => {
   try {
-    const {
+    let {
       page = 1,
-      limit = 10,
+      limit = 20,
+      search = "",
       restaurant,
       store,
-      shiftType,
-      status,
-      search,
+      isActive,
     } = req.query;
 
-    const filter = {};
+    page = Math.max(Number(page), 1);
+    limit = Math.min(Math.max(Number(limit), 1), 100);
 
-    if (restaurant) filter.restaurant = restaurant;
+    const skip = (page - 1) * limit;
 
-    if (store) filter.store = store;
+    const filter = {
+      isDeleted: false,
+    };
 
-    if (shiftType) filter.shiftType = shiftType;
+    // --------------------------------------------------------
+    // RESTAURANT
+    // --------------------------------------------------------
 
-    if (status !== undefined) {
-      filter.status = status === "true";
+    if (restaurant) {
+      if (!isValidObjectId(restaurant)) {
+        return res.status(400).json({
+          success: false,
+          message: "Invalid restaurant ID",
+        });
+      }
+
+      filter.restaurant = restaurant;
     }
 
-    if (search) {
+    // --------------------------------------------------------
+    // STORE
+    // --------------------------------------------------------
+
+    if (store) {
+      if (!isValidObjectId(store)) {
+        return res.status(400).json({
+          success: false,
+          message: "Invalid store ID",
+        });
+      }
+
+      filter.store = store;
+    }
+
+    // --------------------------------------------------------
+    // ACTIVE
+    // --------------------------------------------------------
+
+    if (isActive !== undefined) {
+      filter.isActive = isActive === "true";
+    }
+
+    // --------------------------------------------------------
+    // SEARCH
+    // --------------------------------------------------------
+
+    if (search.trim()) {
       filter.$or = [
         {
-          shiftName: {
-            $regex: search,
+          shiftCode: {
+            $regex: search.trim(),
             $options: "i",
           },
         },
         {
-          shiftCode: {
-            $regex: search,
+          shiftName: {
+            $regex: search.trim(),
             $options: "i",
           },
         },
         {
           description: {
-            $regex: search,
+            $regex: search.trim(),
             $options: "i",
           },
         },
       ];
     }
 
-    const total = await Shift.countDocuments(filter);
+    // --------------------------------------------------------
+    // QUERY
+    // --------------------------------------------------------
 
-    const shifts = await Shift.find(filter)
-      .populate("restaurant", "restaurantName restaurantCode")
-      .populate("store", "storeName storeCode")
-      .populate("applicableRoles", "roleName roleCode")
-      .sort({
-        createdAt: -1,
-      })
-      .skip((Number(page) - 1) * Number(limit))
-      .limit(Number(limit));
+    const [shifts, total] = await Promise.all([
+      Shift.find(filter)
+        .populate(
+          "restaurant",
+          "restaurantName restaurantCode"
+        )
+        .populate(
+          "store",
+          "storeName storeCode"
+        )
+        .populate(
+          "createdBy",
+          "name email"
+        )
+        .populate(
+          "updatedBy",
+          "name email"
+        )
+        .sort({
+          createdAt: -1,
+        })
+        .skip(skip)
+        .limit(limit),
+
+      Shift.countDocuments(filter),
+    ]);
 
     return res.status(200).json({
       success: true,
-      totalRecords: total,
-      currentPage: Number(page),
-      totalPages: Math.ceil(total / Number(limit)),
-      count: shifts.length,
+      message: "Shifts fetched successfully",
       data: shifts,
+      pagination: {
+        total,
+        page,
+        limit,
+        totalPages: Math.ceil(total / limit),
+        hasNextPage:
+          page < Math.ceil(total / limit),
+        hasPreviousPage: page > 1,
+      },
     });
   } catch (error) {
-    console.error("getShifts Error:", error);
+    console.error("Get All Shifts Error:", error);
 
     return res.status(500).json({
       success: false,
-      message: "Failed to fetch shifts.",
+      message: "Failed to fetch shifts",
       error: error.message,
     });
   }
 };
 
-/* ==========================================================
-   Get Shift By Id
-========================================================== */
+// ============================================================
+// GET SHIFT BY ID
+// ============================================================
 
 exports.getShiftById = async (req, res) => {
   try {
-    const shift = await Shift.findById(req.params.id)
-      .populate("restaurant", "restaurantName restaurantCode")
-      .populate("store", "storeName storeCode")
-      .populate("applicableRoles", "roleName roleCode")
-      .populate("createdBy", "name email")
-      .populate("updatedBy", "name email");
+    const { id } = req.params;
+
+    if (!isValidObjectId(id)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid shift ID",
+      });
+    }
+
+    const shift = await Shift.findOne({
+      _id: id,
+      isDeleted: false,
+    })
+      .populate(
+        "restaurant",
+        "restaurantName restaurantCode ownerName"
+      )
+      .populate(
+        "store",
+        "storeName storeCode phone"
+      )
+      .populate(
+        "createdBy",
+        "name email"
+      )
+      .populate(
+        "updatedBy",
+        "name email"
+      );
 
     if (!shift) {
       return res.status(404).json({
         success: false,
-        message: "Shift not found.",
+        message: "Shift not found",
       });
     }
 
     return res.status(200).json({
       success: true,
+      message: "Shift fetched successfully",
       data: shift,
     });
   } catch (error) {
-    console.error("getShiftById Error:", error);
+    console.error("Get Shift Error:", error);
 
     return res.status(500).json({
       success: false,
-      message: "Failed to fetch shift.",
+      message: "Failed to fetch shift",
       error: error.message,
     });
   }
 };
 
+// ============================================================
+// UPDATE SHIFT
+// ============================================================
+
 exports.updateShift = async (req, res) => {
   try {
-    const shift = await Shift.findById(req.params.id);
+    const { id } = req.params;
+
+    if (!isValidObjectId(id)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid shift ID",
+      });
+    }
+
+    const shift = await Shift.findOne({
+      _id: id,
+      isDeleted: false,
+    });
 
     if (!shift) {
       return res.status(404).json({
         success: false,
-
-        message: "Shift not found.",
+        message: "Shift not found",
       });
     }
 
-    // Prevent duplicate shift code
+    const allowedFields = [
+      "restaurant",
+      "store",
+      "shiftCode",
+      "shiftName",
+      "startTime",
+      "endTime",
+      "isOvernight",
+      "breakStartTime",
+      "breakEndTime",
+      "breakDuration",
+      "gracePeriod",
+      "workingHours",
+      "applicableDays",
+      "description",
+      "color",
+      "isActive",
+    ];
 
-    if (
-      req.body.shiftCode &&
-      req.body.shiftCode.toUpperCase() !== shift.shiftCode
-    ) {
-      const exists = await Shift.findOne({
-        shiftCode: req.body.shiftCode.toUpperCase(),
+    // --------------------------------------------------------
+    // UPDATE FIELDS
+    // --------------------------------------------------------
 
-        _id: { $ne: shift._id },
+    allowedFields.forEach((field) => {
+      if (req.body[field] !== undefined) {
+        shift[field] = req.body[field];
+      }
+    });
 
-        isDeleted: false,
+    // --------------------------------------------------------
+    // NORMALIZE CODE
+    // --------------------------------------------------------
+
+    if (req.body.shiftCode) {
+      shift.shiftCode = req.body.shiftCode
+        .trim()
+        .toUpperCase();
+
+      const duplicate = await Shift.findOne({
+        shiftCode: shift.shiftCode,
+        _id: {
+          $ne: id,
+        },
       });
 
-      if (exists) {
-        return res.status(400).json({
+      if (duplicate) {
+        return res.status(409).json({
           success: false,
-
-          message: "Shift code already exists.",
+          message: "Shift code already exists",
         });
       }
     }
 
-    Object.assign(shift, req.body);
+    // --------------------------------------------------------
+    // TIME VALIDATION
+    // --------------------------------------------------------
 
-    shift.updatedBy = req.user?.id || req.body.updatedBy || shift.updatedBy;
+    const timeRegex = /^([01]\d|2[0-3]):([0-5]\d)$/;
+
+    const timeFields = [
+      "startTime",
+      "endTime",
+      "breakStartTime",
+      "breakEndTime",
+    ];
+
+    for (const field of timeFields) {
+      if (
+        req.body[field] !== undefined &&
+        req.body[field] !== "" &&
+        !timeRegex.test(req.body[field])
+      ) {
+        return res.status(400).json({
+          success: false,
+          message: `Invalid ${field}. Use HH:mm format`,
+        });
+      }
+    }
+
+    shift.updatedBy =
+      req.user?._id || req.user?.id;
 
     await shift.save();
 
-    const updatedShift = await Shift.findById(shift._id)
-
-      .populate("restaurant", "restaurantName restaurantCode")
-
-      .populate("store", "storeName storeCode")
-
-      .populate("applicableRoles", "roleName roleCode")
-
-      .populate("updatedBy", "name");
+    const updatedShift = await Shift.findById(
+      shift._id
+    )
+      .populate(
+        "restaurant",
+        "restaurantName restaurantCode"
+      )
+      .populate(
+        "store",
+        "storeName storeCode"
+      );
 
     return res.status(200).json({
       success: true,
-
-      message: "Shift updated successfully.",
-
+      message: "Shift updated successfully",
       data: updatedShift,
     });
   } catch (error) {
-    console.error("updateShift Error:", error);
+    console.error("Update Shift Error:", error);
+
+    if (error.code === 11000) {
+      return res.status(409).json({
+        success: false,
+        message: "Shift code already exists",
+      });
+    }
 
     return res.status(500).json({
       success: false,
-
-      message: "Failed to update shift.",
-
+      message: "Failed to update shift",
       error: error.message,
     });
   }
 };
 
-/* ==========================================================
-
-   Soft Delete Shift
-
-========================================================== */
+// ============================================================
+// DELETE SHIFT
+// ============================================================
 
 exports.deleteShift = async (req, res) => {
   try {
-    const shift = await Shift.findById(req.params.id);
+    const { id } = req.params;
+
+    if (!isValidObjectId(id)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid shift ID",
+      });
+    }
+
+    const shift = await Shift.findOne({
+      _id: id,
+      isDeleted: false,
+    });
 
     if (!shift) {
       return res.status(404).json({
         success: false,
+        message: "Shift not found",
+      });
+    }
 
-        message: "Shift not found.",
+    // --------------------------------------------------------
+    // CHECK WAITERS
+    // --------------------------------------------------------
+
+    const assignedWaiters =
+      await Waiter.countDocuments({
+        shift: id,
+        isDeleted: false,
+      });
+
+    if (assignedWaiters > 0) {
+      return res.status(400).json({
+        success: false,
+        message:
+          "Cannot delete shift because waiters are assigned to this shift",
+        assignedWaiters,
       });
     }
 
     shift.isDeleted = true;
-
-    shift.updatedBy = req.user?.id || req.body.updatedBy || shift.updatedBy;
+    shift.isActive = false;
+    shift.updatedBy =
+      req.user?._id || req.user?.id;
 
     await shift.save();
 
     return res.status(200).json({
       success: true,
-
-      message: "Shift deleted successfully.",
+      message: "Shift deleted successfully",
     });
   } catch (error) {
-    console.error("deleteShift Error:", error);
+    console.error("Delete Shift Error:", error);
 
     return res.status(500).json({
       success: false,
-
-      message: "Failed to delete shift.",
-
+      message: "Failed to delete shift",
       error: error.message,
     });
   }
 };
 
-/* ==========================================================
-
-   Restore Shift
-
-========================================================== */
+// ============================================================
+// RESTORE SHIFT
+// ============================================================
 
 exports.restoreShift = async (req, res) => {
   try {
-    const shift = await Shift.findOne({
-      _id: req.params.id,
+    const { id } = req.params;
 
-      isDeleted: true,
-    });
+    if (!isValidObjectId(id)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid shift ID",
+      });
+    }
+
+    const shift = await Shift.findById(id);
 
     if (!shift) {
       return res.status(404).json({
         success: false,
+        message: "Shift not found",
+      });
+    }
 
-        message: "Deleted shift not found.",
+    if (!shift.isDeleted) {
+      return res.status(400).json({
+        success: false,
+        message: "Shift is already active",
       });
     }
 
     shift.isDeleted = false;
-
-    shift.updatedBy = req.user?.id || req.body.updatedBy || shift.updatedBy;
+    shift.isActive = true;
+    shift.updatedBy =
+      req.user?._id || req.user?.id;
 
     await shift.save();
 
     return res.status(200).json({
       success: true,
-
-      message: "Shift restored successfully.",
-
+      message: "Shift restored successfully",
       data: shift,
     });
   } catch (error) {
-    console.error("restoreShift Error:", error);
+    console.error("Restore Shift Error:", error);
 
     return res.status(500).json({
       success: false,
-
-      message: "Failed to restore shift.",
-
+      message: "Failed to restore shift",
       error: error.message,
     });
   }
 };
 
-/* ==========================================================
-
-   Update Shift Status
-
-========================================================== */
+// ============================================================
+// UPDATE SHIFT STATUS
+// ============================================================
 
 exports.updateShiftStatus = async (req, res) => {
   try {
-    const { status } = req.body;
+    const { id } = req.params;
+    const { isActive } = req.body;
 
-    const shift = await Shift.findById(req.params.id);
+    if (!isValidObjectId(id)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid shift ID",
+      });
+    }
+
+    if (typeof isActive !== "boolean") {
+      return res.status(400).json({
+        success: false,
+        message: "isActive must be true or false",
+      });
+    }
+
+    const shift = await Shift.findOne({
+      _id: id,
+      isDeleted: false,
+    });
 
     if (!shift) {
       return res.status(404).json({
         success: false,
-
-        message: "Shift not found.",
+        message: "Shift not found",
       });
     }
 
-    shift.status = status;
-
-    shift.updatedBy = req.user?.id || req.body.updatedBy || shift.updatedBy;
+    shift.isActive = isActive;
+    shift.updatedBy =
+      req.user?._id || req.user?.id;
 
     await shift.save();
 
     return res.status(200).json({
       success: true,
-
-      message: "Shift status updated successfully.",
-
+      message: "Shift status updated successfully",
       data: shift,
     });
   } catch (error) {
-    console.error("updateShiftStatus Error:", error);
+    console.error("Update Shift Status Error:", error);
 
     return res.status(500).json({
       success: false,
-
-      message: "Failed to update shift status.",
-
+      message: "Failed to update shift status",
       error: error.message,
     });
   }
 };
 
-/* ==========================================================
-
-   Activate Shift
-
-========================================================== */
-
-exports.activateShift = async (req, res) => {
-  try {
-    const shift = await Shift.findById(req.params.id);
-
-    if (!shift) {
-      return res.status(404).json({
-        success: false,
-
-        message: "Shift not found.",
-      });
-    }
-
-    shift.status = true;
-
-    shift.updatedBy = req.user?.id || req.body.updatedBy || shift.updatedBy;
-
-    await shift.save();
-
-    return res.status(200).json({
-      success: true,
-
-      message: "Shift activated successfully.",
-
-      data: shift,
-    });
-  } catch (error) {
-    console.error("activateShift Error:", error);
-
-    return res.status(500).json({
-      success: false,
-
-      message: "Failed to activate shift.",
-
-      error: error.message,
-    });
-  }
-};
-
-/* ==========================================================
-
-   Deactivate Shift
-
-========================================================== */
-
-exports.deactivateShift = async (req, res) => {
-  try {
-    const shift = await Shift.findById(req.params.id);
-
-    if (!shift) {
-      return res.status(404).json({
-        success: false,
-
-        message: "Shift not found.",
-      });
-    }
-
-    shift.status = false;
-
-    shift.updatedBy = req.user?.id || req.body.updatedBy || shift.updatedBy;
-
-    await shift.save();
-
-    return res.status(200).json({
-      success: true,
-
-      message: "Shift deactivated successfully.",
-
-      data: shift,
-    });
-  } catch (error) {
-    console.error("deactivateShift Error:", error);
-
-    return res.status(500).json({
-      success: false,
-
-      message: "Failed to deactivate shift.",
-
-      error: error.message,
-    });
-  }
-};
-
-exports.searchShifts = async (req, res) => {
-  try {
-    const { keyword = "" } = req.query;
-
-    const shifts = await Shift.find({
-      $or: [
-        { shiftCode: { $regex: keyword, $options: "i" } },
-
-        { shiftName: { $regex: keyword, $options: "i" } },
-
-        { description: { $regex: keyword, $options: "i" } },
-      ],
-    })
-
-      .populate("restaurant", "restaurantName")
-
-      .populate("store", "storeName")
-
-      .sort({ createdAt: -1 });
-
-    res.json({
-      success: true,
-
-      count: shifts.length,
-
-      data: shifts,
-    });
-  } catch (error) {
-    res.status(500).json({
-      success: false,
-
-      message: error.message,
-    });
-  }
-};
-
-/* ==========================================================
-
-   Get Active Shifts
-
-========================================================== */
+// ============================================================
+// GET ACTIVE SHIFTS
+// ============================================================
 
 exports.getActiveShifts = async (req, res) => {
   try {
-    const shifts = await Shift.find({
-      status: true,
-    })
+    const { restaurant, store } = req.query;
 
-      .populate("restaurant", "restaurantName")
+    const filter = {
+      isDeleted: false,
+      isActive: true,
+    };
 
-      .populate("store", "storeName")
+    if (restaurant) {
+      if (!isValidObjectId(restaurant)) {
+        return res.status(400).json({
+          success: false,
+          message: "Invalid restaurant ID",
+        });
+      }
 
-      .sort({ shiftName: 1 });
+      filter.restaurant = restaurant;
+    }
 
-    res.json({
+    if (store) {
+      if (!isValidObjectId(store)) {
+        return res.status(400).json({
+          success: false,
+          message: "Invalid store ID",
+        });
+      }
+
+      filter.store = store;
+    }
+
+    const shifts = await Shift.find(filter)
+      .populate(
+        "restaurant",
+        "restaurantName restaurantCode"
+      )
+      .populate(
+        "store",
+        "storeName storeCode"
+      )
+      .sort({
+        startTime: 1,
+      });
+
+    return res.status(200).json({
       success: true,
-
+      message: "Active shifts fetched successfully",
       count: shifts.length,
-
       data: shifts,
     });
   } catch (error) {
-    res.status(500).json({
-      success: false,
+    console.error("Get Active Shifts Error:", error);
 
-      message: error.message,
+    return res.status(500).json({
+      success: false,
+      message: "Failed to fetch active shifts",
+      error: error.message,
     });
   }
 };
 
-/* ==========================================================
+// ============================================================
+// GET SHIFT WAITERS
+// ============================================================
 
-   Get Inactive Shifts
-
-========================================================== */
-
-exports.getInactiveShifts = async (req, res) => {
+exports.getShiftWaiters = async (req, res) => {
   try {
-    const shifts = await Shift.find({
-      status: false,
+    const { id } = req.params;
+
+    if (!isValidObjectId(id)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid shift ID",
+      });
+    }
+
+    const shift = await Shift.findOne({
+      _id: id,
+      isDeleted: false,
+    });
+
+    if (!shift) {
+      return res.status(404).json({
+        success: false,
+        message: "Shift not found",
+      });
+    }
+
+    const waiters = await Waiter.find({
+      shift: id,
+      isDeleted: false,
     })
+      .populate(
+        "restaurant",
+        "restaurantName"
+      )
+      .populate(
+        "store",
+        "storeName"
+      )
+      .populate(
+        "user",
+        "name email phone"
+      )
+      .populate(
+        "assignedTables"
+      )
+      .sort({
+        waiterName: 1,
+      });
 
-      .populate("restaurant", "restaurantName")
-
-      .populate("store", "storeName")
-
-      .sort({ shiftName: 1 });
-
-    res.json({
+    return res.status(200).json({
       success: true,
-
-      count: shifts.length,
-
-      data: shifts,
+      message: "Shift waiters fetched successfully",
+      count: waiters.length,
+      data: waiters,
     });
   } catch (error) {
-    res.status(500).json({
-      success: false,
+    console.error("Get Shift Waiters Error:", error);
 
-      message: error.message,
+    return res.status(500).json({
+      success: false,
+      message: "Failed to fetch shift waiters",
+      error: error.message,
     });
   }
 };
 
-/* ==========================================================
+module.exports = exports;
 
-   Get Deleted Shifts
-
-========================================================== */
-
-exports.getDeletedShifts = async (req, res) => {
-  try {
-    const shifts = await Shift.find({
-      isDeleted: true,
-    })
-
-      .setOptions({
-        bypassDeleted: true,
-      })
-
-      .populate("restaurant", "restaurantName")
-
-      .populate("store", "storeName")
-
-      .sort({ updatedAt: -1 });
-
-    res.json({
-      success: true,
-
-      count: shifts.length,
-
-      data: shifts,
-    });
-  } catch (error) {
-    res.status(500).json({
-      success: false,
-
-      message: error.message,
-    });
-  }
-};
-
-/* ==========================================================
-
-   Get Night Shifts
-
-========================================================== */
-
-exports.getNightShifts = async (req, res) => {
-  try {
-    const shifts = await Shift.find({
-      shiftType: "Night",
-
-      status: true,
-    })
-
-      .populate("restaurant", "restaurantName")
-
-      .populate("store", "storeName");
-
-    res.json({
-      success: true,
-
-      count: shifts.length,
-
-      data: shifts,
-    });
-  } catch (error) {
-    res.status(500).json({
-      success: false,
-
-      message: error.message,
-    });
-  }
-};
-
-/* ==========================================================
-
-   Get Store Shifts
-
-========================================================== */
-
-exports.getStoreShifts = async (req, res) => {
-  try {
-    const shifts = await Shift.find({
-      store: req.params.storeId,
-    })
-
-      .populate("restaurant", "restaurantName")
-
-      .populate("store", "storeName")
-
-      .sort({ shiftName: 1 });
-
-    res.json({
-      success: true,
-
-      count: shifts.length,
-
-      data: shifts,
-    });
-  } catch (error) {
-    res.status(500).json({
-      success: false,
-
-      message: error.message,
-    });
-  }
-};
-
-/* ==========================================================
-
-   Get Role Shifts
-
-========================================================== */
-
-exports.getRoleShifts = async (req, res) => {
-  try {
-    const shifts = await Shift.find({
-      applicableRoles: req.params.roleId,
-    })
-
-      .populate("restaurant", "restaurantName")
-
-      .populate("store", "storeName")
-
-      .populate("applicableRoles", "roleName");
-
-    res.json({
-      success: true,
-
-      count: shifts.length,
-
-      data: shifts,
-    });
-  } catch (error) {
-    res.status(500).json({
-      success: false,
-
-      message: error.message,
-    });
-  }
-};
-
-/* ==========================================================
-
-   Get Today's Shifts
-
-========================================================== */
-
-exports.getTodayShifts = async (req, res) => {
-  try {
-    const day = new Date().toLocaleDateString("en-US", {
-      weekday: "long",
-    });
-
-    const shifts = await Shift.find({
-      workingDays: day,
-
-      status: true,
-    })
-
-      .populate("restaurant", "restaurantName")
-
-      .populate("store", "storeName");
-
-    res.json({
-      success: true,
-
-      today: day,
-
-      count: shifts.length,
-
-      data: shifts,
-    });
-  } catch (error) {
-    res.status(500).json({
-      success: false,
-
-      message: error.message,
-    });
-  }
-};
-
-/* ==========================================================
-
-   Shift Summary
-
-========================================================== */
-
-exports.getShiftSummary = async (req, res) => {
-  try {
-    const [total, active, inactive, deleted, night] = await Promise.all([
-      Shift.countDocuments(),
-
-      Shift.countDocuments({ status: true }),
-
-      Shift.countDocuments({ status: false }),
-
-      Shift.countDocuments({
-        isDeleted: true,
-      }).setOptions({
-        bypassDeleted: true,
-      }),
-
-      Shift.countDocuments({
-        shiftType: "Night",
-      }),
-    ]);
-
-    res.json({
-      success: true,
-
-      data: {
-        totalShifts: total,
-
-        activeShifts: active,
-
-        inactiveShifts: inactive,
-
-        deletedShifts: deleted,
-
-        nightShifts: night,
-      },
-    });
-  } catch (error) {
-    res.status(500).json({
-      success: false,
-
-      message: error.message,
-    });
-  }
-};
-
-/* ==========================================================
-
-   Shift Analytics
-
-========================================================== */
-
-exports.getShiftAnalytics = async (req, res) => {
-  try {
-    const analytics = await Shift.aggregate([
-      {
-        $match: {
-          isDeleted: false,
-        },
-      },
-
-      {
-        $facet: {
-          shiftTypes: [
-            {
-              $group: {
-                _id: "$shiftType",
-
-                total: {
-                  $sum: 1,
-                },
-              },
-            },
-          ],
-
-          statusWise: [
-            {
-              $group: {
-                _id: "$status",
-
-                total: {
-                  $sum: 1,
-                },
-              },
-            },
-          ],
-
-          restaurantWise: [
-            {
-              $group: {
-                _id: "$restaurant",
-
-                total: {
-                  $sum: 1,
-                },
-              },
-            },
-          ],
-
-          storeWise: [
-            {
-              $group: {
-                _id: "$store",
-
-                total: {
-                  $sum: 1,
-                },
-              },
-            },
-          ],
-
-          weeklyHours: [
-            {
-              $project: {
-                totalHours: {
-                  $multiply: [
-                    {
-                      $ifNull: ["$workingHours", 0],
-                    },
-
-                    {
-                      $size: {
-                        $ifNull: ["$workingDays", []],
-                      },
-                    },
-                  ],
-                },
-              },
-            },
-
-            {
-              $group: {
-                _id: null,
-
-                totalWeeklyHours: {
-                  $sum: "$totalHours",
-                },
-
-                averageWeeklyHours: {
-                  $avg: "$totalHours",
-                },
-              },
-            },
-          ],
-        },
-      },
-    ]);
-
-    res.json({
-      success: true,
-
-      data: analytics[0],
-    });
-  } catch (error) {
-    res.status(500).json({
-      success: false,
-
-      message: error.message,
-    });
-  }
-};

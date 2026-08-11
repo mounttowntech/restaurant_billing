@@ -43,21 +43,21 @@ router.get("/all", getRecipes);
 
 router.get("/:id", getRecipeById);
 
-router.put("/:id", updateRecipe);
+router.put("/update/:id", updateRecipe);
 
-router.delete("/:id", deleteRecipe);
+router.delete("/delete/:id", deleteRecipe);
 
 // =====================================================
 // Restore
 // =====================================================
 
-router.patch("/:id/restore", restoreRecipe);
+router.patch("/restore/:id", restoreRecipe);
 
 // =====================================================
 // Status
 // =====================================================
 
-router.patch("/:id/status", updateRecipeStatus);
+router.patch("/status/:id", updateRecipeStatus);
 
 // =====================================================
 // Search

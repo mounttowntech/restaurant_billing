@@ -1,8 +1,8 @@
 const mongoose = require("mongoose");
 
-/* =====================================================
-   Permission Schema
-===================================================== */
+// ==========================================
+// Permission Schema
+// ==========================================
 
 const permissionSchema = new mongoose.Schema(
   {
@@ -62,20 +62,22 @@ const permissionSchema = new mongoose.Schema(
   }
 );
 
-/* =====================================================
-   Role Permission Schema
-===================================================== */
+// ==========================================
+// Role Permission Schema
+// ==========================================
 
 const rolePermissionSchema = new mongoose.Schema(
   {
     restaurant: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Restaurant",
+      default: null,
     },
 
     store: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Store",
+      default: null,
     },
 
     roleCode: {
@@ -89,8 +91,8 @@ const rolePermissionSchema = new mongoose.Schema(
     roleName: {
       type: String,
       required: true,
-      trim: true,
       unique: true,
+      trim: true,
     },
 
     description: {
@@ -136,19 +138,16 @@ const rolePermissionSchema = new mongoose.Schema(
   }
 );
 
-/* =====================================================
-   Indexes
-===================================================== */
+// ==========================================
+// Indexes
+// ==========================================
 
 rolePermissionSchema.index({ restaurant: 1 });
 rolePermissionSchema.index({ store: 1 });
 rolePermissionSchema.index({ roleCode: 1 });
 rolePermissionSchema.index({ roleName: 1 });
 rolePermissionSchema.index({ status: 1 });
-
-/* =====================================================
-   Export
-===================================================== */
+rolePermissionSchema.index({ isDeleted: 1 });
 
 module.exports = mongoose.model(
   "RolePermission",

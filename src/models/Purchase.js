@@ -15,11 +15,13 @@ const purchaseItemSchema = new mongoose.Schema(
     batch: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Batch",
+      default: null,
     },
 
     ingredientCode: {
       type: String,
       trim: true,
+      default: "",
     },
 
     ingredientName: {
@@ -31,23 +33,27 @@ const purchaseItemSchema = new mongoose.Schema(
     barcode: {
       type: String,
       trim: true,
+      default: "",
     },
 
+    /* Stock Unit */
     unit: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Unit",
       required: true,
     },
 
+    /* Purchase Unit */
     purchaseUnit: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Unit",
+      default: null,
     },
 
     quantity: {
       type: Number,
       required: true,
-      min: 0,
+      min: 0.0001,
     },
 
     freeQuantity: {
@@ -65,58 +71,78 @@ const purchaseItemSchema = new mongoose.Schema(
     sellingPrice: {
       type: Number,
       default: 0,
+      min: 0,
     },
 
     discountPercentage: {
       type: Number,
       default: 0,
+      min: 0,
     },
 
     discountAmount: {
       type: Number,
       default: 0,
+      min: 0,
     },
 
     gstPercentage: {
       type: Number,
       default: 0,
+      min: 0,
     },
 
     cgstAmount: {
       type: Number,
       default: 0,
+      min: 0,
     },
 
     sgstAmount: {
       type: Number,
       default: 0,
+      min: 0,
     },
 
     igstAmount: {
       type: Number,
       default: 0,
+      min: 0,
     },
 
     gstAmount: {
       type: Number,
       default: 0,
+      min: 0,
     },
 
     taxableAmount: {
       type: Number,
       default: 0,
+      min: 0,
     },
 
     totalAmount: {
       type: Number,
       default: 0,
+      min: 0,
     },
 
-    manufactureDate: Date,
+    manufactureDate: {
+      type: Date,
+      default: null,
+    },
 
-    expiryDate: Date,
+    expiryDate: {
+      type: Date,
+      default: null,
+    },
 
-    remarks: String,
+    remarks: {
+      type: String,
+      default: "",
+      trim: true,
+    },
   },
   {
     _id: false,
@@ -163,16 +189,24 @@ const purchaseSchema = new mongoose.Schema(
     warehouse: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Warehouse",
+      default: null,
     },
 
     invoiceNumber: {
       type: String,
       trim: true,
+      default: "",
     },
 
-    invoiceDate: Date,
+    invoiceDate: {
+      type: Date,
+      default: null,
+    },
 
-    items: [purchaseItemSchema],
+    items: {
+      type: [purchaseItemSchema],
+      default: [],
+    },
 
     totalItems: {
       type: Number,
@@ -192,6 +226,7 @@ const purchaseSchema = new mongoose.Schema(
     discountAmount: {
       type: Number,
       default: 0,
+      min: 0,
     },
 
     taxableAmount: {
@@ -283,7 +318,11 @@ const purchaseSchema = new mongoose.Schema(
       default: "Received",
     },
 
-    remarks: String,
+    remarks: {
+      type: String,
+      default: "",
+      trim: true,
+    },
 
     isDeleted: {
       type: Boolean,
@@ -293,11 +332,13 @@ const purchaseSchema = new mongoose.Schema(
     createdBy: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
+      default: null,
     },
 
     updatedBy: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
+      default: null,
     },
   },
   {
@@ -307,10 +348,20 @@ const purchaseSchema = new mongoose.Schema(
 );
 
 /* ==========================================================
-   Auto Calculation
+   Validate / Clean Purchase Items
 ========================================================== */
 
-purchaseSchema.pre("save", function (next) {
+purchaseSchema.pre("save", function () {
+  this.items = this.items.filter(
+    (item) =>
+      item.ingredient &&
+      Number(item.quantity) > 0
+  );
+
+  /* ========================================================
+     Header Calculations
+  ======================================================== */
+
   this.totalItems = this.items.length;
 
   this.totalQuantity = 0;
@@ -321,26 +372,74 @@ purchaseSchema.pre("save", function (next) {
   this.igstAmount = 0;
   this.gstAmount = 0;
 
-  this.items.forEach((item) => {
+  /* ========================================================
+     Item Calculations
+  ======================================================== */
 
+  this.items.forEach((item) => {
     const qty = Number(item.quantity || 0);
-    const price = Number(item.purchasePrice || 0);
+
+    const price = Number(
+      item.purchasePrice || 0
+    );
 
     const gross = qty * price;
 
-    const discount = Number(item.discountAmount || 0);
+    /* Calculate discount from percentage */
 
-    const taxable = gross - discount;
+    const discountPercentage = Number(
+      item.discountPercentage || 0
+    );
 
-    const gst = taxable * Number(item.gstPercentage || 0) / 100;
+    const discountAmount =
+      gross *
+      discountPercentage /
+      100;
 
-    item.taxableAmount = taxable;
-    item.gstAmount = gst;
-    item.cgstAmount = gst / 2;
-    item.sgstAmount = gst / 2;
+    item.discountAmount =
+      Number(discountAmount.toFixed(2));
+
+    /* Taxable */
+
+    const taxable =
+      gross -
+      item.discountAmount;
+
+    item.taxableAmount =
+      Number(taxable.toFixed(2));
+
+    /* GST */
+
+    const gstPercentage = Number(
+      item.gstPercentage || 0
+    );
+
+    const gst =
+      taxable *
+      gstPercentage /
+      100;
+
+    item.gstAmount =
+      Number(gst.toFixed(2));
+
+    /* CGST / SGST */
+
+    item.cgstAmount =
+      Number((gst / 2).toFixed(2));
+
+    item.sgstAmount =
+      Number((gst / 2).toFixed(2));
+
     item.igstAmount = 0;
 
-    item.totalAmount = taxable + gst;
+    /* Item Total */
+
+    item.totalAmount =
+      Number(
+        (taxable + gst).toFixed(2)
+      );
+
+    /* Header Totals */
 
     this.totalQuantity += qty;
 
@@ -348,51 +447,91 @@ purchaseSchema.pre("save", function (next) {
 
     this.taxableAmount += taxable;
 
-    this.cgstAmount += item.cgstAmount;
+    this.cgstAmount +=
+      item.cgstAmount;
 
-    this.sgstAmount += item.sgstAmount;
+    this.sgstAmount +=
+      item.sgstAmount;
 
-    this.igstAmount += item.igstAmount;
+    this.igstAmount +=
+      item.igstAmount;
 
     this.gstAmount += gst;
   });
 
+  /* ========================================================
+     Grand Total
+  ======================================================== */
+
   this.grandTotal =
     this.taxableAmount +
     this.gstAmount +
-    Number(this.shippingCharge) +
-    Number(this.otherCharges) -
-    Number(this.discountAmount);
+    Number(this.shippingCharge || 0) +
+    Number(this.otherCharges || 0) -
+    Number(this.discountAmount || 0) +
+    Number(this.roundOffAmount || 0);
+
+  this.grandTotal =
+    Number(this.grandTotal.toFixed(2));
+
+  /* ========================================================
+     Due Amount
+  ======================================================== */
+
+  this.paidAmount =
+    Number(this.paidAmount || 0);
 
   this.dueAmount =
-    this.grandTotal - Number(this.paidAmount);
+    this.grandTotal -
+    this.paidAmount;
 
-  if (this.dueAmount <= 0)
+  this.dueAmount =
+    Number(this.dueAmount.toFixed(2));
+
+  /* ========================================================
+     Payment Status
+  ======================================================== */
+
+  if (this.dueAmount <= 0) {
     this.paymentStatus = "Paid";
-  else if (this.paidAmount > 0)
+  } else if (this.paidAmount > 0) {
     this.paymentStatus = "Partial";
-  else
+  } else {
     this.paymentStatus = "Pending";
-
-  next();
+  }
 });
+
 /* ==========================================================
-   Virtuals
+   Virtual - Total Discount
 ========================================================== */
 
-// Total Discount
-purchaseSchema.virtual("totalDiscount").get(function () {
-  return (
-    Number(this.discountAmount || 0) +
+purchaseSchema.virtual(
+  "totalDiscount"
+).get(function () {
+  const itemDiscount =
     this.items.reduce(
-      (sum, item) => sum + Number(item.discountAmount || 0),
+      (sum, item) =>
+        sum +
+        Number(
+          item.discountAmount || 0
+        ),
       0
-    )
+    );
+
+  return (
+    Number(
+      this.discountAmount || 0
+    ) + itemDiscount
   );
 });
 
-// Total Tax
-purchaseSchema.virtual("totalTax").get(function () {
+/* ==========================================================
+   Virtual - Total Tax
+========================================================== */
+
+purchaseSchema.virtual(
+  "totalTax"
+).get(function () {
   return (
     Number(this.cgstAmount || 0) +
     Number(this.sgstAmount || 0) +
@@ -400,25 +539,48 @@ purchaseSchema.virtual("totalTax").get(function () {
   );
 });
 
-// Total Free Quantity
-purchaseSchema.virtual("totalFreeQuantity").get(function () {
+/* ==========================================================
+   Virtual - Total Free Quantity
+========================================================== */
+
+purchaseSchema.virtual(
+  "totalFreeQuantity"
+).get(function () {
   return this.items.reduce(
-    (sum, item) => sum + Number(item.freeQuantity || 0),
+    (sum, item) =>
+      sum +
+      Number(item.freeQuantity || 0),
     0
   );
 });
 
-// Payment Percentage
-purchaseSchema.virtual("paymentPercentage").get(function () {
-  if (!this.grandTotal) return 0;
+/* ==========================================================
+   Virtual - Payment Percentage
+========================================================== */
+
+purchaseSchema.virtual(
+  "paymentPercentage"
+).get(function () {
+  if (!this.grandTotal) {
+    return 0;
+  }
 
   return Number(
-    ((this.paidAmount / this.grandTotal) * 100).toFixed(2)
+    (
+      (this.paidAmount /
+        this.grandTotal) *
+      100
+    ).toFixed(2)
   );
 });
 
-// Pending Amount
-purchaseSchema.virtual("pendingAmount").get(function () {
+/* ==========================================================
+   Virtual - Pending Amount
+========================================================== */
+
+purchaseSchema.virtual(
+  "pendingAmount"
+).get(function () {
   return this.dueAmount;
 });
 
@@ -426,27 +588,50 @@ purchaseSchema.virtual("pendingAmount").get(function () {
    Indexes
 ========================================================== */
 
-purchaseSchema.index({ purchaseNo: 1 }, { unique: true });
+purchaseSchema.index(
+  { purchaseNo: 1 },
+  { unique: true }
+);
 
-purchaseSchema.index({ purchaseDate: -1 });
+purchaseSchema.index({
+  purchaseDate: -1,
+});
 
-purchaseSchema.index({ supplier: 1 });
+purchaseSchema.index({
+  supplier: 1,
+});
 
-purchaseSchema.index({ restaurant: 1 });
+purchaseSchema.index({
+  restaurant: 1,
+});
 
-purchaseSchema.index({ store: 1 });
+purchaseSchema.index({
+  store: 1,
+});
 
-purchaseSchema.index({ warehouse: 1 });
+purchaseSchema.index({
+  warehouse: 1,
+});
 
-purchaseSchema.index({ paymentStatus: 1 });
+purchaseSchema.index({
+  paymentStatus: 1,
+});
 
-purchaseSchema.index({ purchaseStatus: 1 });
+purchaseSchema.index({
+  purchaseStatus: 1,
+});
 
-purchaseSchema.index({ invoiceNumber: 1 });
+purchaseSchema.index({
+  invoiceNumber: 1,
+});
 
-purchaseSchema.index({ createdAt: -1 });
+purchaseSchema.index({
+  createdAt: -1,
+});
 
-purchaseSchema.index({ isDeleted: 1 });
+purchaseSchema.index({
+  isDeleted: 1,
+});
 
 purchaseSchema.index({
   supplier: 1,
@@ -459,32 +644,40 @@ purchaseSchema.index({
 });
 
 /* ==========================================================
-   Middleware
+   Purchase Number Uppercase
 ========================================================== */
 
-// Always uppercase Purchase Number
-
-purchaseSchema.pre("validate", function (next) {
-  if (this.purchaseNo) {
-    this.purchaseNo = this.purchaseNo
-      .trim()
-      .toUpperCase();
+purchaseSchema.pre(
+  "validate",
+  function () {
+    if (this.purchaseNo) {
+      this.purchaseNo =
+        this.purchaseNo
+          .trim()
+          .toUpperCase();
+    }
   }
+);
 
-  next();
-});
+/* ==========================================================
+   Hide Deleted Purchases
+========================================================== */
 
-// Hide deleted purchases automatically
-
-purchaseSchema.pre(/^find/, function (next) {
-  if (!this.getFilter().hasOwnProperty("isDeleted")) {
-    this.where({
-      isDeleted: false,
-    });
+purchaseSchema.pre(
+  /^find/,
+  function () {
+    if (
+      !Object.prototype.hasOwnProperty.call(
+        this.getFilter(),
+        "isDeleted"
+      )
+    ) {
+      this.where({
+        isDeleted: false,
+      });
+    }
   }
-
-  next();
-});
+);
 
 /* ==========================================================
    JSON Settings
@@ -499,33 +692,7 @@ purchaseSchema.set("toObject", {
 });
 
 /* ==========================================================
-   Production Optimizations
-========================================================== */
-
-// Remove empty items before save
-
-purchaseSchema.pre("save", function (next) {
-  this.items = this.items.filter(
-    (item) =>
-      item.ingredient &&
-      Number(item.quantity) > 0
-  );
-
-  next();
-});
-
-// Update timestamp on update
-
-purchaseSchema.pre("findOneAndUpdate", function (next) {
-  this.set({
-    updatedAt: new Date(),
-  });
-
-  next();
-});
-
-/* ==========================================================
-   Export Model
+   Export
 ========================================================== */
 
 module.exports = mongoose.model(

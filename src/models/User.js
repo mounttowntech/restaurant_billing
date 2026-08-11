@@ -3,13 +3,6 @@ const bcrypt = require("bcryptjs");
 
 const userSchema = new mongoose.Schema(
   {
-    // employeeCode: {
-    //   type: String,
-    //   required: true,
-    //   unique: true,
-    //   trim: true,
-    // },
-
     firstName: {
       type: String,
       required: true,
@@ -19,6 +12,7 @@ const userSchema = new mongoose.Schema(
     lastName: {
       type: String,
       trim: true,
+      default: "",
     },
 
     email: {
@@ -43,22 +37,44 @@ const userSchema = new mongoose.Schema(
       select: false,
     },
 
-    profileImage: String,
+    profileImage: {
+      type: String,
+      default: "",
+    },
 
+    // ROLE IS STRING
     role: {
       type: String,
-      required:true
+      required: true,
+      trim: true,
     },
+
+    // STORE IS OBJECT ID
     store: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Store",
+      default: null,
     },
 
-    
-    address: String,
-    city: String,
-    state: String,
-    pincode: String,
+    address: {
+      type: String,
+      default: "",
+    },
+
+    city: {
+      type: String,
+      default: "",
+    },
+
+    state: {
+      type: String,
+      default: "",
+    },
+
+    pincode: {
+      type: String,
+      default: "",
+    },
 
     joiningDate: {
       type: Date,
@@ -70,13 +86,24 @@ const userSchema = new mongoose.Schema(
       default: 0,
     },
 
-    lastLogin: Date,
+    lastLogin: {
+      type: Date,
+    },
 
-    refreshToken: String,
+    refreshToken: {
+      type: String,
+      default: null,
+    },
 
-    resetPasswordOTP: String,
+    resetPasswordOTP: {
+      type: String,
+      default: null,
+    },
 
-    resetPasswordOTPExpire: Date,
+    resetPasswordOTPExpire: {
+      type: Date,
+      default: null,
+    },
 
     status: {
       type: String,
@@ -87,18 +114,24 @@ const userSchema = new mongoose.Schema(
     createdBy: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
+      default: null,
     },
 
     updatedBy: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
+      default: null,
     },
   },
   {
     timestamps: true,
     versionKey: false,
-  },
+  }
 );
+
+// =====================================================
+// PASSWORD HASH
+// =====================================================
 
 userSchema.pre("save", async function () {
   if (!this.isModified("password")) {
@@ -107,11 +140,23 @@ userSchema.pre("save", async function () {
 
   const salt = await bcrypt.genSalt(10);
 
-  this.password = await bcrypt.hash(this.password, salt);
+  this.password = await bcrypt.hash(
+    this.password,
+    salt
+  );
 });
 
-userSchema.methods.comparePassword = async function (password) {
-  return await bcrypt.compare(password, this.password);
+// =====================================================
+// COMPARE PASSWORD
+// =====================================================
+
+userSchema.methods.comparePassword = async function (
+  enteredPassword
+) {
+  return await bcrypt.compare(
+    enteredPassword,
+    this.password
+  );
 };
 
 module.exports = mongoose.model("User", userSchema);

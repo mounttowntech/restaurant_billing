@@ -16,30 +16,30 @@ const {
 const { verifyToken } = require("../middleware/auth");
 
 // Create
-router.post("/create", verifyToken, createChef);
+router.post("/create", createChef);
 
 // Get All
-router.get("/all", verifyToken, getAllChefs);
+router.get("/all",  getAllChefs);
 
 // Dropdown
-router.get("/dropdown/list", verifyToken, getChefDropdown);
+router.get("/dropdown/list",  getChefDropdown);
 
 // Available Chefs
-router.get("/available/list", verifyToken, getAvailableChefs);
+router.get("/available/list",  getAvailableChefs);
 
 // Get By ID
-router.get("/:id", verifyToken, getChefById);
+router.get("/:id", getChefById);
 
 // Update
-router.put("/update/:id", verifyToken, updateChef);
+router.put("/update/:id",  updateChef);
 
 // Delete
-router.delete("/delete/:id", verifyToken, deleteChef);
+router.delete("/delete/:id", deleteChef);
 
 // Change Status
-router.patch("/:id/status", verifyToken, changeChefStatus);
+router.patch("/status/:id",  changeChefStatus);
 
 // Change Availability
-router.patch("/:id/availability", verifyToken, changeAvailability);
+router.patch("/availability/:id", changeAvailability);
 
 module.exports = router;

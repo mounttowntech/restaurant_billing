@@ -4,66 +4,148 @@ const router = express.Router();
 
 const purchaseController = require("../controllers/purchaseController");
 
-const { verifyToken } = require("../middleware/auth");
+const {
+  verifyToken,
+} = require("../middleware/auth");
 
-// Create
+/* ==========================================================
+   CREATE
+========================================================== */
 
-router.post("/create", verifyToken, purchaseController.createPurchase);
+router.post(
+  "/create",
+  verifyToken,
+  purchaseController.createPurchase
+);
 
-// Get All
+/* ==========================================================
+   GET ALL
+========================================================== */
 
-router.get("/all", verifyToken, purchaseController.getPurchases);
+router.get(
+  "/all",
+  verifyToken,
+  purchaseController.getPurchases
+);
 
-// Search
+/* ==========================================================
+   SEARCH
+========================================================== */
 
-router.get("/search", verifyToken, purchaseController.searchPurchase);
+router.get(
+  "/search",
+  verifyToken,
+  purchaseController.searchPurchase
+);
 
-// Today Purchase
+/* ==========================================================
+   TODAY
+========================================================== */
 
-router.get("/today", verifyToken, purchaseController.todayPurchases);
+router.get(
+  "/today",
+  verifyToken,
+  purchaseController.todayPurchases
+);
 
-// Summary
+/* ==========================================================
+   SUMMARY
+========================================================== */
 
-router.get("/summary", verifyToken, purchaseController.purchaseSummary);
+router.get(
+  "/summary",
+  verifyToken,
+  purchaseController.purchaseSummary
+);
 
-// Supplier Wise
+/* ==========================================================
+   SUPPLIER WISE
+========================================================== */
 
 router.get(
   "/supplier/:supplierId",
   verifyToken,
-  purchaseController.supplierWisePurchase,
+  purchaseController.supplierWisePurchase
 );
 
-// Store Wise
+/* ==========================================================
+   STORE WISE
+========================================================== */
 
-router.get("/store/:storeId", verifyToken, purchaseController.storeWisePurchase);
+router.get(
+  "/store/:storeId",
+  verifyToken,
+  purchaseController.storeWisePurchase
+);
 
-// Single
+/* ==========================================================
+   RESTORE
+========================================================== */
 
-router.get("/:id", verifyToken, purchaseController.getPurchaseById);
+router.put(
+  "/restore/:id",
+  verifyToken,
+  purchaseController.restorePurchase
+);
 
-// Update
+/* ==========================================================
+   RECEIVE
+========================================================== */
 
-router.put("/:id", verifyToken, purchaseController.updatePurchase);
+router.put(
+  "/receive/:id",
+  verifyToken,
+  purchaseController.receivePurchase
+);
 
-// Delete
+/* ==========================================================
+   CANCEL
+========================================================== */
 
-router.delete("/:id", verifyToken, purchaseController.deletePurchase);
+router.put(
+  "/cancel/:id",
+  verifyToken,
+  purchaseController.cancelPurchase
+);
 
-// Restore
+/* ==========================================================
+   PAYMENT
+========================================================== */
 
-router.put("/restore/:id", verifyToken, purchaseController.restorePurchase);
+router.put(
+  "/payment/:id",
+  verifyToken,
+  purchaseController.updatePaymentStatus
+);
 
-// Receive
+/* ==========================================================
+   SINGLE
+========================================================== */
 
-router.put("/receive/:id", verifyToken, purchaseController.receivePurchase);
+router.get(
+  "/:id",
+  verifyToken,
+  purchaseController.getPurchaseById
+);
 
-// Cancel
+/* ==========================================================
+   UPDATE
+========================================================== */
 
-router.put("/cancel/:id", verifyToken, purchaseController.cancelPurchase);
+router.put(
+  "/update/:id",
+  verifyToken,
+  purchaseController.updatePurchase
+);
 
-// Payment Update
+/* ==========================================================
+   DELETE
+========================================================== */
 
-router.put("/payment/:id", verifyToken, purchaseController.updatePaymentStatus);
+router.delete(
+  "/delete/:id",
+  verifyToken,
+  purchaseController.deletePurchase
+);
 
 module.exports = router;

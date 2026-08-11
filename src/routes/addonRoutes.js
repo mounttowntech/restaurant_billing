@@ -62,7 +62,7 @@ router.delete(
 // =============================================
 
 router.patch(
-  "/:id/restore",
+  "/restore/:id",
   // protect,
   addonController.restoreAddon
 );
@@ -72,7 +72,7 @@ router.patch(
 // =============================================
 
 router.patch(
-  "/:id/toggle-active",
+  "/toggle-active/:id",
   // protect,
   addonController.toggleActive
 );
@@ -82,7 +82,7 @@ router.patch(
 // =============================================
 
 router.patch(
-  "/:id/toggle-availability",
+  "/toggle-availability/:id",
   // protect,
   addonController.toggleAvailability
 );

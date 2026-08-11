@@ -48,13 +48,13 @@ router.get(
 );
 
 router.put(
-  "/:id",
+  "/update/:id",
   // protect,
   updateStockAdjustment
 );
 
 router.delete(
-  "/:id",
+  "/delete/:id",
   // protect,
   deleteStockAdjustment
 );

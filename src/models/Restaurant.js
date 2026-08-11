@@ -2,6 +2,21 @@ const mongoose = require("mongoose");
 
 const restaurantSchema = new mongoose.Schema(
   {
+    // ==========================================
+    // COMPANY REFERENCE
+    // ==========================================
+
+    companyId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Company",
+      required: true,
+      index: true,
+    },
+
+    // ==========================================
+    // BASIC INFORMATION
+    // ==========================================
+
     restaurantCode: {
       type: String,
       required: true,
@@ -28,6 +43,10 @@ const restaurantSchema = new mongoose.Schema(
       trim: true,
     },
 
+    // ==========================================
+    // CONTACT
+    // ==========================================
+
     email: {
       type: String,
       lowercase: true,
@@ -46,6 +65,10 @@ const restaurantSchema = new mongoose.Schema(
       trim: true,
       default: "",
     },
+
+    // ==========================================
+    // TAX
+    // ==========================================
 
     gstNumber: {
       type: String,
@@ -67,6 +90,10 @@ const restaurantSchema = new mongoose.Schema(
       uppercase: true,
       default: "",
     },
+
+    // ==========================================
+    // ADDRESS
+    // ==========================================
 
     address: {
       type: String,
@@ -94,6 +121,7 @@ const restaurantSchema = new mongoose.Schema(
 
     country: {
       type: String,
+      trim: true,
       default: "India",
     },
 
@@ -103,59 +131,84 @@ const restaurantSchema = new mongoose.Schema(
       default: "",
     },
 
-    latitude: Number,
+    // ==========================================
+    // LOCATION
+    // ==========================================
 
-    longitude: Number,
-
-    logo: {
-      type: String,
-      default: "",
+    latitude: {
+      type: Number,
+      default: null,
     },
 
-    bannerImage: {
-      type: String,
-      default: "",
+    longitude: {
+      type: Number,
+      default: null,
     },
+
+    // ==========================================
+    // CURRENCY
+    // ==========================================
 
     currency: {
       type: String,
+      trim: true,
       default: "INR",
     },
 
     currencySymbol: {
       type: String,
+      trim: true,
       default: "₹",
     },
 
     timezone: {
       type: String,
+      trim: true,
       default: "Asia/Kolkata",
     },
 
+    // ==========================================
+    // PREFIXES
+    // ==========================================
+
     invoicePrefix: {
       type: String,
+      trim: true,
+      uppercase: true,
       default: "INV",
     },
 
     kotPrefix: {
       type: String,
+      trim: true,
+      uppercase: true,
       default: "KOT",
     },
 
     orderPrefix: {
       type: String,
+      trim: true,
+      uppercase: true,
       default: "ORD",
     },
 
     purchasePrefix: {
       type: String,
+      trim: true,
+      uppercase: true,
       default: "PUR",
     },
 
     expensePrefix: {
       type: String,
+      trim: true,
+      uppercase: true,
       default: "EXP",
     },
+
+    // ==========================================
+    // BUSINESS SETTINGS
+    // ==========================================
 
     serviceChargePercentage: {
       type: Number,
@@ -198,6 +251,24 @@ const restaurantSchema = new mongoose.Schema(
       default: true,
     },
 
+    // ==========================================
+    // IMAGES
+    // ==========================================
+
+    logo: {
+      type: String,
+      default: "",
+    },
+
+    bannerImage: {
+      type: String,
+      default: "",
+    },
+
+    // ==========================================
+    // STATUS
+    // ==========================================
+
     status: {
       type: String,
       enum: ["Active", "Inactive"],
@@ -207,16 +278,23 @@ const restaurantSchema = new mongoose.Schema(
     isDeleted: {
       type: Boolean,
       default: false,
+      index: true,
     },
+
+    // ==========================================
+    // AUDIT
+    // ==========================================
 
     createdBy: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
+      default: null,
     },
 
     updatedBy: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
+      default: null,
     },
   },
   {
@@ -225,11 +303,52 @@ const restaurantSchema = new mongoose.Schema(
   }
 );
 
-restaurantSchema.index({ restaurantCode: 1 });
-restaurantSchema.index({ restaurantName: 1 });
-restaurantSchema.index({ phone: 1 });
-restaurantSchema.index({ email: 1 });
-restaurantSchema.index({ city: 1 });
-restaurantSchema.index({ status: 1 });
+// ==========================================
+// INDEXES
+// ==========================================
 
-module.exports = mongoose.model("Restaurant", restaurantSchema);
+restaurantSchema.index({
+  companyId: 1,
+});
+
+restaurantSchema.index({
+  companyId: 1,
+  restaurantName: 1,
+});
+
+restaurantSchema.index({
+  restaurantCode: 1,
+});
+
+restaurantSchema.index({
+  restaurantName: 1,
+});
+
+restaurantSchema.index({
+  phone: 1,
+});
+
+restaurantSchema.index({
+  email: 1,
+});
+
+restaurantSchema.index({
+  city: 1,
+});
+
+restaurantSchema.index({
+  status: 1,
+});
+
+restaurantSchema.index({
+  isDeleted: 1,
+});
+
+// ==========================================
+// EXPORT
+// ==========================================
+
+module.exports = mongoose.model(
+  "Restaurant",
+  restaurantSchema
+);

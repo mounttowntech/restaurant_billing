@@ -252,7 +252,7 @@ const kotSchema = new mongoose.Schema(
    Pre-save Calculations
 ========================================================== */
 
-kotSchema.pre("save", function (next) {
+kotSchema.pre("save", function () {
 
   this.totalItems = this.items.length;
 
@@ -282,7 +282,7 @@ kotSchema.pre("save", function (next) {
     this.kitchenStatus = "Pending";
   }
 
-  next();
+  
 });
 /* ==========================================================
    Virtuals
@@ -361,7 +361,7 @@ kotSchema.index({ createdAt: -1 });
 ========================================================== */
 
 // Hide soft deleted records
-kotSchema.pre(/^find/, function (next) {
+kotSchema.pre(/^find/, function () {
 
   if (this.getFilter().isDeleted === undefined) {
     this.where({
@@ -369,11 +369,11 @@ kotSchema.pre(/^find/, function (next) {
     });
   }
 
-  next();
+  
 });
 
 // Format KOT Number
-kotSchema.pre("validate", function (next) {
+kotSchema.pre("validate", function () {
 
   if (this.kotNo) {
     this.kotNo = this.kotNo
@@ -381,7 +381,7 @@ kotSchema.pre("validate", function (next) {
       .toUpperCase();
   }
 
-  next();
+ 
 });
 
 /* ==========================================================

@@ -17,9 +17,9 @@ router.get("/:id", tableController.getTableById);
 // Update & Status
 // ======================================================
 
-router.put("/:id", tableController.updateTable);
+router.put("/update/:id", tableController.updateTable);
 
-router.delete("/:id", tableController.deleteTable);
+router.delete("/delete/:id", tableController.deleteTable);
 
 router.put("/restore/:id", tableController.restoreTable);
 
