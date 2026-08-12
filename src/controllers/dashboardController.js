@@ -862,3 +862,44 @@ exports.getSalesTrend = async (req, res) => {
     });
   }
 };
+// ============================================================
+// 10. RECENT SALES
+// GET /api/dashboard/recent-sales
+// ============================================================
+
+exports.getRecentSales = async (req, res) => {
+  try {
+    const userFilter = getUserFilter(req);
+
+    const limit = Math.min(
+      Math.max(Number(req.query.limit) || 10, 1),
+      100
+    );
+
+    const sales = await Order.find(userFilter)
+      .sort({
+        createdAt: -1,
+      })
+      .limit(limit)
+      .select(
+        "invoiceNo orderNo customer grandTotal paidAmount dueAmount paymentMethod paymentStatus status createdAt"
+      )
+      .populate("customer", "name phone email")
+      .lean();
+
+    res.status(200).json({
+      success: true,
+      message: "Recent sales fetched successfully",
+      count: sales.length,
+      data: sales,
+    });
+  } catch (error) {
+    console.error("Recent Sales Error:", error);
+
+    res.status(500).json({
+      success: false,
+      message: "Failed to fetch recent sales",
+      error: error.message,
+    });
+  }
+};
