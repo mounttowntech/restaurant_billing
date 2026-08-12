@@ -44,6 +44,11 @@ router.get(
   dashboardController.getTodayOrders
 );
 
+// *Recent Sales*
+router.get(
+  "/recent-sales",
+  dashboardController.getRecentSales
+);
 // ============================================================
 // PURCHASE
 // ============================================================
