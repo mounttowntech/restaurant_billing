@@ -18,7 +18,7 @@ router.get(
   
   dashboardController.getDashboard
 );
-
+router.get("/cards", dashboardController.cards);
 // ============================================================
 // SALES
 // ============================================================
