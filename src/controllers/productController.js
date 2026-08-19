@@ -28,9 +28,7 @@ const getStoreDetails = async (storeId) => {
   }
 
   if (!store.restaurant) {
-    throw new Error(
-      "Restaurant not assigned to this store"
-    );
+    throw new Error("Restaurant not assigned to this store");
   }
 
   const restaurant = await Restaurant.findOne({
@@ -39,15 +37,11 @@ const getStoreDetails = async (storeId) => {
   });
 
   if (!restaurant) {
-    throw new Error(
-      "Restaurant not found for this store"
-    );
+    throw new Error("Restaurant not found for this store");
   }
 
   if (!restaurant.companyId) {
-    throw new Error(
-      "Company not assigned to this restaurant"
-    );
+    throw new Error("Company not assigned to this restaurant");
   }
 
   return {
@@ -113,10 +107,7 @@ exports.createProduct = async (req, res) => {
       });
     }
 
-    if (
-      sellingPrice === undefined ||
-      sellingPrice === null
-    ) {
+    if (sellingPrice === undefined || sellingPrice === null) {
       return res.status(400).json({
         success: false,
         message: "Selling price is required",
@@ -127,29 +118,22 @@ exports.createProduct = async (req, res) => {
     // GET STORE DETAILS
     // ==========================================
 
-    const {
-      store,
-      restaurant,
-      companyId,
-    } = await getStoreDetails(storeId);
+    const { store, restaurant, companyId } = await getStoreDetails(storeId);
 
     // ==========================================
     // CHECK DUPLICATE PRODUCT
     // ==========================================
 
-    const existingProduct =
-      await Product.findOne({
-        store: store._id,
-        productCode:
-          productCode.toUpperCase(),
-        isDeleted: false,
-      });
+    const existingProduct = await Product.findOne({
+      store: store._id,
+      productCode: productCode.toUpperCase(),
+      isDeleted: false,
+    });
 
     if (existingProduct) {
       return res.status(400).json({
         success: false,
-        message:
-          "Product code already exists in this store",
+        message: "Product code already exists in this store",
       });
     }
 
@@ -157,97 +141,64 @@ exports.createProduct = async (req, res) => {
     // CREATE PRODUCT
     // ==========================================
 
-    const product =
-      await Product.create({
-        companyId,
+    const product = await Product.create({
+      companyId,
 
-        restaurant: restaurant._id,
+      restaurant: restaurant._id,
 
-        store: store._id,
+      store: store._id,
 
-        productCode:
-          productCode.toUpperCase(),
+      productCode: productCode.toUpperCase(),
 
-        productName,
+      productName,
 
-        description:
-          description || "",
+      description: description || "",
 
-        category:
-          category || null,
+      category: category || null,
 
-        purchasePrice:
-          purchasePrice || 0,
+      purchasePrice: purchasePrice || 0,
 
-        sellingPrice,
+      sellingPrice,
 
-        mrp:
-          mrp || 0,
+      mrp: mrp || 0,
 
-        taxPercentage:
-          taxPercentage || 0,
+      taxPercentage: taxPercentage || 0,
 
-        taxInclusive:
-          taxInclusive !== undefined
-            ? taxInclusive
-            : false,
+      taxInclusive: taxInclusive !== undefined ? taxInclusive : false,
 
-        unit:
-          unit || "PCS",
+      unit: unit || "PCS",
 
-        openingStock:
-          openingStock || 0,
+      openingStock: openingStock || 0,
 
-        currentStock:
-          currentStock !== undefined
-            ? currentStock
-            : openingStock || 0,
+      currentStock:
+        currentStock !== undefined ? currentStock : openingStock || 0,
 
-        minimumStock:
-          minimumStock || 0,
+      minimumStock: minimumStock || 0,
 
-        trackInventory:
-          trackInventory !== undefined
-            ? trackInventory
-            : true,
+      trackInventory: trackInventory !== undefined ? trackInventory : true,
 
-        productType:
-          productType || "Food",
+      productType: productType || "Food",
 
-        kitchenName:
-          kitchenName || "",
+      kitchenName: kitchenName || "",
 
-        preparationTime:
-          preparationTime || 0,
+      preparationTime: preparationTime || 0,
 
-        image:
-          image || "",
+      image: image || "",
 
-        isAvailable:
-          isAvailable !== undefined
-            ? isAvailable
-            : true,
+      isAvailable: isAvailable !== undefined ? isAvailable : true,
 
-        isActive:
-          isActive !== undefined
-            ? isActive
-            : true,
+      isActive: isActive !== undefined ? isActive : true,
 
-        createdBy:
-          req.user?._id || null,
-      });
+      createdBy: req.user?._id || null,
+    });
 
     return res.status(201).json({
       success: true,
-      message:
-        "Product created successfully",
+      message: "Product created successfully",
       data: product,
     });
   } catch (error) {
-    console.error(
-      "CREATE PRODUCT ERROR:",
-      error
-    );
+    console.error("CREATE PRODUCT ERROR:", error);
 
     return res.status(500).json({
       success: false,
@@ -273,13 +224,7 @@ exports.getAllProducts = async (req, res) => {
       });
     }
 
-    const {
-      search,
-      category,
-      productType,
-      isAvailable,
-      isActive,
-    } = req.query;
+    const { search, category, productType, isAvailable, isActive } = req.query;
 
     const filter = {
       store: storeId,
@@ -325,18 +270,9 @@ exports.getAllProducts = async (req, res) => {
     }
 
     const products = await Product.find(filter)
-      .populate(
-        "category",
-        "categoryName categoryCode"
-      )
-      .populate(
-        "store",
-        "storeName storeCode"
-      )
-      .populate(
-        "restaurant",
-        "restaurantName restaurantCode"
-      )
+      .populate("category", "categoryName categoryCode")
+      .populate("store", "storeName storeCode")
+      .populate("restaurant", "restaurantName restaurantCode")
       .sort({
         createdAt: -1,
       });
@@ -346,12 +282,8 @@ exports.getAllProducts = async (req, res) => {
       count: products.length,
       data: products,
     });
-
   } catch (error) {
-    console.error(
-      "GET PRODUCTS ERROR:",
-      error
-    );
+    console.error("GET PRODUCTS ERROR:", error);
 
     return res.status(500).json({
       success: false,
@@ -365,43 +297,25 @@ exports.getAllProducts = async (req, res) => {
 // GET /api/products/:id
 // =====================================================
 
-exports.getProductById = async (
-  req,
-  res
-) => {
+exports.getProductById = async (req, res) => {
   try {
     const { id } = req.params;
 
-    if (
-      !mongoose.Types.ObjectId.isValid(id)
-    ) {
+    if (!mongoose.Types.ObjectId.isValid(id)) {
       return res.status(400).json({
         success: false,
         message: "Invalid Product ID",
       });
     }
 
-    const product =
-      await Product.findOne({
-        _id: id,
-        isDeleted: false,
-      })
-        .populate(
-          "category",
-          "categoryName categoryCode"
-        )
-        .populate(
-          "store",
-          "storeName storeCode"
-        )
-        .populate(
-          "restaurant",
-          "restaurantName restaurantCode"
-        )
-        .populate(
-          "companyId",
-          "companyName companyCode"
-        );
+    const product = await Product.findOne({
+      _id: id,
+      isDeleted: false,
+    })
+      .populate("category", "categoryName categoryCode")
+      .populate("store", "storeName storeCode")
+      .populate("restaurant", "restaurantName restaurantCode")
+      .populate("companyId", "companyName companyCode");
 
     if (!product) {
       return res.status(404).json({
@@ -415,10 +329,7 @@ exports.getProductById = async (
       data: product,
     });
   } catch (error) {
-    console.error(
-      "GET PRODUCT ERROR:",
-      error
-    );
+    console.error("GET PRODUCT ERROR:", error);
 
     return res.status(500).json({
       success: false,
@@ -432,27 +343,21 @@ exports.getProductById = async (
 // PUT /api/products/:id
 // =====================================================
 
-exports.updateProduct = async (
-  req,
-  res
-) => {
+exports.updateProduct = async (req, res) => {
   try {
     const { id } = req.params;
 
-    if (
-      !mongoose.Types.ObjectId.isValid(id)
-    ) {
+    if (!mongoose.Types.ObjectId.isValid(id)) {
       return res.status(400).json({
         success: false,
         message: "Invalid Product ID",
       });
     }
 
-    const product =
-      await Product.findOne({
-        _id: id,
-        isDeleted: false,
-      });
+    const product = await Product.findOne({
+      _id: id,
+      isDeleted: false,
+    });
 
     if (!product) {
       return res.status(404).json({
@@ -465,15 +370,10 @@ exports.updateProduct = async (
     // Do not change hierarchy
     // ==========================================
 
-    if (
-      req.body.companyId ||
-      req.body.restaurant ||
-      req.body.store
-    ) {
+    if (req.body.companyId || req.body.restaurant || req.body.store) {
       return res.status(400).json({
         success: false,
-        message:
-          "Company, restaurant and store cannot be changed",
+        message: "Company, restaurant and store cannot be changed",
       });
     }
 
@@ -503,33 +403,23 @@ exports.updateProduct = async (
       "isActive",
     ];
 
-    allowedFields.forEach(
-      (field) => {
-        if (
-          req.body[field] !== undefined
-        ) {
-          product[field] =
-            req.body[field];
-        }
+    allowedFields.forEach((field) => {
+      if (req.body[field] !== undefined) {
+        product[field] = req.body[field];
       }
-    );
+    });
 
-    product.updatedBy =
-      req.user?._id || null;
+    product.updatedBy = req.user?._id || null;
 
     await product.save();
 
     return res.status(200).json({
       success: true,
-      message:
-        "Product updated successfully",
+      message: "Product updated successfully",
       data: product,
     });
   } catch (error) {
-    console.error(
-      "UPDATE PRODUCT ERROR:",
-      error
-    );
+    console.error("UPDATE PRODUCT ERROR:", error);
 
     return res.status(500).json({
       success: false,
@@ -543,27 +433,21 @@ exports.updateProduct = async (
 // DELETE /api/products/:id
 // =====================================================
 
-exports.deleteProduct = async (
-  req,
-  res
-) => {
+exports.deleteProduct = async (req, res) => {
   try {
     const { id } = req.params;
 
-    if (
-      !mongoose.Types.ObjectId.isValid(id)
-    ) {
+    if (!mongoose.Types.ObjectId.isValid(id)) {
       return res.status(400).json({
         success: false,
         message: "Invalid Product ID",
       });
     }
 
-    const product =
-      await Product.findOne({
-        _id: id,
-        isDeleted: false,
-      });
+    const product = await Product.findOne({
+      _id: id,
+      isDeleted: false,
+    });
 
     if (!product) {
       return res.status(404).json({
@@ -574,21 +458,16 @@ exports.deleteProduct = async (
 
     product.isDeleted = true;
 
-    product.updatedBy =
-      req.user?._id || null;
+    product.updatedBy = req.user?._id || null;
 
     await product.save();
 
     return res.status(200).json({
       success: true,
-      message:
-        "Product deleted successfully",
+      message: "Product deleted successfully",
     });
   } catch (error) {
-    console.error(
-      "DELETE PRODUCT ERROR:",
-      error
-    );
+    console.error("DELETE PRODUCT ERROR:", error);
 
     return res.status(500).json({
       success: false,
@@ -602,58 +481,46 @@ exports.deleteProduct = async (
 // PATCH /api/products/:id/toggle-availability
 // =====================================================
 
-exports.toggleProductAvailability =
-  async (req, res) => {
-    try {
-      const { id } = req.params;
+exports.toggleProductAvailability = async (req, res) => {
+  try {
+    const { id } = req.params;
 
-      if (
-        !mongoose.Types.ObjectId.isValid(
-          id
-        )
-      ) {
-        return res.status(400).json({
-          success: false,
-          message: "Invalid Product ID",
-        });
-      }
-
-      const product =
-        await Product.findOne({
-          _id: id,
-          isDeleted: false,
-        });
-
-      if (!product) {
-        return res.status(404).json({
-          success: false,
-          message: "Product not found",
-        });
-      }
-
-      product.isAvailable =
-        !product.isAvailable;
-
-      product.updatedBy =
-        req.user?._id || null;
-
-      await product.save();
-
-      return res.status(200).json({
-        success: true,
-        message:
-          "Product availability updated",
-        data: product,
-      });
-    } catch (error) {
-      console.error(
-        "TOGGLE PRODUCT ERROR:",
-        error
-      );
-
-      return res.status(500).json({
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({
         success: false,
-        message: error.message,
+        message: "Invalid Product ID",
       });
     }
-  };
+
+    const product = await Product.findOne({
+      _id: id,
+      isDeleted: false,
+    });
+
+    if (!product) {
+      return res.status(404).json({
+        success: false,
+        message: "Product not found",
+      });
+    }
+
+    product.isAvailable = !product.isAvailable;
+
+    product.updatedBy = req.user?._id || null;
+
+    await product.save();
+
+    return res.status(200).json({
+      success: true,
+      message: "Product availability updated",
+      data: product,
+    });
+  } catch (error) {
+    console.error("TOGGLE PRODUCT ERROR:", error);
+
+    return res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};

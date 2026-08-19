@@ -22,7 +22,7 @@ exports.createCategory = async (req, res) => {
     } = req.body;
 
     const exists = await Category.findOne({
-      categoryCode: categoryCode.toUpperCase(),
+      categoryCode: categoryCode?.toUpperCase(),
       isDeleted: false,
     });
 
@@ -121,9 +121,6 @@ exports.getCategoryById = async (req, res) => {
   }
 };
 
-// ==============================================
-// Update Category
-// ==============================================
 exports.updateCategory = async (req, res) => {
   try {
     const category = await Category.findById(req.params.id);
@@ -135,12 +132,14 @@ exports.updateCategory = async (req, res) => {
       });
     }
 
-    if (
-      req.body.categoryCode &&
-      req.body.categoryCode !== category.categoryCode
-    ) {
+    if (req.body.categoryCode) {
+      const newCode = req.body.categoryCode.trim().toUpperCase();
+
+      const restaurantId = req.body.restaurant || category.restaurant;
+
       const exists = await Category.findOne({
-        categoryCode: req.body.categoryCode.toUpperCase(),
+        restaurant: restaurantId,
+        categoryCode: newCode,
         _id: { $ne: req.params.id },
         isDeleted: false,
       });
@@ -148,23 +147,41 @@ exports.updateCategory = async (req, res) => {
       if (exists) {
         return res.status(400).json({
           success: false,
-          message: "Category Code already exists",
+          message: "Category Code already exists for this Restaurant",
         });
       }
 
-      req.body.categoryCode = req.body.categoryCode.toUpperCase();
+      req.body.categoryCode = newCode;
     }
+
+    // ==========================================
+    // OPTIONAL PARENT CATEGORY
+    // ==========================================
+
+    if (
+      req.body.parentCategory === "" ||
+      req.body.parentCategory === undefined
+    ) {
+      req.body.parentCategory = null;
+    }
+
+    // ==========================================
+    // UPDATED BY
+    // ==========================================
 
     req.body.updatedBy = req.user?._id;
 
-    const updated = await Category.findByIdAndUpdate(
-      req.params.id,
-      req.body,
-      {
-        new: true,
-        runValidators: true,
-      }
-    );
+    // ==========================================
+    // UPDATE
+    // ==========================================
+
+    const updated = await Category.findByIdAndUpdate(req.params.id, req.body, {
+      new: true,
+      runValidators: true,
+    })
+      .populate("parentCategory", "categoryName")
+      .populate("restaurant", "restaurantName")
+      .populate("store", "storeName");
 
     res.status(200).json({
       success: true,

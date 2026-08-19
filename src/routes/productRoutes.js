@@ -11,64 +11,42 @@ const {
   toggleProductAvailability,
 } = require("../controllers/productController");
 
-const {
-  verifyToken,
-} = require("../middleware/auth");
+const { verifyToken } = require("../middleware/auth");
 
 // =====================================================
 // CREATE PRODUCT
 // POST /api/products/create
 // =====================================================
 
-router.post(
-  "/create",
-  verifyToken,
-  createProduct
-);
-
 // =====================================================
 // GET ALL PRODUCTS
 // GET /api/products
 // =====================================================
 
-router.get(
-  "/all",
-  verifyToken,
-  getAllProducts
-);
+router.get("/all", verifyToken, getAllProducts);
+
+router.get("/:id", verifyToken, getProductById);
+
+router.post("/create", verifyToken, createProduct);
 
 // =====================================================
 // GET PRODUCT BY ID
 // GET /api/products/:id
 // =====================================================
 
-router.get(
-  "/:id",
-  verifyToken,
-  getProductById
-);
-
 // =====================================================
 // UPDATE PRODUCT
 // PUT /api/products/:id
 // =====================================================
 
-router.put(
-  "/update/:id",
-  verifyToken,
-  updateProduct
-);
+router.put("/update/:id", verifyToken, updateProduct);
 
 // =====================================================
 // DELETE PRODUCT
 // DELETE /api/products/:id
 // =====================================================
 
-router.delete(
-  "/delete/:id",
-  verifyToken,
-  deleteProduct
-);
+router.delete("/delete/:id", verifyToken, deleteProduct);
 
 // =====================================================
 // TOGGLE AVAILABILITY
@@ -78,7 +56,7 @@ router.delete(
 router.patch(
   "/toggle-availability/:id",
   verifyToken,
-  toggleProductAvailability
+  toggleProductAvailability,
 );
 
 module.exports = router;
