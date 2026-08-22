@@ -100,50 +100,35 @@ exports.createCompany = async (req, res) => {
 
       phone,
 
-      alternatePhone:
-        alternatePhone || "",
+      alternatePhone: alternatePhone || "",
 
-      gstNumber:
-        gstNumber || "",
+      gstNumber: gstNumber || "",
 
-      panNumber:
-        panNumber || "",
+      panNumber: panNumber || "",
 
-      address:
-        address || "",
+      address: address || "",
 
-      area:
-        area || "",
+      area: area || "",
 
-      city:
-        city || "",
+      city: city || "",
 
-      state:
-        state || "",
+      state: state || "",
 
-      country:
-        country || "India",
+      country: country || "India",
 
-      pincode:
-        pincode || "",
+      pincode: pincode || "",
 
-      currency:
-        currency || "INR",
+      currency: currency || "INR",
 
-      currencySymbol:
-        currencySymbol || "₹",
+      currencySymbol: currencySymbol || "₹",
 
-      timezone:
-        timezone || "Asia/Kolkata",
+      timezone: timezone || "Asia/Kolkata",
 
-      logo:
-        logo || "",
+      logo: logo || "",
 
-      status:
-        status || "Active",
+      status: status || "Active",
 
-      createdBy:
-        req.user._id,
+      createdBy: req.user._id,
     });
 
     return res.status(201).json({
@@ -151,12 +136,8 @@ exports.createCompany = async (req, res) => {
       message: "Company created successfully",
       data: company,
     });
-
   } catch (error) {
-    console.error(
-      "CREATE COMPANY ERROR:",
-      error
-    );
+    console.error("CREATE COMPANY ERROR:", error);
 
     return res.status(500).json({
       success: false,
@@ -169,10 +150,7 @@ exports.createCompany = async (req, res) => {
 // GET ALL COMPANIES
 // =====================================================
 
-exports.getAllCompanies = async (
-  req,
-  res
-) => {
+exports.getAllCompanies = async (req, res) => {
   try {
     if (!req.user) {
       return res.status(401).json({
@@ -205,35 +183,23 @@ exports.getAllCompanies = async (
 
     // Status
     if (req.query.status) {
-      filter.status =
-        req.query.status;
+      filter.status = req.query.status;
     }
 
-    const companies =
-      await Company.find(filter)
-        .populate(
-          "createdBy",
-          "firstName lastName email"
-        )
-        .populate(
-          "updatedBy",
-          "firstName lastName email"
-        )
-        .sort({
-          createdAt: -1,
-        });
+    const companies = await Company.find(filter)
+      .populate("createdBy", "firstName lastName email")
+      .populate("updatedBy", "firstName lastName email")
+      .sort({
+        createdAt: -1,
+      });
 
     return res.json({
       success: true,
       count: companies.length,
       data: companies,
     });
-
   } catch (error) {
-    console.error(
-      "GET COMPANIES ERROR:",
-      error
-    );
+    console.error("GET COMPANIES ERROR:", error);
 
     return res.status(500).json({
       success: false,
@@ -246,10 +212,7 @@ exports.getAllCompanies = async (
 // GET COMPANY BY ID
 // =====================================================
 
-exports.getCompanyById = async (
-  req,
-  res
-) => {
+exports.getCompanyById = async (req, res) => {
   try {
     if (!req.user) {
       return res.status(401).json({
@@ -258,19 +221,12 @@ exports.getCompanyById = async (
       });
     }
 
-    const company =
-      await Company.findOne({
-        _id: req.params.id,
-        isDeleted: false,
-      })
-        .populate(
-          "createdBy",
-          "firstName lastName email"
-        )
-        .populate(
-          "updatedBy",
-          "firstName lastName email"
-        );
+    const company = await Company.findOne({
+      _id: req.params.id,
+      isDeleted: false,
+    })
+      .populate("createdBy", "firstName lastName email")
+      .populate("updatedBy", "firstName lastName email");
 
     if (!company) {
       return res.status(404).json({
@@ -283,12 +239,8 @@ exports.getCompanyById = async (
       success: true,
       data: company,
     });
-
   } catch (error) {
-    console.error(
-      "GET COMPANY ERROR:",
-      error
-    );
+    console.error("GET COMPANY ERROR:", error);
 
     return res.status(500).json({
       success: false,
@@ -301,10 +253,7 @@ exports.getCompanyById = async (
 // UPDATE COMPANY
 // =====================================================
 
-exports.updateCompany = async (
-  req,
-  res
-) => {
+exports.updateCompany = async (req, res) => {
   try {
     if (!req.user) {
       return res.status(401).json({
@@ -313,11 +262,10 @@ exports.updateCompany = async (
       });
     }
 
-    const company =
-      await Company.findOne({
-        _id: req.params.id,
-        isDeleted: false,
-      });
+    const company = await Company.findOne({
+      _id: req.params.id,
+      isDeleted: false,
+    });
 
     if (!company) {
       return res.status(404).json({
@@ -330,8 +278,7 @@ exports.updateCompany = async (
     if (req.body.companyCode) {
       return res.status(400).json({
         success: false,
-        message:
-          "Company code cannot be changed",
+        message: "Company code cannot be changed",
       });
     }
 
@@ -357,35 +304,23 @@ exports.updateCompany = async (
       "status",
     ];
 
-    allowedFields.forEach(
-      (field) => {
-        if (
-          req.body[field] !==
-          undefined
-        ) {
-          company[field] =
-            req.body[field];
-        }
+    allowedFields.forEach((field) => {
+      if (req.body[field] !== undefined) {
+        company[field] = req.body[field];
       }
-    );
+    });
 
-    company.updatedBy =
-      req.user._id;
+    company.updatedBy = req.user._id;
 
     await company.save();
 
     return res.json({
       success: true,
-      message:
-        "Company updated successfully",
+      message: "Company updated successfully",
       data: company,
     });
-
   } catch (error) {
-    console.error(
-      "UPDATE COMPANY ERROR:",
-      error
-    );
+    console.error("UPDATE COMPANY ERROR:", error);
 
     return res.status(500).json({
       success: false,
@@ -398,10 +333,7 @@ exports.updateCompany = async (
 // DELETE COMPANY
 // =====================================================
 
-exports.deleteCompany = async (
-  req,
-  res
-) => {
+exports.deleteCompany = async (req, res) => {
   try {
     if (!req.user) {
       return res.status(401).json({
@@ -410,11 +342,10 @@ exports.deleteCompany = async (
       });
     }
 
-    const company =
-      await Company.findOne({
-        _id: req.params.id,
-        isDeleted: false,
-      });
+    const company = await Company.findOne({
+      _id: req.params.id,
+      isDeleted: false,
+    });
 
     if (!company) {
       return res.status(404).json({
@@ -425,22 +356,16 @@ exports.deleteCompany = async (
 
     company.isDeleted = true;
 
-    company.updatedBy =
-      req.user._id;
+    company.updatedBy = req.user._id;
 
     await company.save();
 
     return res.json({
       success: true,
-      message:
-        "Company deleted successfully",
+      message: "Company deleted successfully",
     });
-
   } catch (error) {
-    console.error(
-      "DELETE COMPANY ERROR:",
-      error
-    );
+    console.error("DELETE COMPANY ERROR:", error);
 
     return res.status(500).json({
       success: false,
@@ -453,10 +378,7 @@ exports.deleteCompany = async (
 // RESTORE COMPANY
 // =====================================================
 
-exports.restoreCompany = async (
-  req,
-  res
-) => {
+exports.restoreCompany = async (req, res) => {
   try {
     if (!req.user) {
       return res.status(401).json({
@@ -465,10 +387,7 @@ exports.restoreCompany = async (
       });
     }
 
-    const company =
-      await Company.findById(
-        req.params.id
-      );
+    const company = await Company.findById(req.params.id);
 
     if (!company) {
       return res.status(404).json({
@@ -479,23 +398,17 @@ exports.restoreCompany = async (
 
     company.isDeleted = false;
 
-    company.updatedBy =
-      req.user._id;
+    company.updatedBy = req.user._id;
 
     await company.save();
 
     return res.json({
       success: true,
-      message:
-        "Company restored successfully",
+      message: "Company restored successfully",
       data: company,
     });
-
   } catch (error) {
-    console.error(
-      "RESTORE COMPANY ERROR:",
-      error
-    );
+    console.error("RESTORE COMPANY ERROR:", error);
 
     return res.status(500).json({
       success: false,
@@ -508,56 +421,41 @@ exports.restoreCompany = async (
 // TOGGLE COMPANY STATUS
 // =====================================================
 
-exports.toggleCompanyStatus =
-  async (req, res) => {
-    try {
-      if (!req.user) {
-        return res.status(401).json({
-          success: false,
-          message:
-            "Authentication required",
-        });
-      }
-
-      const company =
-        await Company.findById(
-          req.params.id
-        );
-
-      if (!company) {
-        return res.status(404).json({
-          success: false,
-          message:
-            "Company not found",
-        });
-      }
-
-      company.status =
-        company.status === "Active"
-          ? "Inactive"
-          : "Active";
-
-      company.updatedBy =
-        req.user._id;
-
-      await company.save();
-
-      return res.json({
-        success: true,
-        message:
-          "Company status updated successfully",
-        data: company,
-      });
-
-    } catch (error) {
-      console.error(
-        "TOGGLE COMPANY STATUS ERROR:",
-        error
-      );
-
-      return res.status(500).json({
+exports.toggleCompanyStatus = async (req, res) => {
+  try {
+    if (!req.user) {
+      return res.status(401).json({
         success: false,
-        message: error.message,
+        message: "Authentication required",
       });
     }
-  };
+
+    const company = await Company.findById(req.params.id);
+
+    if (!company) {
+      return res.status(404).json({
+        success: false,
+        message: "Company not found",
+      });
+    }
+
+    company.status = company.status === "Active" ? "Inactive" : "Active";
+
+    company.updatedBy = req.user._id;
+
+    await company.save();
+
+    return res.json({
+      success: true,
+      message: "Company status updated successfully",
+      data: company,
+    });
+  } catch (error) {
+    console.error("TOGGLE COMPANY STATUS ERROR:", error);
+
+    return res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};

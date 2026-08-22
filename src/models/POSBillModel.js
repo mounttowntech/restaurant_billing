@@ -68,7 +68,7 @@ const posBillItemSchema = new mongoose.Schema(
       min: 0,
     },
   },
-  { _id: true }
+  { _id: true },
 );
 
 const paymentSchema = new mongoose.Schema(
@@ -103,7 +103,7 @@ const paymentSchema = new mongoose.Schema(
       default: Date.now,
     },
   },
-  { _id: false }
+  { _id: false },
 );
 
 const posBillSchema = new mongoose.Schema(
@@ -299,13 +299,7 @@ const posBillSchema = new mongoose.Schema(
 
     status: {
       type: String,
-      enum: [
-        "DRAFT",
-        "HOLD",
-        "RESUMED",
-        "COMPLETED",
-        "CANCELLED",
-      ],
+      enum: ["DRAFT", "HOLD", "RESUMED", "COMPLETED", "CANCELLED"],
       default: "DRAFT",
       index: true,
     },
@@ -344,12 +338,9 @@ const posBillSchema = new mongoose.Schema(
   },
   {
     timestamps: true,
-  }
+  },
 );
 
-posBillSchema.index(
-  { restaurant: 1, store: 1, billNo: 1 },
-  { unique: true }
-);
+posBillSchema.index({ restaurant: 1, store: 1, billNo: 1 }, { unique: true });
 
 module.exports = mongoose.model("POSBill", posBillSchema);

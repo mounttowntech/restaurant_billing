@@ -162,12 +162,12 @@ const ingredientStockLedgerSchema = new mongoose.Schema(
    Auto Calculations
 ========================================================== */
 
-ingredientStockLedgerSchema.pre("save", function (next) {
+ingredientStockLedgerSchema.pre("save", function () {
   this.totalValue =
     Number(this.balanceStock || 0) *
     Number(this.purchasePrice || 0);
 
-  next();
+ 
 });
 
 /* ==========================================================
@@ -222,22 +222,22 @@ ingredientStockLedgerSchema.index({
    Middleware
 ========================================================== */
 
-ingredientStockLedgerSchema.pre(/^find/, function (next) {
+ingredientStockLedgerSchema.pre(/^find/, function () {
   if (this.getFilter().isDeleted === undefined) {
     this.where({
       isDeleted: false,
     });
   }
-  next();
+ 
 });
 
-ingredientStockLedgerSchema.pre("validate", function (next) {
+ingredientStockLedgerSchema.pre("validate", function () {
   if (this.ledgerNo) {
     this.ledgerNo = this.ledgerNo
       .trim()
       .toUpperCase();
   }
-  next();
+
 });
 
 /* ==========================================================
