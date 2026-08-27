@@ -86,6 +86,8 @@ exports.getAllIngredientStockLedgers = async (req, res) => {
     const limit = Number(req.query.limit) || 10;
     const skip = (page - 1) * limit;
 
+    console.log("Query Parameters:", req.query);
+
     const {
       search,
       ingredient,
@@ -104,8 +106,7 @@ exports.getAllIngredientStockLedgers = async (req, res) => {
     if (restaurant) query.restaurant = restaurant;
     if (store) query.store = store;
     if (warehouse) query.warehouse = warehouse;
-    if (transactionType)
-      query.transactionType = transactionType;
+    if (transactionType) query.transactionType = transactionType;
     if (status) query.status = status;
 
     if (search) {
@@ -131,25 +132,23 @@ exports.getAllIngredientStockLedgers = async (req, res) => {
       ];
     }
 
-    const total =
-      await IngredientStockLedger.countDocuments(query);
+    const total = await IngredientStockLedger.countDocuments(query);
 
-    const ledgers =
-      await IngredientStockLedger.find(query)
-        .populate("ingredient", "ingredientName")
-        .populate("batch", "batchNo")
-        .populate("unit", "unitName unitCode")
-        .populate("restaurant", "restaurantName")
-        .populate("store", "storeName")
-        .populate("warehouse", "warehouseName")
-        .populate("createdBy", "name")
-        .populate("updatedBy", "name")
-        .sort({
-          transactionDate: -1,
-          createdAt: -1,
-        })
-        .skip(skip)
-        .limit(limit);
+    const ledgers = await IngredientStockLedger.find(query)
+      .populate("ingredient", "ingredientName")
+      .populate("batch", "batchNo")
+      .populate("unit", "unitName unitCode")
+      .populate("restaurant", "restaurantName")
+      .populate("store", "storeName")
+      .populate("warehouse", "warehouseName")
+      .populate("createdBy", "name")
+      .populate("updatedBy", "name")
+      .sort({
+        transactionDate: -1,
+        createdAt: -1,
+      })
+      .skip(skip)
+      .limit(limit);
 
     return res.status(200).json({
       success: true,
@@ -171,24 +170,20 @@ exports.getAllIngredientStockLedgers = async (req, res) => {
    Get Ingredient Stock Ledger By ID
 ========================================================== */
 
-exports.getIngredientStockLedgerById = async (
-  req,
-  res
-) => {
+exports.getIngredientStockLedgerById = async (req, res) => {
   try {
-    const ledger =
-      await IngredientStockLedger.findOne({
-        _id: req.params.id,
-        isDeleted: false,
-      })
-        .populate("ingredient")
-        .populate("batch")
-        .populate("unit")
-        .populate("restaurant")
-        .populate("store")
-        .populate("warehouse")
-        .populate("createdBy", "name email")
-        .populate("updatedBy", "name email");
+    const ledger = await IngredientStockLedger.findOne({
+      _id: req.params.id,
+      isDeleted: false,
+    })
+      .populate("ingredient")
+      .populate("batch")
+      .populate("unit")
+      .populate("restaurant")
+      .populate("store")
+      .populate("warehouse")
+      .populate("createdBy", "name email")
+      .populate("updatedBy", "name email");
 
     if (!ledger) {
       return res.status(404).json({
@@ -213,16 +208,12 @@ exports.getIngredientStockLedgerById = async (
    Update Ingredient Stock Ledger
 ========================================================== */
 
-exports.updateIngredientStockLedger = async (
-  req,
-  res
-) => {
+exports.updateIngredientStockLedger = async (req, res) => {
   try {
-    const ledger =
-      await IngredientStockLedger.findOne({
-        _id: req.params.id,
-        isDeleted: false,
-      });
+    const ledger = await IngredientStockLedger.findOne({
+      _id: req.params.id,
+      isDeleted: false,
+    });
 
     if (!ledger) {
       return res.status(404).json({
@@ -233,20 +224,16 @@ exports.updateIngredientStockLedger = async (
 
     // Duplicate Ledger Number Check
     if (req.body.ledgerNo) {
-      const exists =
-        await IngredientStockLedger.findOne({
-          _id: { $ne: req.params.id },
-          ledgerNo: req.body.ledgerNo
-            .trim()
-            .toUpperCase(),
-          isDeleted: false,
-        });
+      const exists = await IngredientStockLedger.findOne({
+        _id: { $ne: req.params.id },
+        ledgerNo: req.body.ledgerNo.trim().toUpperCase(),
+        isDeleted: false,
+      });
 
       if (exists) {
         return res.status(400).json({
           success: false,
-          message:
-            "Ledger number already exists.",
+          message: "Ledger number already exists.",
         });
       }
     }
@@ -261,8 +248,7 @@ exports.updateIngredientStockLedger = async (
 
     return res.status(200).json({
       success: true,
-      message:
-        "Ingredient stock ledger updated successfully.",
+      message: "Ingredient stock ledger updated successfully.",
       data: ledger,
     });
   } catch (error) {
@@ -516,14 +502,11 @@ exports.getStockInReport = async (req, res) => {
       isDeleted: false,
     };
 
-    if (req.query.store)
-      query.store = req.query.store;
+    if (req.query.store) query.store = req.query.store;
 
-    if (req.query.restaurant)
-      query.restaurant = req.query.restaurant;
+    if (req.query.restaurant) query.restaurant = req.query.restaurant;
 
-    if (req.query.ingredient)
-      query.ingredient = req.query.ingredient;
+    if (req.query.ingredient) query.ingredient = req.query.ingredient;
 
     const report = await IngredientStockLedger.find(query)
       .populate("ingredient", "ingredientName ingredientCode")
@@ -558,14 +541,11 @@ exports.getStockOutReport = async (req, res) => {
       isDeleted: false,
     };
 
-    if (req.query.store)
-      query.store = req.query.store;
+    if (req.query.store) query.store = req.query.store;
 
-    if (req.query.restaurant)
-      query.restaurant = req.query.restaurant;
+    if (req.query.restaurant) query.restaurant = req.query.restaurant;
 
-    if (req.query.ingredient)
-      query.ingredient = req.query.ingredient;
+    if (req.query.ingredient) query.ingredient = req.query.ingredient;
 
     const report = await IngredientStockLedger.find(query)
       .populate("ingredient", "ingredientName ingredientCode")
@@ -601,20 +581,19 @@ exports.getTodayTransactions = async (req, res) => {
     const end = new Date();
     end.setHours(23, 59, 59, 999);
 
-    const transactions =
-      await IngredientStockLedger.find({
-        transactionDate: {
-          $gte: start,
-          $lte: end,
-        },
-        isDeleted: false,
-      })
-        .populate("ingredient", "ingredientName ingredientCode")
-        .populate("store", "storeName")
-        .populate("warehouse", "warehouseName")
-        .sort({
-          transactionDate: -1,
-        });
+    const transactions = await IngredientStockLedger.find({
+      transactionDate: {
+        $gte: start,
+        $lte: end,
+      },
+      isDeleted: false,
+    })
+      .populate("ingredient", "ingredientName ingredientCode")
+      .populate("store", "storeName")
+      .populate("warehouse", "warehouseName")
+      .sort({
+        transactionDate: -1,
+      });
 
     return res.status(200).json({
       success: true,
@@ -635,64 +614,61 @@ exports.getTodayTransactions = async (req, res) => {
 
 exports.getStockSummary = async (req, res) => {
   try {
-    const summary =
-      await IngredientStockLedger.aggregate([
-        {
-          $match: {
-            isDeleted: false,
+    const summary = await IngredientStockLedger.aggregate([
+      {
+        $match: {
+          isDeleted: false,
+        },
+      },
+      {
+        $group: {
+          _id: "$ingredient",
+          totalStockIn: {
+            $sum: "$stockIn",
+          },
+          totalStockOut: {
+            $sum: "$stockOut",
+          },
+          currentBalance: {
+            $max: "$balanceStock",
+          },
+          totalValue: {
+            $max: "$totalValue",
+          },
+          totalTransactions: {
+            $sum: 1,
           },
         },
-        {
-          $group: {
-            _id: "$ingredient",
-            totalStockIn: {
-              $sum: "$stockIn",
-            },
-            totalStockOut: {
-              $sum: "$stockOut",
-            },
-            currentBalance: {
-              $max: "$balanceStock",
-            },
-            totalValue: {
-              $max: "$totalValue",
-            },
-            totalTransactions: {
-              $sum: 1,
-            },
-          },
+      },
+      {
+        $lookup: {
+          from: "ingredients",
+          localField: "_id",
+          foreignField: "_id",
+          as: "ingredient",
         },
-        {
-          $lookup: {
-            from: "ingredients",
-            localField: "_id",
-            foreignField: "_id",
-            as: "ingredient",
-          },
+      },
+      {
+        $unwind: "$ingredient",
+      },
+      {
+        $project: {
+          ingredientId: "$ingredient._id",
+          ingredientName: "$ingredient.ingredientName",
+          ingredientCode: "$ingredient.ingredientCode",
+          totalStockIn: 1,
+          totalStockOut: 1,
+          currentBalance: 1,
+          totalValue: 1,
+          totalTransactions: 1,
         },
-        {
-          $unwind: "$ingredient",
+      },
+      {
+        $sort: {
+          ingredientName: 1,
         },
-        {
-          $project: {
-            ingredientId: "$ingredient._id",
-            ingredientName:
-              "$ingredient.ingredientName",
-            ingredientCode:
-              "$ingredient.ingredientCode",
-            totalStockIn: 1,
-            totalStockOut: 1,
-            currentBalance: 1,
-            totalValue: 1,
-            totalTransactions: 1,
-          },
-        },
-        {
-          $sort: {
-            ingredientName: 1,
-          },
-        },
-      ]);
+      },
+    ]);
 
     return res.status(200).json({
       success: true,

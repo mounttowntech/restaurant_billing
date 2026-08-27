@@ -58,13 +58,7 @@ const kotItemSchema = new mongoose.Schema(
 
     kitchenStatus: {
       type: String,
-      enum: [
-        "Pending",
-        "Preparing",
-        "Ready",
-        "Served",
-        "Cancelled",
-      ],
+      enum: ["Pending", "Preparing", "Ready", "Served", "Cancelled"],
       default: "Pending",
     },
 
@@ -92,7 +86,7 @@ const kotItemSchema = new mongoose.Schema(
   },
   {
     _id: false,
-  }
+  },
 );
 
 /* ==========================================================
@@ -154,24 +148,13 @@ const kotSchema = new mongoose.Schema(
 
     kotType: {
       type: String,
-      enum: [
-        "Dine In",
-        "Takeaway",
-        "Delivery",
-        "Online",
-        "QR Order",
-      ],
+      enum: ["Dine In", "Takeaway", "Delivery", "Online", "QR Order"],
       default: "Dine In",
     },
 
     priority: {
       type: String,
-      enum: [
-        "Low",
-        "Normal",
-        "High",
-        "Urgent",
-      ],
+      enum: ["Low", "Normal", "High", "Urgent"],
       default: "Normal",
     },
 
@@ -190,13 +173,7 @@ const kotSchema = new mongoose.Schema(
 
     kitchenStatus: {
       type: String,
-      enum: [
-        "Pending",
-        "Preparing",
-        "Ready",
-        "Served",
-        "Cancelled",
-      ],
+      enum: ["Pending", "Preparing", "Ready", "Served", "Cancelled"],
       default: "Pending",
     },
 
@@ -245,7 +222,7 @@ const kotSchema = new mongoose.Schema(
   {
     timestamps: true,
     versionKey: false,
-  }
+  },
 );
 
 /* ==========================================================
@@ -253,36 +230,25 @@ const kotSchema = new mongoose.Schema(
 ========================================================== */
 
 kotSchema.pre("save", function () {
-
   this.totalItems = this.items.length;
 
   this.totalQuantity = this.items.reduce(
     (sum, item) => sum + Number(item.quantity || 0),
-    0
+    0,
   );
 
   // Header kitchen status
-  if (
-    this.items.every((item) => item.kitchenStatus === "Served")
-  ) {
+  if (this.items.every((item) => item.kitchenStatus === "Served")) {
     this.kitchenStatus = "Served";
-  } else if (
-    this.items.every((item) => item.kitchenStatus === "Ready")
-  ) {
+  } else if (this.items.every((item) => item.kitchenStatus === "Ready")) {
     this.kitchenStatus = "Ready";
-  } else if (
-    this.items.some((item) => item.kitchenStatus === "Preparing")
-  ) {
+  } else if (this.items.some((item) => item.kitchenStatus === "Preparing")) {
     this.kitchenStatus = "Preparing";
-  } else if (
-    this.items.every((item) => item.kitchenStatus === "Cancelled")
-  ) {
+  } else if (this.items.every((item) => item.kitchenStatus === "Cancelled")) {
     this.kitchenStatus = "Cancelled";
   } else {
     this.kitchenStatus = "Pending";
   }
-
-  
 });
 /* ==========================================================
    Virtuals
@@ -290,23 +256,17 @@ kotSchema.pre("save", function () {
 
 // Pending Items Count
 kotSchema.virtual("pendingItems").get(function () {
-  return this.items.filter(
-    (item) => item.kitchenStatus !== "Served"
-  ).length;
+  return this.items.filter((item) => item.kitchenStatus !== "Served").length;
 });
 
 // Ready Items Count
 kotSchema.virtual("readyItems").get(function () {
-  return this.items.filter(
-    (item) => item.kitchenStatus === "Ready"
-  ).length;
+  return this.items.filter((item) => item.kitchenStatus === "Ready").length;
 });
 
 // Served Items Count
 kotSchema.virtual("servedItems").get(function () {
-  return this.items.filter(
-    (item) => item.kitchenStatus === "Served"
-  ).length;
+  return this.items.filter((item) => item.kitchenStatus === "Served").length;
 });
 
 // Completion Status
@@ -323,10 +283,7 @@ kotSchema.virtual("isPrinted").get(function () {
    Indexes
 ========================================================== */
 
-kotSchema.index(
-  { kotNo: 1 },
-  { unique: true }
-);
+kotSchema.index({ kotNo: 1 }, { unique: true });
 
 kotSchema.index({ restaurant: 1 });
 
@@ -362,26 +319,18 @@ kotSchema.index({ createdAt: -1 });
 
 // Hide soft deleted records
 kotSchema.pre(/^find/, function () {
-
   if (this.getFilter().isDeleted === undefined) {
     this.where({
       isDeleted: false,
     });
   }
-
-  
 });
 
 // Format KOT Number
 kotSchema.pre("validate", function () {
-
   if (this.kotNo) {
-    this.kotNo = this.kotNo
-      .trim()
-      .toUpperCase();
+    this.kotNo = this.kotNo.trim().toUpperCase();
   }
-
- 
 });
 
 /* ==========================================================
@@ -390,20 +339,16 @@ kotSchema.pre("validate", function () {
 
 // Mark Preparing
 kotSchema.methods.markPreparing = async function () {
-
   this.kitchenStatus = "Preparing";
 
   this.startedAt = new Date();
 
   this.items.forEach((item) => {
-
     if (item.kitchenStatus === "Pending") {
-
       item.kitchenStatus = "Preparing";
 
       item.startedAt = new Date();
     }
-
   });
 
   return await this.save();
@@ -411,25 +356,21 @@ kotSchema.methods.markPreparing = async function () {
 
 // Mark Ready
 kotSchema.methods.markReady = async function () {
-
   this.kitchenStatus = "Ready";
 
   this.completedAt = new Date();
 
   this.items.forEach((item) => {
-
     if (
       item.kitchenStatus === "Preparing" ||
       item.kitchenStatus === "Pending"
     ) {
-
       item.kitchenStatus = "Ready";
 
       item.readyAt = new Date();
 
       item.isPrepared = true;
     }
-
   });
 
   return await this.save();
@@ -437,13 +378,11 @@ kotSchema.methods.markReady = async function () {
 
 // Mark Served
 kotSchema.methods.markServed = async function () {
-
   this.kitchenStatus = "Served";
 
   this.servedAt = new Date();
 
   this.items.forEach((item) => {
-
     item.kitchenStatus = "Served";
 
     item.isServed = true;
@@ -451,7 +390,6 @@ kotSchema.methods.markServed = async function () {
     item.servedQuantity = item.quantity;
 
     item.servedAt = new Date();
-
   });
 
   return await this.save();
@@ -459,7 +397,6 @@ kotSchema.methods.markServed = async function () {
 
 // Mark Printed
 kotSchema.methods.markPrinted = async function () {
-
   this.printed = true;
 
   this.printedAt = new Date();
@@ -469,7 +406,6 @@ kotSchema.methods.markPrinted = async function () {
 
 // Soft Delete
 kotSchema.methods.softDelete = async function (userId) {
-
   this.isDeleted = true;
 
   this.updatedBy = userId;
@@ -479,7 +415,6 @@ kotSchema.methods.softDelete = async function (userId) {
 
 // Restore
 kotSchema.methods.restore = async function () {
-
   this.isDeleted = false;
 
   return await this.save();
@@ -491,30 +426,22 @@ kotSchema.methods.restore = async function () {
 
 // Kitchen Queue
 kotSchema.statics.getKitchenQueue = function () {
-
   return this.find({
-
     kitchenStatus: {
       $in: ["Pending", "Preparing"],
     },
 
     isDeleted: false,
-
   }).sort({
-
     priority: -1,
 
     createdAt: 1,
-
   });
-
 };
 
 // Chef Orders
 kotSchema.statics.getChefOrders = function (chefId) {
-
   return this.find({
-
     chef: chefId,
 
     kitchenStatus: {
@@ -522,35 +449,24 @@ kotSchema.statics.getChefOrders = function (chefId) {
     },
 
     isDeleted: false,
-
   }).sort({
-
     createdAt: 1,
-
   });
-
 };
 
 // Pending KOTs
 kotSchema.statics.getPendingKOTs = function () {
-
   return this.find({
-
     kitchenStatus: "Pending",
 
     isDeleted: false,
-
   }).sort({
-
     createdAt: 1,
-
   });
-
 };
 
 // Today's KOTs
 kotSchema.statics.getTodayKOTs = function () {
-
   const start = new Date();
   start.setHours(0, 0, 0, 0);
 
@@ -558,16 +474,13 @@ kotSchema.statics.getTodayKOTs = function () {
   end.setHours(23, 59, 59, 999);
 
   return this.find({
-
     kotDate: {
       $gte: start,
       $lte: end,
     },
 
     isDeleted: false,
-
   });
-
 };
 
 /* ==========================================================

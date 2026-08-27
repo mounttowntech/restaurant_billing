@@ -155,7 +155,7 @@ const ingredientStockLedgerSchema = new mongoose.Schema(
   {
     timestamps: true,
     versionKey: false,
-  }
+  },
 );
 
 /* ==========================================================
@@ -164,8 +164,7 @@ const ingredientStockLedgerSchema = new mongoose.Schema(
 
 ingredientStockLedgerSchema.pre("save", function () {
   this.totalValue =
-    Number(this.balanceStock || 0) *
-    Number(this.purchasePrice || 0);
+    Number(this.balanceStock || 0) * Number(this.purchasePrice || 0);
 
  
 });
@@ -184,10 +183,7 @@ ingredientStockLedgerSchema.virtual("movement").get(function () {
    Indexes
 ========================================================== */
 
-ingredientStockLedgerSchema.index(
-  { ledgerNo: 1 },
-  { unique: true }
-);
+ingredientStockLedgerSchema.index({ ledgerNo: 1 }, { unique: true });
 
 ingredientStockLedgerSchema.index({
   ingredient: 1,
@@ -233,9 +229,7 @@ ingredientStockLedgerSchema.pre(/^find/, function () {
 
 ingredientStockLedgerSchema.pre("validate", function () {
   if (this.ledgerNo) {
-    this.ledgerNo = this.ledgerNo
-      .trim()
-      .toUpperCase();
+    this.ledgerNo = this.ledgerNo.trim().toUpperCase();
   }
 
 });
@@ -244,12 +238,11 @@ ingredientStockLedgerSchema.pre("validate", function () {
    Instance Methods
 ========================================================== */
 
-ingredientStockLedgerSchema.methods.softDelete =
-  async function (userId) {
-    this.isDeleted = true;
-    this.updatedBy = userId;
-    await this.save();
-  };
+ingredientStockLedgerSchema.methods.softDelete = async function (userId) {
+  this.isDeleted = true;
+  this.updatedBy = userId;
+  await this.save();
+};
 
 /* ==========================================================
    JSON Settings
@@ -269,5 +262,5 @@ ingredientStockLedgerSchema.set("toObject", {
 
 module.exports = mongoose.model(
   "IngredientStockLedger",
-  ingredientStockLedgerSchema
+  ingredientStockLedgerSchema,
 );

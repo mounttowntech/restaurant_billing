@@ -11,43 +11,13 @@ const { verifyToken } = require("../middleware/auth");
 // Create Ledger
 router.post(
   "/create",
-  verifyToken,
-  ingredientStockLedgerController.createIngredientStockLedger
+  verifyToken,  ingredientStockLedgerController.createIngredientStockLedger,
 );
 
 // Get All Ledgers
 router.get(
   "/all",
-  verifyToken,
-  ingredientStockLedgerController.getAllIngredientStockLedgers
-);
-
-// Get Ledger By ID
-router.get(
-  "/:id",
-  verifyToken,
-  ingredientStockLedgerController.getIngredientStockLedgerById
-);
-
-// Update Ledger
-router.put(
-  "/:id",
-  verifyToken,
-  ingredientStockLedgerController.updateIngredientStockLedger
-);
-
-// Soft Delete
-router.delete(
-  "/:id",
-  verifyToken,
-  ingredientStockLedgerController.deleteIngredientStockLedger
-);
-
-// Restore
-router.put(
-  "/restore/:id",
-  verifyToken,
-  ingredientStockLedgerController.restoreIngredientStockLedger
+  verifyToken,  ingredientStockLedgerController.getAllIngredientStockLedgers,
 );
 
 /* ==========================================================
@@ -58,28 +28,28 @@ router.put(
 router.get(
   "/ingredient/:ingredientId",
   verifyToken,
-  ingredientStockLedgerController.getIngredientLedgerHistory
+  ingredientStockLedgerController.getIngredientLedgerHistory,
 );
 
 // Store Ledger
 router.get(
   "/store/:storeId",
   verifyToken,
-  ingredientStockLedgerController.getStoreLedger
+  ingredientStockLedgerController.getStoreLedger,
 );
 
 // Warehouse Ledger
 router.get(
   "/warehouse/:warehouseId",
   verifyToken,
-  ingredientStockLedgerController.getWarehouseLedger
+  ingredientStockLedgerController.getWarehouseLedger,
 );
 
 // Transaction Type
 router.get(
   "/transaction/:transactionType",
   verifyToken,
-  ingredientStockLedgerController.getTransactionTypeLedger
+  ingredientStockLedgerController.getTransactionTypeLedger,
 );
 
 /* ==========================================================
@@ -90,28 +60,56 @@ router.get(
 router.get(
   "/reports/stock-in",
   verifyToken,
-  ingredientStockLedgerController.getStockInReport
+  ingredientStockLedgerController.getStockInReport,
 );
 
 // Stock Out Report
 router.get(
   "/reports/stock-out",
   verifyToken,
-  ingredientStockLedgerController.getStockOutReport
+  ingredientStockLedgerController.getStockOutReport,
 );
 
 // Today's Transactions
 router.get(
   "/reports/today",
   verifyToken,
-  ingredientStockLedgerController.getTodayTransactions
+  ingredientStockLedgerController.getTodayTransactions,
 );
 
 // Stock Summary
 router.get(
   "/reports/summary",
   verifyToken,
-  ingredientStockLedgerController.getStockSummary
+  ingredientStockLedgerController.getStockSummary,
+);
+
+// Get Ledger By ID
+router.get(
+  "/:id",
+  verifyToken,
+  ingredientStockLedgerController.getIngredientStockLedgerById,
+);
+
+// Update Ledger
+router.put(
+  "/:id",
+  verifyToken,
+  ingredientStockLedgerController.updateIngredientStockLedger,
+);
+
+// Soft Delete
+router.delete(
+  "/:id",
+  verifyToken,
+  ingredientStockLedgerController.deleteIngredientStockLedger,
+);
+
+// Restore
+router.put(
+  "/restore/:id",
+  verifyToken,
+  ingredientStockLedgerController.restoreIngredientStockLedger,
 );
 
 module.exports = router;

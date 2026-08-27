@@ -52,7 +52,7 @@ const recipeItemSchema = new mongoose.Schema(
   },
   {
     _id: false,
-  }
+  },
 );
 
 /* ==========================================================
@@ -75,11 +75,11 @@ const recipeSchema = new mongoose.Schema(
       trim: true,
     },
 
-menuItem: {
-  type: mongoose.Schema.Types.ObjectId,
-  ref: "MenuItem",
-  required: true,
-},
+    menuItem: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "MenuItem",
+      required: true,
+    },
 
     menuCategory: {
       type: mongoose.Schema.Types.ObjectId,
@@ -164,7 +164,7 @@ menuItem: {
   {
     timestamps: true,
     versionKey: false,
-  }
+  },
 );
 
 /* ==========================================================
@@ -178,30 +178,21 @@ recipeSchema.pre("save", function () {
     const wastageQty =
       (Number(item.quantity) * Number(item.wastagePercentage || 0)) / 100;
 
-    item.actualQuantity =
-      Number(item.quantity) + wastageQty;
+    item.actualQuantity = Number(item.quantity) + wastageQty;
 
-    item.totalCost =
-      item.actualQuantity * Number(item.costPerUnit || 0);
+    item.totalCost = item.actualQuantity * Number(item.costPerUnit || 0);
 
     totalCost += item.totalCost;
   });
 
   this.totalCost = totalCost;
 
-  this.profitAmount =
-    Number(this.sellingPrice) - totalCost;
+  this.profitAmount = Number(this.sellingPrice) - totalCost;
 
   this.profitPercentage =
     this.sellingPrice > 0
-      ? Number(
-          (
-            (this.profitAmount / this.sellingPrice) *
-            100
-          ).toFixed(2)
-        )
+      ? Number(((this.profitAmount / this.sellingPrice) * 100).toFixed(2))
       : 0;
-
 });
 
 /* ==========================================================
@@ -242,18 +233,12 @@ recipeSchema.pre(/^find/, function () {
       isDeleted: false,
     });
   }
-
-  
 });
 
 recipeSchema.pre("validate", function () {
   if (this.recipeCode) {
-    this.recipeCode = this.recipeCode
-      .trim()
-      .toUpperCase();
+    this.recipeCode = this.recipeCode.trim().toUpperCase();
   }
-
-  
 });
 
 /* ==========================================================
@@ -272,7 +257,4 @@ recipeSchema.set("toObject", {
    Export
 ========================================================== */
 
-module.exports = mongoose.model(
-  "Recipe",
-  recipeSchema
-);
+module.exports = mongoose.model("Recipe", recipeSchema);

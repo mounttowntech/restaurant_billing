@@ -21,7 +21,7 @@ const ComboMealItemSchema = new mongoose.Schema(
   },
   {
     _id: false,
-  }
+  },
 );
 
 // =====================================================
@@ -170,7 +170,7 @@ const ComboMealSchema = new mongoose.Schema(
   {
     timestamps: true,
     versionKey: false,
-  }
+  },
 );
 
 // =====================================================
@@ -206,7 +206,4 @@ ComboMealSchema.index({
 // Export
 // =====================================================
 
-module.exports = mongoose.model(
-  "ComboMeal",
-  ComboMealSchema
-);
+module.exports = mongoose.model("ComboMeal", ComboMealSchema);

@@ -12,7 +12,6 @@ const registerEmail = require("../templates/registerEmail");
 const loginEmail = require("../templates/loginEmail");
 const changePasswordEmail = require("../templates/changePasswordEmail");
 
-
 // =====================================================
 // REGISTER USER
 // =====================================================
@@ -51,8 +50,7 @@ exports.register = async (req, res) => {
     if (!firstName || !email || !phone || !password || !role) {
       return res.status(400).json({
         success: false,
-        message:
-          "First name, email, phone, password and role are required.",
+        message: "First name, email, phone, password and role are required.",
       });
     }
 
@@ -73,7 +71,7 @@ exports.register = async (req, res) => {
     ];
 
     const validRole = allowedRoles.find(
-      (item) => item.toLowerCase() === role.toLowerCase()
+      (item) => item.toLowerCase() === role.toLowerCase(),
     );
 
     if (!validRole) {
@@ -173,10 +171,7 @@ exports.register = async (req, res) => {
 
       console.log("Welcome email sent.");
     } catch (mailError) {
-      console.error(
-        "Welcome email failed:",
-        mailError.message
-      );
+      console.error("Welcome email failed:", mailError.message);
     }
 
     // =================================================
@@ -196,14 +191,11 @@ exports.register = async (req, res) => {
       message: "User registered successfully.",
       data: userData,
     });
-
   } catch (error) {
     console.error("REGISTER ERROR:", error);
 
     if (error.code === 11000) {
-      const field = Object.keys(
-        error.keyPattern || {}
-      )[0];
+      const field = Object.keys(error.keyPattern || {})[0];
 
       return res.status(400).json({
         success: false,
@@ -307,7 +299,7 @@ exports.login = async (req, res) => {
       process.env.JWT_SECRET,
       {
         expiresIn: process.env.JWT_EXPIRE || "7d",
-      }
+      },
     );
 
     // ==========================================
@@ -367,22 +359,18 @@ exports.login = async (req, res) => {
 
 exports.changePassword = async (req, res) => {
   try {
-    const {
-      oldPassword,
-      newPassword,
-    } = req.body;
+    const { oldPassword, newPassword } = req.body;
 
     if (!oldPassword || !newPassword) {
       return res.status(400).json({
         success: false,
-        message:
-          "Old password and new password are required.",
+        message: "Old password and new password are required.",
       });
     }
 
-    const user = await User.findById(
-      req.user._id || req.user.id
-    ).select("+password");
+    const user = await User.findById(req.user._id || req.user.id).select(
+      "+password",
+    );
 
     if (!user) {
       return res.status(404).json({
@@ -391,9 +379,7 @@ exports.changePassword = async (req, res) => {
       });
     }
 
-    const match = await user.comparePassword(
-      oldPassword
-    );
+    const match = await user.comparePassword(oldPassword);
 
     if (!match) {
       return res.status(400).json({
@@ -456,14 +442,11 @@ exports.forgotPassword = async (req, res) => {
     // Generate Token
     // ==========================================
 
-    const resetToken = crypto
-      .randomBytes(32)
-      .toString("hex");
+    const resetToken = crypto.randomBytes(32).toString("hex");
 
     user.resetPasswordToken = resetToken;
 
-    user.resetPasswordExpire =
-      Date.now() + 15 * 60 * 1000;
+    user.resetPasswordExpire = Date.now() + 15 * 60 * 1000;
 
     await user.save();
 
@@ -471,8 +454,7 @@ exports.forgotPassword = async (req, res) => {
     // Reset URL
     // ==========================================
 
-    const resetURL =
-      `http://localhost:5173/reset-password/${resetToken}`;
+    const resetURL = `http://localhost:5173/reset-password/${resetToken}`;
 
     try {
       await sendMail({
@@ -515,8 +497,7 @@ exports.forgotPassword = async (req, res) => {
 
       return res.status(200).json({
         success: true,
-        message:
-          "Reset password link sent successfully.",
+        message: "Reset password link sent successfully.",
       });
     } catch (mailError) {
       console.error(mailError);
@@ -563,8 +544,7 @@ exports.resetPassword = async (req, res) => {
     if (!user) {
       return res.status(400).json({
         success: false,
-        message:
-          "Reset link is invalid or has expired.",
+        message: "Reset link is invalid or has expired.",
       });
     }
 

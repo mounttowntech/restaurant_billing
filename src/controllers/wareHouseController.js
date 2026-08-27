@@ -9,26 +9,11 @@ const User = require("../models/User");
 
 const populateWarehouse = (query) => {
   return query
-    .populate(
-      "restaurant",
-      "restaurantName restaurantCode"
-    )
-    .populate(
-      "store",
-      "storeName storeCode"
-    )
-    .populate(
-      "manager",
-      "name email phone"
-    )
-    .populate(
-      "createdBy",
-      "name email"
-    )
-    .populate(
-      "updatedBy",
-      "name email"
-    );
+    .populate("restaurant", "restaurantName restaurantCode")
+    .populate("store", "storeName storeCode")
+    .populate("manager", "name email phone")
+    .populate("createdBy", "name email")
+    .populate("updatedBy", "name email");
 };
 
 /* ==========================================================
@@ -64,12 +49,7 @@ exports.createWarehouse = async (req, res) => {
        Required Fields
     ====================================================== */
 
-    if (
-      !restaurant ||
-      !store ||
-      !warehouseCode ||
-      !warehouseName
-    ) {
+    if (!restaurant || !store || !warehouseCode || !warehouseName) {
       return res.status(400).json({
         success: false,
         message:
@@ -81,8 +61,7 @@ exports.createWarehouse = async (req, res) => {
        Validate Restaurant
     ====================================================== */
 
-    const restaurantExists =
-      await Restaurant.findById(restaurant);
+    const restaurantExists = await Restaurant.findById(restaurant);
 
     if (!restaurantExists) {
       return res.status(404).json({
@@ -95,8 +74,7 @@ exports.createWarehouse = async (req, res) => {
        Validate Store
     ====================================================== */
 
-    const storeExists =
-      await Store.findById(store);
+    const storeExists = await Store.findById(store);
 
     if (!storeExists) {
       return res.status(404).json({
@@ -110,8 +88,7 @@ exports.createWarehouse = async (req, res) => {
     ====================================================== */
 
     if (manager) {
-      const managerExists =
-        await User.findById(manager);
+      const managerExists = await User.findById(manager);
 
       if (!managerExists) {
         return res.status(404).json({
@@ -125,19 +102,16 @@ exports.createWarehouse = async (req, res) => {
        Duplicate Warehouse Code
     ====================================================== */
 
-    const existingWarehouse =
-      await Warehouse.findOne({
-        restaurant,
-        warehouseCode:
-          warehouseCode.toUpperCase(),
-        isDeleted: false,
-      });
+    const existingWarehouse = await Warehouse.findOne({
+      restaurant,
+      warehouseCode: warehouseCode.toUpperCase(),
+      isDeleted: false,
+    });
 
     if (existingWarehouse) {
       return res.status(400).json({
         success: false,
-        message:
-          "Warehouse code already exists for this restaurant.",
+        message: "Warehouse code already exists for this restaurant.",
       });
     }
 
@@ -145,19 +119,17 @@ exports.createWarehouse = async (req, res) => {
        Check Duplicate Warehouse Name
     ====================================================== */
 
-    const existingName =
-      await Warehouse.findOne({
-        restaurant,
-        store,
-        warehouseName: warehouseName.trim(),
-        isDeleted: false,
-      });
+    const existingName = await Warehouse.findOne({
+      restaurant,
+      store,
+      warehouseName: warehouseName.trim(),
+      isDeleted: false,
+    });
 
     if (existingName) {
       return res.status(400).json({
         success: false,
-        message:
-          "Warehouse with this name already exists in this store.",
+        message: "Warehouse with this name already exists in this store.",
       });
     }
 
@@ -176,7 +148,7 @@ exports.createWarehouse = async (req, res) => {
           $set: {
             isDefault: false,
           },
-        }
+        },
       );
     }
 
@@ -184,75 +156,56 @@ exports.createWarehouse = async (req, res) => {
        Create Warehouse
     ====================================================== */
 
-    const warehouse =
-      await Warehouse.create({
-        restaurant,
-        store,
+    const warehouse = await Warehouse.create({
+      restaurant,
+      store,
 
-        warehouseCode:
-          warehouseCode.toUpperCase(),
+      warehouseCode: warehouseCode.toUpperCase(),
 
-        warehouseName:
-          warehouseName.trim(),
+      warehouseName: warehouseName.trim(),
 
-        warehouseType,
+      warehouseType,
 
-        manager:
-          manager || null,
+      manager: manager || null,
 
-        contactPerson,
-        phone,
-        email,
-        address,
-        city,
-        state,
-        country,
-        pincode,
+      contactPerson,
+      phone,
+      email,
+      address,
+      city,
+      state,
+      country,
+      pincode,
 
-        capacity:
-          Number(capacity || 0),
+      capacity: Number(capacity || 0),
 
-        capacityUnit,
+      capacityUnit,
 
-        isDefault:
-          Boolean(isDefault),
+      isDefault: Boolean(isDefault),
 
-        isActive:
-          isActive !== undefined
-            ? Boolean(isActive)
-            : true,
+      isActive: isActive !== undefined ? Boolean(isActive) : true,
 
-        description,
-        remarks,
+      description,
+      remarks,
 
-        createdBy:
-          req.user?.id ||
-          req.user?._id ||
-          null,
-      });
+      createdBy: req.user?.id || req.user?._id || null,
+    });
 
     /* ======================================================
        Populate
     ====================================================== */
 
-    const populatedWarehouse =
-      await populateWarehouse(
-        Warehouse.findById(
-          warehouse._id
-        )
-      );
+    const populatedWarehouse = await populateWarehouse(
+      Warehouse.findById(warehouse._id),
+    );
 
     return res.status(201).json({
       success: true,
-      message:
-        "Warehouse created successfully.",
+      message: "Warehouse created successfully.",
       data: populatedWarehouse,
     });
   } catch (error) {
-    console.error(
-      "createWarehouse:",
-      error
-    );
+    console.error("createWarehouse:", error);
 
     /* ======================================================
        Duplicate Key
@@ -261,15 +214,13 @@ exports.createWarehouse = async (req, res) => {
     if (error.code === 11000) {
       return res.status(400).json({
         success: false,
-        message:
-          "Warehouse code already exists.",
+        message: "Warehouse code already exists.",
       });
     }
 
     return res.status(500).json({
       success: false,
-      message:
-        "Failed to create warehouse.",
+      message: "Failed to create warehouse.",
       error: error.message,
     });
   }
@@ -309,8 +260,7 @@ exports.getWarehouses = async (req, res) => {
     }
 
     if (warehouseType) {
-      filter.warehouseType =
-        warehouseType;
+      filter.warehouseType = warehouseType;
     }
 
     if (manager) {
@@ -318,73 +268,53 @@ exports.getWarehouses = async (req, res) => {
     }
 
     if (isDefault !== undefined) {
-      filter.isDefault =
-        isDefault === "true";
+      filter.isDefault = isDefault === "true";
     }
 
     if (isActive !== undefined) {
-      filter.isActive =
-        isActive === "true";
+      filter.isActive = isActive === "true";
     }
 
     /* ======================================================
        Pagination
     ====================================================== */
 
-    const pageNumber =
-      Math.max(1, Number(page));
+    const pageNumber = Math.max(1, Number(page));
 
-    const pageLimit =
-      Math.max(1, Number(limit));
+    const pageLimit = Math.max(1, Number(limit));
 
-    const skip =
-      (pageNumber - 1) *
-      pageLimit;
+    const skip = (pageNumber - 1) * pageLimit;
 
-    const totalRecords =
-      await Warehouse.countDocuments(
-        filter
-      );
+    const totalRecords = await Warehouse.countDocuments(filter);
 
-    const warehouses =
-      await populateWarehouse(
-        Warehouse.find(filter)
-          .sort({
-            createdAt: -1,
-          })
-          .skip(skip)
-          .limit(pageLimit)
-      );
+    const warehouses = await populateWarehouse(
+      Warehouse.find(filter)
+        .sort({
+          createdAt: -1,
+        })
+        .skip(skip)
+        .limit(pageLimit),
+    );
 
     return res.status(200).json({
       success: true,
 
       totalRecords,
 
-      currentPage:
-        pageNumber,
+      currentPage: pageNumber,
 
-      totalPages:
-        Math.ceil(
-          totalRecords /
-            pageLimit
-        ),
+      totalPages: Math.ceil(totalRecords / pageLimit),
 
-      count:
-        warehouses.length,
+      count: warehouses.length,
 
       data: warehouses,
     });
   } catch (error) {
-    console.error(
-      "getWarehouses:",
-      error
-    );
+    console.error("getWarehouses:", error);
 
     return res.status(500).json({
       success: false,
-      message:
-        "Failed to fetch warehouses.",
+      message: "Failed to fetch warehouses.",
       error: error.message,
     });
   }
@@ -394,24 +324,19 @@ exports.getWarehouses = async (req, res) => {
    Get Warehouse By ID
 ========================================================== */
 
-exports.getWarehouseById = async (
-  req,
-  res
-) => {
+exports.getWarehouseById = async (req, res) => {
   try {
-    const warehouse =
-      await populateWarehouse(
-        Warehouse.findOne({
-          _id: req.params.id,
-          isDeleted: false,
-        })
-      );
+    const warehouse = await populateWarehouse(
+      Warehouse.findOne({
+        _id: req.params.id,
+        isDeleted: false,
+      }),
+    );
 
     if (!warehouse) {
       return res.status(404).json({
         success: false,
-        message:
-          "Warehouse not found.",
+        message: "Warehouse not found.",
       });
     }
 
@@ -420,15 +345,11 @@ exports.getWarehouseById = async (
       data: warehouse,
     });
   } catch (error) {
-    console.error(
-      "getWarehouseById:",
-      error
-    );
+    console.error("getWarehouseById:", error);
 
     return res.status(500).json({
       success: false,
-      message:
-        "Failed to fetch warehouse.",
+      message: "Failed to fetch warehouse.",
       error: error.message,
     });
   }
@@ -438,22 +359,17 @@ exports.getWarehouseById = async (
    Update Warehouse
 ========================================================== */
 
-exports.updateWarehouse = async (
-  req,
-  res
-) => {
+exports.updateWarehouse = async (req, res) => {
   try {
-    const warehouse =
-      await Warehouse.findOne({
-        _id: req.params.id,
-        isDeleted: false,
-      });
+    const warehouse = await Warehouse.findOne({
+      _id: req.params.id,
+      isDeleted: false,
+    });
 
     if (!warehouse) {
       return res.status(404).json({
         success: false,
-        message:
-          "Warehouse not found.",
+        message: "Warehouse not found.",
       });
     }
 
@@ -485,21 +401,16 @@ exports.updateWarehouse = async (
     ====================================================== */
 
     if (restaurant) {
-      const restaurantExists =
-        await Restaurant.findById(
-          restaurant
-        );
+      const restaurantExists = await Restaurant.findById(restaurant);
 
       if (!restaurantExists) {
         return res.status(404).json({
           success: false,
-          message:
-            "Restaurant not found.",
+          message: "Restaurant not found.",
         });
       }
 
-      warehouse.restaurant =
-        restaurant;
+      warehouse.restaurant = restaurant;
     }
 
     /* ======================================================
@@ -507,14 +418,12 @@ exports.updateWarehouse = async (
     ====================================================== */
 
     if (store) {
-      const storeExists =
-        await Store.findById(store);
+      const storeExists = await Store.findById(store);
 
       if (!storeExists) {
         return res.status(404).json({
           success: false,
-          message:
-            "Store not found.",
+          message: "Store not found.",
         });
       }
 
@@ -526,19 +435,16 @@ exports.updateWarehouse = async (
     ====================================================== */
 
     if (manager) {
-      const managerExists =
-        await User.findById(manager);
+      const managerExists = await User.findById(manager);
 
       if (!managerExists) {
         return res.status(404).json({
           success: false,
-          message:
-            "Manager/User not found.",
+          message: "Manager/User not found.",
         });
       }
 
-      warehouse.manager =
-        manager;
+      warehouse.manager = manager;
     }
 
     /* ======================================================
@@ -546,33 +452,25 @@ exports.updateWarehouse = async (
     ====================================================== */
 
     if (warehouseCode) {
-      const normalizedCode =
-        warehouseCode
-          .trim()
-          .toUpperCase();
+      const normalizedCode = warehouseCode.trim().toUpperCase();
 
-      const duplicate =
-        await Warehouse.findOne({
-          _id: {
-            $ne: warehouse._id,
-          },
-          restaurant:
-            warehouse.restaurant,
-          warehouseCode:
-            normalizedCode,
-          isDeleted: false,
-        });
+      const duplicate = await Warehouse.findOne({
+        _id: {
+          $ne: warehouse._id,
+        },
+        restaurant: warehouse.restaurant,
+        warehouseCode: normalizedCode,
+        isDeleted: false,
+      });
 
       if (duplicate) {
         return res.status(400).json({
           success: false,
-          message:
-            "Warehouse code already exists.",
+          message: "Warehouse code already exists.",
         });
       }
 
-      warehouse.warehouseCode =
-        normalizedCode;
+      warehouse.warehouseCode = normalizedCode;
     }
 
     /* ======================================================
@@ -580,18 +478,15 @@ exports.updateWarehouse = async (
     ====================================================== */
 
     if (warehouseName !== undefined) {
-      warehouse.warehouseName =
-        warehouseName.trim();
+      warehouse.warehouseName = warehouseName.trim();
     }
 
     if (warehouseType !== undefined) {
-      warehouse.warehouseType =
-        warehouseType;
+      warehouse.warehouseType = warehouseType;
     }
 
     if (contactPerson !== undefined) {
-      warehouse.contactPerson =
-        contactPerson;
+      warehouse.contactPerson = contactPerson;
     }
 
     if (phone !== undefined) {
@@ -599,13 +494,11 @@ exports.updateWarehouse = async (
     }
 
     if (email !== undefined) {
-      warehouse.email =
-        email.toLowerCase();
+      warehouse.email = email.toLowerCase();
     }
 
     if (address !== undefined) {
-      warehouse.address =
-        address;
+      warehouse.address = address;
     }
 
     if (city !== undefined) {
@@ -617,38 +510,31 @@ exports.updateWarehouse = async (
     }
 
     if (country !== undefined) {
-      warehouse.country =
-        country;
+      warehouse.country = country;
     }
 
     if (pincode !== undefined) {
-      warehouse.pincode =
-        pincode;
+      warehouse.pincode = pincode;
     }
 
     if (capacity !== undefined) {
-      warehouse.capacity =
-        Number(capacity);
+      warehouse.capacity = Number(capacity);
     }
 
     if (capacityUnit !== undefined) {
-      warehouse.capacityUnit =
-        capacityUnit;
+      warehouse.capacityUnit = capacityUnit;
     }
 
     if (isActive !== undefined) {
-      warehouse.isActive =
-        Boolean(isActive);
+      warehouse.isActive = Boolean(isActive);
     }
 
     if (description !== undefined) {
-      warehouse.description =
-        description;
+      warehouse.description = description;
     }
 
     if (remarks !== undefined) {
-      warehouse.remarks =
-        remarks;
+      warehouse.remarks = remarks;
     }
 
     /* ======================================================
@@ -658,11 +544,9 @@ exports.updateWarehouse = async (
     if (isDefault === true) {
       await Warehouse.updateMany(
         {
-          restaurant:
-            warehouse.restaurant,
+          restaurant: warehouse.restaurant,
 
-          store:
-            warehouse.store,
+          store: warehouse.store,
 
           _id: {
             $ne: warehouse._id,
@@ -674,26 +558,21 @@ exports.updateWarehouse = async (
           $set: {
             isDefault: false,
           },
-        }
+        },
       );
 
-      warehouse.isDefault =
-        true;
+      warehouse.isDefault = true;
     }
 
     if (isDefault === false) {
-      warehouse.isDefault =
-        false;
+      warehouse.isDefault = false;
     }
 
     /* ======================================================
        Audit
     ====================================================== */
 
-    warehouse.updatedBy =
-      req.user?.id ||
-      req.user?._id ||
-      null;
+    warehouse.updatedBy = req.user?.id || req.user?._id || null;
 
     await warehouse.save();
 
@@ -701,29 +580,21 @@ exports.updateWarehouse = async (
        Populate
     ====================================================== */
 
-    const updatedWarehouse =
-      await populateWarehouse(
-        Warehouse.findById(
-          warehouse._id
-        )
-      );
+    const updatedWarehouse = await populateWarehouse(
+      Warehouse.findById(warehouse._id),
+    );
 
     return res.status(200).json({
       success: true,
-      message:
-        "Warehouse updated successfully.",
+      message: "Warehouse updated successfully.",
       data: updatedWarehouse,
     });
   } catch (error) {
-    console.error(
-      "updateWarehouse:",
-      error
-    );
+    console.error("updateWarehouse:", error);
 
     return res.status(500).json({
       success: false,
-      message:
-        "Failed to update warehouse.",
+      message: "Failed to update warehouse.",
       error: error.message,
     });
   }
@@ -733,22 +604,17 @@ exports.updateWarehouse = async (
    Delete Warehouse
 ========================================================== */
 
-exports.deleteWarehouse = async (
-  req,
-  res
-) => {
+exports.deleteWarehouse = async (req, res) => {
   try {
-    const warehouse =
-      await Warehouse.findOne({
-        _id: req.params.id,
-        isDeleted: false,
-      });
+    const warehouse = await Warehouse.findOne({
+      _id: req.params.id,
+      isDeleted: false,
+    });
 
     if (!warehouse) {
       return res.status(404).json({
         success: false,
-        message:
-          "Warehouse not found.",
+        message: "Warehouse not found.",
       });
     }
 
@@ -756,28 +622,20 @@ exports.deleteWarehouse = async (
     warehouse.isActive = false;
     warehouse.isDefault = false;
 
-    warehouse.updatedBy =
-      req.user?.id ||
-      req.user?._id ||
-      null;
+    warehouse.updatedBy = req.user?.id || req.user?._id || null;
 
     await warehouse.save();
 
     return res.status(200).json({
       success: true,
-      message:
-        "Warehouse deleted successfully.",
+      message: "Warehouse deleted successfully.",
     });
   } catch (error) {
-    console.error(
-      "deleteWarehouse:",
-      error
-    );
+    console.error("deleteWarehouse:", error);
 
     return res.status(500).json({
       success: false,
-      message:
-        "Failed to delete warehouse.",
+      message: "Failed to delete warehouse.",
       error: error.message,
     });
   }
@@ -787,58 +645,42 @@ exports.deleteWarehouse = async (
    Restore Warehouse
 ========================================================== */
 
-exports.restoreWarehouse = async (
-  req,
-  res
-) => {
+exports.restoreWarehouse = async (req, res) => {
   try {
-    const warehouse =
-      await Warehouse.findOne({
-        _id: req.params.id,
-        isDeleted: true,
-      });
+    const warehouse = await Warehouse.findOne({
+      _id: req.params.id,
+      isDeleted: true,
+    });
 
     if (!warehouse) {
       return res.status(404).json({
         success: false,
-        message:
-          "Deleted warehouse not found.",
+        message: "Deleted warehouse not found.",
       });
     }
 
     warehouse.isDeleted = false;
     warehouse.isActive = true;
 
-    warehouse.updatedBy =
-      req.user?.id ||
-      req.user?._id ||
-      null;
+    warehouse.updatedBy = req.user?.id || req.user?._id || null;
 
     await warehouse.save();
 
-    const restoredWarehouse =
-      await populateWarehouse(
-        Warehouse.findById(
-          warehouse._id
-        )
-      );
+    const restoredWarehouse = await populateWarehouse(
+      Warehouse.findById(warehouse._id),
+    );
 
     return res.status(200).json({
       success: true,
-      message:
-        "Warehouse restored successfully.",
+      message: "Warehouse restored successfully.",
       data: restoredWarehouse,
     });
   } catch (error) {
-    console.error(
-      "restoreWarehouse:",
-      error
-    );
+    console.error("restoreWarehouse:", error);
 
     return res.status(500).json({
       success: false,
-      message:
-        "Failed to restore warehouse.",
+      message: "Failed to restore warehouse.",
       error: error.message,
     });
   }
@@ -848,22 +690,17 @@ exports.restoreWarehouse = async (
    Set Default Warehouse
 ========================================================== */
 
-exports.setDefaultWarehouse = async (
-  req,
-  res
-) => {
+exports.setDefaultWarehouse = async (req, res) => {
   try {
-    const warehouse =
-      await Warehouse.findOne({
-        _id: req.params.id,
-        isDeleted: false,
-      });
+    const warehouse = await Warehouse.findOne({
+      _id: req.params.id,
+      isDeleted: false,
+    });
 
     if (!warehouse) {
       return res.status(404).json({
         success: false,
-        message:
-          "Warehouse not found.",
+        message: "Warehouse not found.",
       });
     }
 
@@ -873,11 +710,9 @@ exports.setDefaultWarehouse = async (
 
     await Warehouse.updateMany(
       {
-        restaurant:
-          warehouse.restaurant,
+        restaurant: warehouse.restaurant,
 
-        store:
-          warehouse.store,
+        store: warehouse.store,
 
         _id: {
           $ne: warehouse._id,
@@ -889,7 +724,7 @@ exports.setDefaultWarehouse = async (
         $set: {
           isDefault: false,
         },
-      }
+      },
     );
 
     /* ======================================================
@@ -898,29 +733,21 @@ exports.setDefaultWarehouse = async (
 
     warehouse.isDefault = true;
 
-    warehouse.updatedBy =
-      req.user?.id ||
-      req.user?._id ||
-      null;
+    warehouse.updatedBy = req.user?.id || req.user?._id || null;
 
     await warehouse.save();
 
     return res.status(200).json({
       success: true,
-      message:
-        "Default warehouse updated successfully.",
+      message: "Default warehouse updated successfully.",
       data: warehouse,
     });
   } catch (error) {
-    console.error(
-      "setDefaultWarehouse:",
-      error
-    );
+    console.error("setDefaultWarehouse:", error);
 
     return res.status(500).json({
       success: false,
-      message:
-        "Failed to set default warehouse.",
+      message: "Failed to set default warehouse.",
       error: error.message,
     });
   }
@@ -930,13 +757,9 @@ exports.setDefaultWarehouse = async (
    Search Warehouse
 ========================================================== */
 
-exports.searchWarehouse = async (
-  req,
-  res
-) => {
+exports.searchWarehouse = async (req, res) => {
   try {
-    const keyword =
-      req.query.search || "";
+    const keyword = req.query.search || "";
 
     const filter = {
       isDeleted: false,
@@ -974,13 +797,11 @@ exports.searchWarehouse = async (
       ],
     };
 
-    const warehouses =
-      await populateWarehouse(
-        Warehouse.find(filter)
-          .sort({
-            warehouseName: 1,
-          })
-      );
+    const warehouses = await populateWarehouse(
+      Warehouse.find(filter).sort({
+        warehouseName: 1,
+      }),
+    );
 
     return res.status(200).json({
       success: true,
@@ -988,15 +809,11 @@ exports.searchWarehouse = async (
       data: warehouses,
     });
   } catch (error) {
-    console.error(
-      "searchWarehouse:",
-      error
-    );
+    console.error("searchWarehouse:", error);
 
     return res.status(500).json({
       success: false,
-      message:
-        "Failed to search warehouses.",
+      message: "Failed to search warehouses.",
       error: error.message,
     });
   }
@@ -1006,40 +823,31 @@ exports.searchWarehouse = async (
    Get Default Warehouse
 ========================================================== */
 
-exports.getDefaultWarehouse = async (
-  req,
-  res
-) => {
+exports.getDefaultWarehouse = async (req, res) => {
   try {
-    const {
-      restaurant,
-      store,
-    } = req.query;
+    const { restaurant, store } = req.query;
 
     if (!restaurant || !store) {
       return res.status(400).json({
         success: false,
-        message:
-          "restaurant and store are required.",
+        message: "restaurant and store are required.",
       });
     }
 
-    const warehouse =
-      await populateWarehouse(
-        Warehouse.findOne({
-          restaurant,
-          store,
-          isDefault: true,
-          isActive: true,
-          isDeleted: false,
-        })
-      );
+    const warehouse = await populateWarehouse(
+      Warehouse.findOne({
+        restaurant,
+        store,
+        isDefault: true,
+        isActive: true,
+        isDeleted: false,
+      }),
+    );
 
     if (!warehouse) {
       return res.status(404).json({
         success: false,
-        message:
-          "Default warehouse not found.",
+        message: "Default warehouse not found.",
       });
     }
 
@@ -1048,15 +856,11 @@ exports.getDefaultWarehouse = async (
       data: warehouse,
     });
   } catch (error) {
-    console.error(
-      "getDefaultWarehouse:",
-      error
-    );
+    console.error("getDefaultWarehouse:", error);
 
     return res.status(500).json({
       success: false,
-      message:
-        "Failed to fetch default warehouse.",
+      message: "Failed to fetch default warehouse.",
       error: error.message,
     });
   }
@@ -1066,23 +870,18 @@ exports.getDefaultWarehouse = async (
    Warehouse Summary
 ========================================================== */
 
-exports.getWarehouseSummary = async (
-  req,
-  res
-) => {
+exports.getWarehouseSummary = async (req, res) => {
   try {
     const filter = {
       isDeleted: false,
     };
 
     if (req.query.restaurant) {
-      filter.restaurant =
-        req.query.restaurant;
+      filter.restaurant = req.query.restaurant;
     }
 
     if (req.query.store) {
-      filter.store =
-        req.query.store;
+      filter.store = req.query.store;
     }
 
     const [
@@ -1091,9 +890,7 @@ exports.getWarehouseSummary = async (
       inactiveWarehouses,
       defaultWarehouses,
     ] = await Promise.all([
-      Warehouse.countDocuments(
-        filter
-      ),
+      Warehouse.countDocuments(filter),
 
       Warehouse.countDocuments({
         ...filter,
@@ -1121,15 +918,11 @@ exports.getWarehouseSummary = async (
       },
     });
   } catch (error) {
-    console.error(
-      "getWarehouseSummary:",
-      error
-    );
+    console.error("getWarehouseSummary:", error);
 
     return res.status(500).json({
       success: false,
-      message:
-        "Failed to fetch warehouse summary.",
+      message: "Failed to fetch warehouse summary.",
       error: error.message,
     });
   }

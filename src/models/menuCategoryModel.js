@@ -82,12 +82,7 @@ const menuCategorySchema = new mongoose.Schema(
     serviceType: [
       {
         type: String,
-        enum: [
-          "Dine In",
-          "Take Away",
-          "Delivery",
-          "Drive Thru",
-        ],
+        enum: ["Dine In", "Take Away", "Delivery", "Drive Thru"],
       },
     ],
 
@@ -134,7 +129,7 @@ const menuCategorySchema = new mongoose.Schema(
   {
     timestamps: true,
     versionKey: false,
-  }
+  },
 );
 
 /* ===========================
