@@ -55,7 +55,7 @@ exports.getMenuItems = async (req, res) => {
 
     console.log("2");
 
-    const query = MenuItem.find(filter);
+    const query = MenuItem.find(filter).populate("addons", "_id addonCode addonName price");
 
     console.log("3");
 

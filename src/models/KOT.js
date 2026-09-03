@@ -8,8 +8,7 @@ const kotItemSchema = new mongoose.Schema(
   {
         order: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "Order",
-      required: true,
+      ref: "Order"
     },
     orderItem: {
       type: mongoose.Schema.Types.ObjectId,
