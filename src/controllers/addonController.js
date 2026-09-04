@@ -1,6 +1,43 @@
 // controllers/addonController.js
 
 const Addon = require("../models/Addon");
+const MenuItem = require("../models/MenuItem");
+
+/* =====================================================
+   Create Addon
+===================================================== */
+
+// exports.createAddon = async (req, res) => {
+//   try {
+//     const existing = await Addon.findOne({
+//       addonCode: req.body.addonCode.toUpperCase(),
+//     });
+
+//     if (existing) {
+//       return res.status(400).json({
+//         success: false,
+//         message: "Addon code already exists",
+//       });
+//     }
+
+//     const addon = await Addon.create({
+//       ...req.body,
+//       addonCode: req.body.addonCode.toUpperCase(),
+//       createdBy: req.user?._id,
+//     });
+
+//     res.status(201).json({
+//       success: true,
+//       message: "Addon created successfully",
+//       data: addon,
+//     });
+//   } catch (error) {
+//     res.status(500).json({
+//       success: false,
+//       message: error.message,
+//     });
+//   }
+// };
 
 /* =====================================================
    Create Addon
@@ -8,8 +45,31 @@ const Addon = require("../models/Addon");
 
 exports.createAddon = async (req, res) => {
   try {
+    const {
+      addonCode,
+      applicableMenuItems = [],
+    } = req.body;
+
+    // ---------------------------------------------------
+    // Validate addon code
+    // ---------------------------------------------------
+
+    if (!addonCode) {
+      return res.status(400).json({
+        success: false,
+        message: "Addon code is required",
+      });
+    }
+
+    const code = addonCode.trim().toUpperCase();
+
+    // ---------------------------------------------------
+    // Check duplicate addon code
+    // ---------------------------------------------------
+
     const existing = await Addon.findOne({
-      addonCode: req.body.addonCode.toUpperCase(),
+      addonCode: code,
+      isDeleted: false,
     });
 
     if (existing) {
@@ -19,18 +79,64 @@ exports.createAddon = async (req, res) => {
       });
     }
 
+    // ---------------------------------------------------
+    // Create Addon
+    // ---------------------------------------------------
+
     const addon = await Addon.create({
       ...req.body,
-      addonCode: req.body.addonCode.toUpperCase(),
+
+      addonCode: code,
+
+      // Make sure this is always an array
+      applicableMenuItems: Array.isArray(applicableMenuItems)
+        ? applicableMenuItems
+        : [],
+
       createdBy: req.user?._id,
     });
+
+    // ---------------------------------------------------
+    // Update MenuItems
+    // Add this addon ID to selected menu items
+    // ---------------------------------------------------
+
+    if (
+      Array.isArray(applicableMenuItems) &&
+      applicableMenuItems.length > 0
+    ) {
+      await MenuItem.updateMany(
+        {
+          _id: {
+            $in: applicableMenuItems,
+          },
+        },
+        {
+          $addToSet: {
+            addons: addon._id,
+          },
+        }
+      );
+    }
+
+    // ---------------------------------------------------
+    // Populate response
+    // ---------------------------------------------------
+
+    const populatedAddon = await Addon.findById(addon._id)
+      .populate(
+        "applicableMenuItems",
+        "menuCode menuName"
+      );
 
     res.status(201).json({
       success: true,
       message: "Addon created successfully",
-      data: addon,
+      data: populatedAddon,
     });
   } catch (error) {
+    console.error("Create Addon Error:", error);
+
     res.status(500).json({
       success: false,
       message: error.message,
@@ -154,9 +260,48 @@ exports.getAddonById = async (req, res) => {
    Update Addon
 ===================================================== */
 
+// exports.updateAddon = async (req, res) => {
+//   try {
+//     const addon = await Addon.findById(req.params.id);
+
+//     if (!addon || addon.isDeleted) {
+//       return res.status(404).json({
+//         success: false,
+//         message: "Addon not found",
+//       });
+//     }
+
+//     Object.assign(addon, req.body);
+
+//     addon.updatedBy = req.user?._id;
+
+//     await addon.save();
+
+//     res.json({
+//       success: true,
+//       message: "Addon updated successfully",
+//       data: addon,
+//     });
+//   } catch (error) {
+//     res.status(500).json({
+//       success: false,
+//       message: error.message,
+//     });
+//   }
+// };
+
+
+/* =====================================================
+   Update Addon
+===================================================== */
+
 exports.updateAddon = async (req, res) => {
   try {
     const addon = await Addon.findById(req.params.id);
+
+    // ---------------------------------------------------
+    // Check addon
+    // ---------------------------------------------------
 
     if (!addon || addon.isDeleted) {
       return res.status(404).json({
@@ -165,18 +310,139 @@ exports.updateAddon = async (req, res) => {
       });
     }
 
+    // ---------------------------------------------------
+    // Get old menu items
+    // ---------------------------------------------------
+
+    const oldMenuItems = Array.isArray(
+      addon.applicableMenuItems
+    )
+      ? addon.applicableMenuItems.map((id) =>
+          id.toString()
+        )
+      : [];
+
+    // ---------------------------------------------------
+    // Get new menu items
+    // ---------------------------------------------------
+
+    const newMenuItems = Array.isArray(
+      req.body.applicableMenuItems
+    )
+      ? req.body.applicableMenuItems.map((id) =>
+          id.toString()
+        )
+      : [];
+
+    // ---------------------------------------------------
+    // Find removed menu items
+    // ---------------------------------------------------
+
+    const removedMenuItems = oldMenuItems.filter(
+      (oldId) => !newMenuItems.includes(oldId)
+    );
+
+    // ---------------------------------------------------
+    // Find newly added menu items
+    // ---------------------------------------------------
+
+    const addedMenuItems = newMenuItems.filter(
+      (newId) => !oldMenuItems.includes(newId)
+    );
+
+    // ---------------------------------------------------
+    // Remove addon from old menu items
+    // ---------------------------------------------------
+
+    if (removedMenuItems.length > 0) {
+      await MenuItem.updateMany(
+        {
+          _id: {
+            $in: removedMenuItems,
+          },
+        },
+        {
+          $pull: {
+            addons: addon._id,
+          },
+        }
+      );
+    }
+
+    // ---------------------------------------------------
+    // Add addon to new menu items
+    // ---------------------------------------------------
+
+    if (addedMenuItems.length > 0) {
+      await MenuItem.updateMany(
+        {
+          _id: {
+            $in: addedMenuItems,
+          },
+        },
+        {
+          $addToSet: {
+            addons: addon._id,
+          },
+        }
+      );
+    }
+
+    // ---------------------------------------------------
+    // Check duplicate addon code
+    // ---------------------------------------------------
+
+    if (req.body.addonCode) {
+      const newCode = req.body.addonCode
+        .trim()
+        .toUpperCase();
+
+      const duplicate = await Addon.findOne({
+        addonCode: newCode,
+        _id: {
+          $ne: addon._id,
+        },
+        isDeleted: false,
+      });
+
+      if (duplicate) {
+        return res.status(400).json({
+          success: false,
+          message: "Addon code already exists",
+        });
+      }
+
+      req.body.addonCode = newCode;
+    }
+
+    // ---------------------------------------------------
+    // Update Addon
+    // ---------------------------------------------------
+
     Object.assign(addon, req.body);
 
     addon.updatedBy = req.user?._id;
 
     await addon.save();
 
+    // ---------------------------------------------------
+    // Populate response
+    // ---------------------------------------------------
+
+    const populatedAddon = await Addon.findById(addon._id)
+      .populate(
+        "applicableMenuItems",
+        "menuCode menuName"
+      );
+
     res.json({
       success: true,
       message: "Addon updated successfully",
-      data: addon,
+      data: populatedAddon,
     });
   } catch (error) {
+    console.error("Update Addon Error:", error);
+
     res.status(500).json({
       success: false,
       message: error.message,

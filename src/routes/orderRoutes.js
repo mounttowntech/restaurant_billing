@@ -3,6 +3,7 @@ const express = require("express");
 const router = express.Router();
 
 const orderController = require("../controllers/orderController");
+const posOrderController = require("../controllers/posOrderController");
 
 const { verifyToken } = require("../middleware/auth");
 
@@ -51,5 +52,104 @@ router.put("/cancel/:id", orderController.cancelOrder);
 // Payment
 
 router.put("/paid/:id", verifyToken, orderController.markPaid);
+
+
+
+/* ==========================================================
+   POS
+========================================================== */
+
+router.post(
+  "/pos/create",
+  posOrderController.createPOSOrder
+);
+
+/* ==========================================================
+   ORDERS
+========================================================== */
+
+router.post(
+  "/create",
+  orderController.createOrder
+);
+
+router.get(
+  "/all",
+  orderController.getOrders
+);
+
+router.get(
+  "/today",
+  orderController.getTodayOrders
+);
+
+router.get(
+  "/kitchen-queue",
+  orderController.getKitchenQueue
+);
+
+router.get(
+  "/table/:tableId",
+  orderController.getActiveTableOrders
+);
+
+router.get(
+  "/summary",
+  orderController.orderSummary
+);
+
+router.get(
+  "/:id",
+  orderController.getOrderById
+);
+
+router.put(
+  "/update/:id",
+  orderController.updateOrder
+);
+
+router.delete(
+  "/delete/:id",
+  orderController.deleteOrder
+);
+
+router.patch(
+  "/restore/:id",
+  orderController.restoreOrder
+);
+
+/* ==========================================================
+   ORDER STATUS
+========================================================== */
+
+router.patch(
+  "/:id/accept",
+  orderController.acceptOrder
+);
+
+router.patch(
+  "/:id/preparing",
+  orderController.startPreparing
+);
+
+router.patch(
+  "/:id/ready",
+  orderController.markReady
+);
+
+router.patch(
+  "/:id/complete",
+  orderController.completeOrder
+);
+
+router.patch(
+  "/:id/cancel",
+  orderController.cancelOrder
+);
+
+router.patch(
+  "/:id/paid",
+  orderController.markPaid
+);
 
 module.exports = router;

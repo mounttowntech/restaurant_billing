@@ -6,6 +6,10 @@ const mongoose = require("mongoose");
 
 const kotItemSchema = new mongoose.Schema(
   {
+        order: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Order"
+    },
     orderItem: {
       type: mongoose.Schema.Types.ObjectId,
       required: true,
