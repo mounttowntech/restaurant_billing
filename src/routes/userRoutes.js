@@ -1,7 +1,7 @@
 const express = require("express");
 const router = express.Router();
 
-const userController = require("../controllers/userController");
+const { createUser, getUsers, getUserById, updateUser, deleteUser, restoreUser, updateUserStatus, activateUser, deactivateUser, blockUser, unblockUser, getCurrentUserProfile, updateProfile, uploadProfileImage, removeProfileImage, searchUsers, getActiveUsers, getInactiveUsers, getBlockedUsers, getDeletedUsers, getOnlineUsers, getOfflineUsers, getRestaurantUsers, getStoreUsers, getRoleUsers, getShiftUsers, getUserSummary, getUserAnalytics } = require("../controllers/userController");
 
 // Optional Authentication Middleware
 // const { verifyToken } = require("../middleware/authMiddleware");
@@ -17,42 +17,42 @@ const userController = require("../controllers/userController");
 router.post(
   "/create",
   // verifyToken,
-  userController.createUser
+  createUser
 );
 
 // Get All Users
 router.get(
   "/all",
   // verifyToken,
-  userController.getUsers
+  getUsers
 );
 
 // Get User By ID
 router.get(
   "/:id",
   // verifyToken,
-  userController.getUserById
+  getUserById
 );
 
 // Update User
 router.put(
   "/:id",
   // verifyToken,
-  userController.updateUser
+  updateUser
 );
 
 // Soft Delete User
 router.delete(
   "/:id",
   // verifyToken,
-  userController.deleteUser
+  deleteUser
 );
 
 // Restore User
 router.put(
   "/restore/:id",
   // verifyToken,
-  userController.restoreUser
+  restoreUser
 );
 
 /* ==========================================================
@@ -63,35 +63,35 @@ router.put(
 router.put(
   "/status/:id",
   // verifyToken,
-  userController.updateUserStatus
+  updateUserStatus
 );
 
 // Activate User
 router.put(
   "/activate/:id",
   // verifyToken,
-  userController.activateUser
+  activateUser
 );
 
 // Deactivate User
 router.put(
   "/deactivate/:id",
   // verifyToken,
-  userController.deactivateUser
+  deactivateUser
 );
 
 // Block User
 router.put(
   "/block/:id",
   // verifyToken,
-  userController.blockUser
+  blockUser
 );
 
 // Unblock User
 router.put(
   "/unblock/:id",
   // verifyToken,
-  userController.unblockUser
+  unblockUser
 );
 
 /* ==========================================================
@@ -99,36 +99,36 @@ router.put(
 ========================================================== */
 
 // Login
-router.post(
-  "/login",
-  userController.loginUser
-);
+// router.post(
+//   "/login",
+//   userController.loginUser
+// );
 
 // Logout
-router.post(
-  "/logout",
-  // verifyToken,
-  userController.logoutUser
-);
+// router.post(
+//   "/logout",
+//   // verifyToken,
+//   userController.logoutUser
+// );
 
 // Change Password
-router.put(
-  "/change-password",
-  // verifyToken,
-  userController.changePassword
-);
+// router.put(
+//   "/change-password",
+//   // verifyToken,
+//   userController.changePassword
+// );
 
 // Forgot Password
-router.post(
-  "/forgot-password",
-  userController.forgotPassword
-);
+// router.post(
+//   "/forgot-password",
+//   userController.forgotPassword
+// );
 
 // Reset Password
-router.post(
-  "/reset-password",
-  userController.resetPassword
-);
+// router.post(
+//   "/reset-password",
+//   userController.resetPassword
+// );
 
 /* ==========================================================
    Profile
@@ -138,14 +138,13 @@ router.post(
 router.get(
   "/profile/me",
   // verifyToken,
-  userController.getCurrentUserProfile
+  getCurrentUserProfile
 );
 
 // Update Profile
-router.put(
-  "/profile/update",
+router.put(  "/profile/update",
   // verifyToken,
-  userController.updateProfile
+  updateProfile
 );
 
 // Upload Profile Image
@@ -153,14 +152,14 @@ router.put(
   "/profile/upload-image",
   // verifyToken,
   // upload.single("profileImage"),
-  userController.uploadProfileImage
+  uploadProfileImage
 );
 
 // Remove Profile Image
 router.delete(
   "/profile/remove-image",
   // verifyToken,
-  userController.removeProfileImage
+  removeProfileImage
 );
 
 /* ==========================================================
@@ -171,91 +170,91 @@ router.delete(
 router.get(
   "/reports/search",
   // verifyToken,
-  userController.searchUsers
+  searchUsers
 );
 
 // Active Users
 router.get(
   "/reports/active",
   // verifyToken,
-  userController.getActiveUsers
+  getActiveUsers
 );
 
 // Inactive Users
 router.get(
   "/reports/inactive",
   // verifyToken,
-  userController.getInactiveUsers
+  getInactiveUsers
 );
 
 // Blocked Users
 router.get(
   "/reports/blocked",
   // verifyToken,
-  userController.getBlockedUsers
+  getBlockedUsers
 );
 
 // Deleted Users
 router.get(
   "/reports/deleted",
   // verifyToken,
-  userController.getDeletedUsers
+  getDeletedUsers
 );
 
 // Online Users
 router.get(
   "/reports/online",
   // verifyToken,
-  userController.getOnlineUsers
+  getOnlineUsers
 );
 
 // Offline Users
 router.get(
   "/reports/offline",
   // verifyToken,
-  userController.getOfflineUsers
+  getOfflineUsers
 );
 
 // Restaurant Users
 router.get(
   "/reports/restaurant/:restaurantId",
   // verifyToken,
-  userController.getRestaurantUsers
+  getRestaurantUsers
 );
 
 // Store Users
 router.get(
   "/reports/store/:storeId",
   // verifyToken,
-  userController.getStoreUsers
+  getStoreUsers
 );
 
 // Role Users
 router.get(
   "/reports/role/:roleId",
   // verifyToken,
-  userController.getRoleUsers
+  getRoleUsers
 );
 
 // Shift Users
 router.get(
   "/reports/shift/:shiftId",
   // verifyToken,
-  userController.getShiftUsers
+  getShiftUsers
 );
 
 // Summary
 router.get(
   "/reports/summary",
   // verifyToken,
-  userController.getUserSummary
+  getUserSummary
 );
 
 // Analytics
 router.get(
   "/reports/analytics",
   // verifyToken,
-  userController.getUserAnalytics
+  getUserAnalytics
 );
 
 module.exports = router;

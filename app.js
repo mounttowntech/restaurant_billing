@@ -17,7 +17,7 @@ app.get("/", (req, res) =>
 );
 app.use("/api/auth", require("./src/routes/authRoutes"));
 app.use("/api/cashregister", require("./src/routes/cashRegisterRoutes"));
-// app.use("/api/users", require("./src/routes/userRoutes"));
+app.use("/api/users", require("./src/routes/userRoutes"));
 app.use("/api/roles", require("./src/routes/roleRoutes"));
 app.use("/api/restaurants", require("./src/routes/restaurantRoutes"));
 app.use("/api/tables", require("./src/routes/tableRoutes"));
